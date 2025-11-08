@@ -6,6 +6,7 @@
   color: var(--text);
   min-width: 220px;
   max-width: 300px;
+  cursor: pointer;
 }
 .content {
   padding: var(--pad-y) var(--pad-x);

@@ -1,8 +1,10 @@
 import { Handle, Position, type NodeProps } from "@xyflow/react";
+import { memo } from "react";
+
 import styles from "./BarrierNode.module.css";
 import type { BowtieNodeData } from "../../../domain/bowtie.types";
 
-export default function BarrierNode({ id, data }: NodeProps) {
+function BarrierNode({ id, data }: NodeProps) {
   const d = data as BowtieNodeData;
   const role = d?.role === "prevention" ? "prevention" : "mitigation";
   const title = d?.metadata?.eli5 ?? d?.label;
@@ -23,6 +25,9 @@ export default function BarrierNode({ id, data }: NodeProps) {
         title={title}
         onKeyDown={handleKeyDown}
         className={`${styles.card} ${role === "prevention" ? styles.prevention : styles.mitigation}`}
+        data-testid="bowtie-barrier-node"
+        data-label={d?.label}
+        data-role={role}
       >
         <div className={styles.headerBar} />
         <div className={styles.content}>
@@ -46,4 +51,8 @@ export default function BarrierNode({ id, data }: NodeProps) {
       </p>
     </>
   );
+
+
 }
+export default memo(BarrierNode);
+

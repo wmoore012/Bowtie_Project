@@ -1,8 +1,10 @@
 import { Handle, Position, type NodeProps } from "@xyflow/react";
+import { memo } from "react";
+
 import styles from "./HazardTagNode.module.css";
 import type { BowtieNodeData } from "../../../domain/bowtie.types";
 
-export default function HazardTagNode({ id, data }: NodeProps) {
+function HazardTagNode({ id, data }: NodeProps) {
   const d = data as BowtieNodeData;
   const title = d?.metadata?.eli5 ?? d?.label;
   const descId = `${id}-desc`;
@@ -22,6 +24,8 @@ export default function HazardTagNode({ id, data }: NodeProps) {
         title={title}
         onKeyDown={handleKeyDown}
         className={styles.tag}
+        data-testid="bowtie-hazard-node"
+        data-label={d?.label}
       >
         <span className={styles.icon} aria-hidden="true"></span>
         <span className={styles.label}>{d?.label}</span>
@@ -34,4 +38,6 @@ export default function HazardTagNode({ id, data }: NodeProps) {
     </>
   );
 }
+export default memo(HazardTagNode);
+
 

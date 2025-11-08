@@ -5,10 +5,10 @@ export function NodeDetailPanel({ node, onClose }: { node: BowtieNode | null; on
   if (!node) return null;
   const md = (node.metadata || {}) as NodeMetadata;
   return (
-    <div role="dialog" aria-label="Node details" className={styles.panel}>
+    <div role="dialog" aria-modal="true" aria-label="Node details" className={styles.panel}>
       <div className={styles.header}>
         <h3 className={styles.title}>{node.label}</h3>
-        <button onClick={onClose} aria-label="Close">✕</button>
+        <button type="button" onClick={onClose} aria-label="Close node details">✕</button>
       </div>
 
       {md.eli5 && (

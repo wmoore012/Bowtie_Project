@@ -1,8 +1,10 @@
 import { Handle, Position, type NodeProps } from "@xyflow/react";
+import { memo } from "react";
+
 import styles from "./ConsequenceNode.module.css";
 import type { BowtieNodeData } from "../../../domain/bowtie.types";
 
-export default function ConsequenceNode({ id, data }: NodeProps) {
+function ConsequenceNode({ id, data }: NodeProps) {
   const d = data as BowtieNodeData;
   const title = d?.metadata?.eli5 ?? d?.label;
   const descId = `${id}-desc`;
@@ -34,4 +36,8 @@ export default function ConsequenceNode({ id, data }: NodeProps) {
       </p>
     </>
   );
+
+
 }
+export default memo(ConsequenceNode);
+

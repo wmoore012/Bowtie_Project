@@ -1,8 +1,10 @@
 import { Handle, Position, type NodeProps } from "@xyflow/react";
+import { memo } from "react";
+
 import styles from "./TopEventKnotNode.module.css";
 import type { BowtieNodeData } from "../../../domain/bowtie.types";
 
-export default function TopEventKnotNode({ id, data }: NodeProps) {
+function TopEventKnotNode({ id, data }: NodeProps) {
   const d = data as BowtieNodeData;
   const title = d?.metadata?.eli5 ?? d?.label;
   const descId = `${id}-desc`;
@@ -24,7 +26,7 @@ export default function TopEventKnotNode({ id, data }: NodeProps) {
         className={styles.wrap}
       >
         <div className={styles.knot}>
-          <span className={styles.icon} aria-hidden="true">525</span>
+          <span className={styles.icon} aria-hidden="true"></span>
           <span className={styles.label}>{d?.label}</span>
         </div>
         <Handle type="target" position={Position.Left} />
@@ -36,4 +38,6 @@ export default function TopEventKnotNode({ id, data }: NodeProps) {
     </>
   );
 }
+export default memo(TopEventKnotNode);
+
 

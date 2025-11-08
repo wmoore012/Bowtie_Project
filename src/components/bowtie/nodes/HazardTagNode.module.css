@@ -8,6 +8,7 @@
   box-shadow: var(--hazard-pill-shadow, 0 2px 8px rgba(0, 0, 0, 0.15));
   color: var(--hazard-pill-text, #ffffff);
   padding: calc(var(--pad-y) + 2px) calc(var(--pad-x) + 6px);
+  cursor: pointer;
 }
 .label { font-weight: 700; font-size: 14px; text-transform: uppercase; letter-spacing: 0.05em; }
 .icon { font-size: 0; }

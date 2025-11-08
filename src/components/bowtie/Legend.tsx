@@ -1,9 +1,48 @@
 import styles from "./Legend.module.css";
+import { memo, useEffect, useState } from "react";
 
-export function Legend() {
+
+export const Legend = memo(function Legend() {
+  const STORAGE_KEY = "bowtie.legend.expanded";
+  const [expanded, setExpanded] = useState<boolean>(() => {
+    if (typeof window === "undefined") return false; // SSR-safe default
+    try {
+      const v = window.localStorage?.getItem(STORAGE_KEY);
+      if (v === "true") return true;
+      if (v === "false") return false;
+    } catch {}
+    return false; // default: collapsed to maximize canvas
+  });
+
+  useEffect(() => {
+    try { window?.localStorage?.setItem(STORAGE_KEY, expanded ? "true" : "false"); } catch {}
+  }, [expanded]);
+
+  const contentId = "legend-content";
+  const titleId = "legend-title";
   return (
     <aside className={styles.legend} aria-label="Bowtie legend">
-      <div className={styles.title}>How to read this bowtie</div>
+      <div className={styles.header}>
+        <div id={titleId} className={styles.title}>How to read this diagram</div>
+        <button
+          className={styles.toggle}
+          aria-expanded={expanded}
+          aria-controls={contentId}
+          type="button"
+          onClick={() => setExpanded((e) => !e)}
+        >
+          <span className={styles.chevron} aria-hidden="true">{expanded ? "▼" : "▶"}</span>
+          {expanded ? "Hide legend" : "Show legend"}
+        </button>
+      </div>
+
+      <div
+        id={contentId}
+        className={`${styles.content} ${expanded ? styles.contentOpen : styles.contentClosed}`}
+        role="region"
+        aria-labelledby={titleId}
+        aria-hidden={!expanded}
+      >
 
       <div className={styles.rowGroup}>
         <div className={styles.column}>
@@ -64,6 +103,7 @@ export function Legend() {
       <div className={styles.note}>
         This simplified model intentionally excludes degradation factors.
       </div>
+      </div>
     </aside>
   );
-}
+});

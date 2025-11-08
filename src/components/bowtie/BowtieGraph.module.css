@@ -1,24 +1,9 @@
-.wrapper {
-  width: 100%;
-  height: 100vh;
-  position: relative;
-  container-type: inline-size;
-}
-.hud {
-  position: absolute;
-  top: 12px;
-  right: 12px;
-  z-index: 25;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  align-items: flex-end;
-}
 
-
+/* Consolidated toolbar styles */
 .toolbar {
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: 12px;
   padding: 10px;
   background: var(--panel-bg, rgba(255,255,255,0.85));
@@ -28,9 +13,6 @@
   box-shadow: var(--shadow, 0 6px 18px rgba(0,0,0,0.08));
   backdrop-filter: blur(8px);
 }
-
-/* Distribute left step controls and right-side triggers */
-.toolbar { justify-content: space-between; }
 .toolbarRight { display: flex; align-items: center; gap: 8px; }
 
 /* Pop-out menu below toolbar */
@@ -66,11 +48,6 @@
   border: 1px solid var(--border, #e5e7eb);
   background: var(--panel-bg, rgba(255,255,255,0.95));
   box-shadow: var(--shadow, 0 6px 18px rgba(0,0,0,0.08));
-  animation: hintBounce 1.2s ease-in-out 4;
-}
-@keyframes hintBounce {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-4px); }
 }
 @media (prefers-reduced-motion: reduce) { .hint { animation: none; } }
 
@@ -92,24 +69,16 @@
   align-items: center;
   gap: 8px;
 }
+/* Keep toolbar height stable when mode toggles by hiding content instead of removing */
+.stepControlsHidden { visibility: hidden; pointer-events: none; }
 
 .stepLabel {
   font-size: 12px;
   opacity: 0.8;
 }
 
-.wingControls {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
 
-.sep {
-  margin: 0 6px;
-  opacity: 0.6;
-}
-
-.button {
+.bowtieButton {
   padding: 6px 10px;
   border-radius: 8px;
   border: 1px solid var(--border, #e5e7eb);
@@ -118,28 +87,13 @@
   cursor: pointer;
   transition: all 0.2s ease;
 }
-.button:hover {
-  background: var(--btn-bg-hover, #fff);
-}
-.button:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-.button:focus-visible {
-  outline: 2px solid var(--ring);
-  outline-offset: 2px;
-}
+.bowtieButton:hover { background: var(--btn-bg-hover, #fff); }
+.bowtieButton:disabled { opacity: 0.5; cursor: not-allowed; }
+.bowtieButton:focus-visible { outline: 2px solid var(--ring); outline-offset: 2px; }
 
 
-.filters {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  align-items: center;
-  margin-top: 6px;
-}
 .filterLabel { font-size: 12px; opacity: 0.8; margin-right: 4px; }
-.chip {
+.bowtieChip {
   font-size: 12px;
   padding: 4px 10px;
   border-radius: 999px;
@@ -148,14 +102,14 @@
   color: var(--chip-text, #334155);
   cursor: pointer;
 }
-.chip[data-pressed="true"] {
+.bowtieChip[data-pressed="true"] {
   background: var(--prevent-border, #06B6D4);
   border-color: var(--prevent-border, #06B6D4);
   color: #fff;
   font-weight: 600;
 }
-.chip[data-pressed="true"]::before { content: "\2713\0020"; }
-.chip:focus-visible { outline: 2px solid var(--ring); outline-offset: 2px; }
+.bowtieChip[data-pressed="true"]::before { content: "\2713\0020"; }
+.bowtieChip:focus-visible { outline: 2px solid var(--ring); outline-offset: 2px; }
 
 .srOnly {
   position: absolute !important;
@@ -200,6 +154,7 @@
   right: 12px;
   width: 44px;
   height: 44px;
+  z-index: 10;
   background: transparent;
   border: none;
   font-size: 24px;
@@ -263,6 +218,7 @@
 /* Pop-out card BEM internals */
 .popOutCard__title {
   margin: 0 0 16px 0;
+  padding-right: 56px;
   font-size: 20px;
   font-weight: 700;
   color: var(--card-text-color, #1f2937);
@@ -288,4 +244,92 @@
 
 @media (prefers-reduced-motion: reduce) {
   .popOutCardWrapper { animation: none; }
+}
+
+
+/* App shell layout */
+.appShell {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  width: 100%;
+}
+.topBar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--border, #e5e7eb);
+  background: var(--panel-bg, #fff);
+}
+.topBarLeft { font-weight: 700; }
+.topBarRight { display: flex; align-items: center; gap: 8px; }
+.modeLabel { font-size: 12px; opacity: 0.8; }
+.modeToggle { display: inline-flex; gap: 4px; align-items: center; }
+
+.body {
+  display: flex;
+  flex: 1;
+  min-height: 0; /* allow children to shrink */
+  overflow: hidden;
+}
+.sidebar {
+  width: 280px;
+  border-right: 1px solid var(--border, #e5e7eb);
+  overflow: auto;
+  background: var(--panel-bg, #fff);
+}
+.sidebarHeader { font-size: 12px; text-transform: uppercase; letter-spacing: .06em; padding: 10px; color: #475569; }
+.sidebarSection { padding: 10px; }
+
+.canvasRegion {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.canvasToolbarContainer { /* replaces .hud absolute block */
+  position: static;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 8px;
+}
+.canvasHost {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+}
+.canvasHost :global(.react-flow) { width: 100%; height: 100%; }
+
+.inspector {
+  width: 320px;
+  border-left: 1px solid var(--border, #e5e7eb);
+  overflow: auto;
+  background: var(--panel-bg, #fff);
+}
+
+/* Collapsed panels to maximize canvas space */
+.collapsed { display: none; }
+
+.inspectorEmpty { padding: 12px; color: #64748b; font-size: 14px; }
+
+
+/* Builder palette styling */
+.paletteGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.paletteGroup button {
+  width: 100%;
+  text-align: left;
+}
+.paletteGroup button[draggable="true"] {
+  cursor: grab;
+}
+.sidebarHint {
+  margin-top: 8px;
+  color: #64748b;
+  font-size: 12px;
 }

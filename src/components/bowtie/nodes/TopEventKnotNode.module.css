@@ -2,6 +2,7 @@
   width: 140px;
   height: 140px;
   position: relative;
+  cursor: pointer;
 }
 .knot {
   width: 140px;
