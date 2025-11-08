@@ -40,6 +40,9 @@ const nodeTypes = {
 function InnerGraph({ diagram }: { diagram: BowtieDiagram }) {
   const wrapperRef = useRef<HTMLDivElement>(null);
   const cardRef = useRef<HTMLDivElement | null>(null);
+  // Cache for hover preloading (optional micro-optimization)
+  const preloadRef = useRef<Map<string, BowtieNodeData>>(new Map());
+
 
   // Default to expanded, full-step view
   const [leftExpanded, setLeftExpanded] = useState(true);
@@ -375,6 +378,14 @@ function InnerGraph({ diagram }: { diagram: BowtieDiagram }) {
           if (bt === "hazard") setLeftExpanded((v) => !v);
           if (bt === "topEvent") setRightExpanded((v) => !v);
           handleNodeClick(n);
+        }}
+        onNodeMouseEnter={(_, n) => {
+          try {
+            const d = n.data as BowtieNodeData;
+            if (d && !preloadRef.current.has(n.id)) {
+              preloadRef.current.set(n.id, d);
+            }
+          } catch {}
         }}
         nodeTypes={nodeTypes}
         defaultEdgeOptions={{ markerEnd: { type: MarkerType.ArrowClosed }, style: { stroke: "var(--edge)" } }}
