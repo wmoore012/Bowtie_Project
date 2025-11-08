@@ -1,0 +1,20 @@
+.tag {
+  display: inline-flex;
+  align-items: center;
+  background: var(--hazard-bg);
+  border: 1.5px solid var(--hazard-border);
+  border-radius: 9999px;
+  box-shadow: var(--shadow);
+  color: var(--text);
+  padding: calc(var(--pad-y) - 4px) var(--pad-x);
+}
+.label {
+  font-weight: 600;
+  font-size: 13px;
+}
+
+
+.tag:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 3px;
+}

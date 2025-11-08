@@ -1,0 +1,25 @@
+.wrap {
+  width: 72px;
+  height: 72px;
+  position: relative;
+}
+.knot {
+  width: 72px;
+  height: 72px;
+  border-radius: 72px;
+  background: radial-gradient(circle at 30% 30%, var(--top-bg), #ffffff);
+  border: 2px solid var(--top-border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  color: #111827;
+  box-shadow: var(--shadow);
+}
+
+
+.wrap:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 3px;
+  border-radius: 72px;
+}

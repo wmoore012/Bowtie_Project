@@ -1,0 +1,42 @@
+:root{
+  /* Semantic colors mapped to tokens */
+  --threat-bg: #F59E0B1F;
+  --threat-border: #F59E0B;
+  --prevent-bg: #06B6D41F;
+  --prevent-border: #06B6D4;
+  --hazard-bg: #6B72801F;
+  --hazard-border: #6B7280;
+  --top-bg: #EF44441F;
+  --top-border: #EF4444;
+  --mitigate-bg: #3B82F61F;
+  --mitigate-border: #3B82F6;
+  --consequence-bg: #9333EA1F;
+  --consequence-border: #9333EA;
+
+  --chip-bg: #0F172A0F;
+  --chip-text: #475569;
+  --shadow: 0 6px 18px rgba(0,0,0,0.08);
+  --text: #0F172A;
+  --edge: #64748B;
+  --edge-dim: #CBD5E1;
+  --edge-fail: #EF4444;
+
+  --panel-bg: rgba(255,255,255,0.85);
+  --border: #e5e7eb;
+  --btn-bg: rgba(255,255,255,0.95);
+  --btn-bg-hover: #ffffff;
+
+  /* Spacing & radii */
+  --pad-x: 14px;
+  --pad-y: 10px;
+  --radius-card: 12px;
+  --radius-pill: 14px;
+
+  /* Focus ring */
+  --ring: #2563EB;
+@media (prefers-reduced-motion: reduce) {
+  * { animation: none !important; transition: none !important; }
+}
+
+}
+

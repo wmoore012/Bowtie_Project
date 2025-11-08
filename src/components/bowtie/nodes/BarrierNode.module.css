@@ -1,0 +1,52 @@
+.card {
+  background: var(--node-bg, var(--prevent-bg));
+  border: 1.5px solid var(--node-border, var(--prevent-border));
+  border-radius: var(--radius-card, 12px);
+  box-shadow: var(--shadow);
+  color: var(--text);
+  min-width: 240px;
+  max-width: 320px;
+}
+.headerBar {
+  height: 4px;
+  border-top-left-radius: var(--radius-card, 12px);
+  border-top-right-radius: var(--radius-card, 12px);
+  background: var(--node-border, var(--prevent-border));
+}
+.content {
+  padding: var(--pad-y) var(--pad-x);
+}
+.title {
+  font-weight: 600;
+  font-size: 14px;
+  line-height: 1.25;
+}
+.chips {
+  display: flex;
+  gap: 6px;
+  margin-top: 8px;
+  flex-wrap: wrap;
+}
+.chip {
+  font-size: 11px;
+  padding: 2px 8px;
+  background: var(--chip-bg);
+  color: var(--chip-text);
+  border-radius: 999px;
+}
+
+/* Role variants set CSS variables */
+.prevention {
+  --node-bg: var(--prevent-bg);
+  --node-border: var(--prevent-border);
+}
+.mitigation {
+  --node-bg: var(--mitigate-bg);
+  --node-border: var(--mitigate-border);
+}
+
+
+.card:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 3px;
+}

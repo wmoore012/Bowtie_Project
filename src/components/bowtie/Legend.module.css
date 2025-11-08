@@ -1,0 +1,15 @@
+.legend {
+  background: var(--panel-bg, rgba(255,255,255,0.9));
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 12px;
+  font-size: 12px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+  max-width: 320px;
+  backdrop-filter: blur(6px);
+}
+.title { font-weight: 700; margin-bottom: 8px; }
+.list { margin: 0; padding-left: 18px; line-height: 1.5; }
+.note { margin-top: 8px; font-style: italic; }
+

@@ -1,0 +1,147 @@
+.wrapper {
+  width: 100%;
+  height: 100vh;
+  position: relative;
+  container-type: inline-size;
+}
+.hud {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 25;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  align-items: flex-end;
+}
+
+
+.toolbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px;
+  background: var(--panel-bg, rgba(255,255,255,0.85));
+  color: var(--text, #0F172A);
+  border: 1px solid var(--border, #e5e7eb);
+  border-radius: 10px;
+  box-shadow: var(--shadow, 0 6px 18px rgba(0,0,0,0.08));
+  backdrop-filter: blur(8px);
+}
+
+/* Distribute left step controls and right-side triggers */
+.toolbar { justify-content: space-between; }
+.toolbarRight { display: flex; align-items: center; gap: 8px; }
+
+/* Pop-out menu below toolbar */
+.menuPanel {
+  align-self: flex-end;
+  background: var(--panel-bg, rgba(255,255,255,0.9));
+  color: var(--text, #0F172A);
+  border: 1px solid var(--border, #e5e7eb);
+  border-radius: 10px;
+  box-shadow: var(--shadow, 0 6px 18px rgba(0,0,0,0.08));
+  backdrop-filter: blur(8px);
+  padding: 8px;
+  display: grid;
+  gap: 6px;
+  min-width: 180px;
+}
+.menuItem {
+  text-align: left;
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid var(--border, #e5e7eb);
+  background: var(--btn-bg, rgba(255,255,255,0.95));
+  cursor: pointer;
+}
+.menuItem:hover { background: var(--btn-bg-hover, #fff); }
+.menuItem:focus-visible { outline: 2px solid var(--ring); outline-offset: 2px; }
+
+/* Collapsible filters panel */
+.filtersPanel {
+  align-self: flex-end;
+  background: var(--panel-bg, rgba(255,255,255,0.9));
+  border: 1px solid var(--border, #e5e7eb);
+  border-radius: 10px;
+  box-shadow: var(--shadow, 0 6px 18px rgba(0,0,0,0.08));
+  backdrop-filter: blur(8px);
+  padding: 10px;
+  max-width: 480px;
+}
+
+
+.stepControls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.stepLabel {
+  font-size: 12px;
+  opacity: 0.8;
+}
+
+.wingControls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.sep {
+  margin: 0 6px;
+  opacity: 0.6;
+}
+
+.button {
+  padding: 6px 10px;
+  border-radius: 8px;
+  border: 1px solid var(--border, #e5e7eb);
+  background: var(--btn-bg, rgba(255,255,255,0.95));
+  color: var(--text, #0F172A);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.button:hover {
+  background: var(--btn-bg-hover, #fff);
+}
+.button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.button:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+
+
+.filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  margin-top: 6px;
+}
+.filterLabel { font-size: 12px; opacity: 0.8; margin-right: 4px; }
+.chip {
+  font-size: 12px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--border, #e5e7eb);
+  background: var(--chip-bg, #f1f5f9);
+  color: var(--chip-text, #334155);
+  cursor: pointer;
+}
+.chip[data-pressed="true"] {
+  background: var(--filter-chip-active-bg, #e2e8f0);
+  border-color: var(--filter-chip-active-bg, #e2e8f0);
+}
+.chip:focus-visible { outline: 2px solid var(--ring); outline-offset: 2px; }
+
+.srOnly {
+  position: absolute !important;
+  width: 1px; height: 1px;
+  padding: 0; border: 0; margin: -1px;
+  overflow: hidden; clip: rect(0 0 0 0);
+  white-space: nowrap; clip-path: inset(50%);
+}
