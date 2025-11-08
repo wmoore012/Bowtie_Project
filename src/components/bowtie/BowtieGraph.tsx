@@ -83,16 +83,36 @@ function InnerGraph({ diagram }: { diagram: BowtieDiagram }) {
     return () => window.removeEventListener("keydown", listener);
   }, [cardNode]);
 
-  // Click outside card to close (non-blocking overlay)
+  // Click outside card to close (non-blocking overlay) with drag threshold
   useEffect(() => {
     if (!cardNode) return;
+    let startX = 0;
+    let startY = 0;
+    let startedOutside = false;
+
     const onDown = (e: MouseEvent) => {
-      if (cardRef.current && !cardRef.current.contains(e.target as Node)) {
+      const target = e.target as Node;
+      startedOutside = !!(cardRef.current && !cardRef.current.contains(target));
+      startX = e.clientX;
+      startY = e.clientY;
+    };
+
+    const onUp = (e: MouseEvent) => {
+      if (!startedOutside) return;
+      const dx = e.clientX - startX;
+      const dy = e.clientY - startY;
+      // Only treat as a click if the pointer didn’t move more than ~5px
+      if ((dx * dx + dy * dy) <= 25) {
         handleCloseCard();
       }
     };
+
     window.addEventListener("mousedown", onDown);
-    return () => window.removeEventListener("mousedown", onDown);
+    window.addEventListener("mouseup", onUp);
+    return () => {
+      window.removeEventListener("mousedown", onDown);
+      window.removeEventListener("mouseup", onUp);
+    };
   }, [cardNode]);
 
 
