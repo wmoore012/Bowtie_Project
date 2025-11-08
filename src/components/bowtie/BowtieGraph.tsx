@@ -11,7 +11,7 @@ import {
   MarkerType,
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
-import type { BowtieDiagram, BowtieNodeType } from "../../domain/bowtie.types";
+import type { BowtieDiagram, BowtieNodeType, BowtieNodeData } from "../../domain/bowtie.types";
 import { computeSimpleLayout, computeElkLayout } from "./layout";
 import { Legend } from "./Legend";
 import { toPng } from "html-to-image";
@@ -39,6 +39,8 @@ const nodeTypes = {
 
 function InnerGraph({ diagram }: { diagram: BowtieDiagram }) {
   const wrapperRef = useRef<HTMLDivElement>(null);
+  const cardRef = useRef<HTMLDivElement | null>(null);
+
   // Default to expanded, full-step view
   const [leftExpanded, setLeftExpanded] = useState(true);
   const [rightExpanded, setRightExpanded] = useState(true);
@@ -78,6 +80,18 @@ function InnerGraph({ diagram }: { diagram: BowtieDiagram }) {
     return () => window.removeEventListener("keydown", listener);
   }, [cardNode]);
 
+  // Click outside card to close (non-blocking overlay)
+  useEffect(() => {
+    if (!cardNode) return;
+    const onDown = (e: MouseEvent) => {
+      if (cardRef.current && !cardRef.current.contains(e.target as Node)) {
+        handleCloseCard();
+      }
+    };
+    window.addEventListener("mousedown", onDown);
+    return () => window.removeEventListener("mousedown", onDown);
+  }, [cardNode]);
+
 
   const visibleDiagram = useMemo(() => {
     return computeStepDiagram(diagram, {
@@ -112,12 +126,13 @@ function InnerGraph({ diagram }: { diagram: BowtieDiagram }) {
   // Onboarding hint for failed scenario toggle
   useEffect(() => {
     const key = "bowtie.hintFailedSeen";
-    if (typeof window === "undefined") return;
-    if (!localStorage.getItem(key)) {
+    const ls = typeof window !== "undefined" ? (window as any).localStorage : undefined;
+    if (!ls || typeof ls.getItem !== "function" || typeof ls.setItem !== "function") return;
+    if (!ls.getItem(key)) {
       setShowFailedHint(true);
       const t = setTimeout(() => {
         setShowFailedHint(false);
-        localStorage.setItem(key, "1");
+        try { ls.setItem(key, "1"); } catch {}
       }, 5000);
       return () => clearTimeout(t);
     }
@@ -372,72 +387,96 @@ function InnerGraph({ diagram }: { diagram: BowtieDiagram }) {
 
       {cardNode && (
         <div
+          ref={cardRef}
           className={styles.popOutCardWrapper}
           role="dialog"
           aria-modal="true"
-          aria-labelledby="popout-title"
+          aria-labelledby="card-title"
         >
           <div className={styles.popOutCard}>
-            <button
-              className={styles.closeButton}
-              onClick={handleCloseCard}
-              aria-label="Close card"
-            >
-              ×
-            </button>
-            <h2 id="popout-title" className={styles.popOutCard__title}>
-              {(cardNode.data as any)?.label}
-            </h2>
+            {(() => {
+              const nodeData = cardNode.data as BowtieNodeData;
+              const { label, metadata } = nodeData;
+              return (
+                <>
+                  <button
+                    className={styles.closeButton}
+                    onClick={handleCloseCard}
+                    aria-label="Close details"
+                    type="button"
+                  >
+                    ×
+                  </button>
 
-            {(cardNode.data as any)?.metadata?.eli5 && (
-              <section className={styles.popOutCard__section} aria-labelledby="eli5-heading">
-                <h3 id="eli5-heading" className={styles.popOutCard__heading}>ELI5</h3>
-                <p className={styles.popOutCard__text}>{(cardNode.data as any).metadata.eli5}</p>
-              </section>
-            )}
+                  <h2 id="card-title" className={styles.popOutCard__title}>{label}</h2>
 
-            {(cardNode.data as any)?.metadata?.chips?.length ? (
-              <section className={styles.popOutCard__section} aria-labelledby="roles-heading">
-                <h3 id="roles-heading" className={styles.popOutCard__heading}>Roles</h3>
-                <ul className={styles.popOutCard__chips}>
-                  {(cardNode.data as any).metadata.chips.map((chip: string, i: number) => (
-                    <li key={i} className={styles.popOutCard__chip}>{chip}</li>
-                  ))}
-                </ul>
-              </section>
-            ) : null}
+                  {metadata?.eli5 && (
+                    <section className={styles.popOutCard__section} aria-labelledby="eli5-heading">
+                      <h3 id="eli5-heading" className={styles.popOutCard__heading}>ELI5</h3>
+                      <p className={styles.popOutCard__text}>{metadata.eli5}</p>
+                    </section>
+                  )}
 
-            {(cardNode.data as any)?.metadata?.details?.length ? (
-              <section className={styles.popOutCard__section} aria-labelledby="details-heading">
-                <h3 id="details-heading" className={styles.popOutCard__heading}>Details</h3>
-                <ul className={styles.popOutCard__list}>
-                  {(cardNode.data as any).metadata.details.map((d: string, i: number) => (
-                    <li key={i} className={styles.popOutCard__listItem}>{d}</li>
-                  ))}
-                </ul>
-              </section>
-            ) : null}
+                  {metadata?.chips?.length ? (
+                    <section className={styles.popOutCard__section} aria-labelledby="owner-type-heading">
+                      <h3 id="owner-type-heading" className={styles.popOutCard__heading}>Owner &amp; type</h3>
+                      <ul className={styles.popOutCard__chips}>
+                        {metadata.chips.map((chip: string, i: number) => (
+                          <li key={i} className={styles.popOutCard__chip}>{chip}</li>
+                        ))}
+                      </ul>
+                    </section>
+                  ) : null}
 
-            {(cardNode.data as any)?.metadata?.kpis?.length ? (
-              <section className={styles.popOutCard__section} aria-labelledby="kpis-heading">
-                <h3 id="kpis-heading" className={styles.popOutCard__heading}>KPIs</h3>
-                <ul className={styles.popOutCard__list}>
-                  {(cardNode.data as any).metadata.kpis.map((kpi: string, i: number) => (
-                    <li key={i} className={styles.popOutCard__listItem}>{kpi}</li>
-                  ))}
-                </ul>
-              </section>
-            ) : null}
+                  {metadata?.kpis?.length ? (
+                    <section className={styles.popOutCard__section} aria-labelledby="kpis-heading">
+                      <h3 id="kpis-heading" className={styles.popOutCard__heading}>KPIs</h3>
+                      <ul className={styles.popOutCard__list}>
+                        {metadata.kpis.map((kpi: string, i: number) => (
+                          <li key={i} className={styles.popOutCard__listItem}>{kpi}</li>
+                        ))}
+                      </ul>
+                    </section>
+                  ) : null}
+
+                  {metadata?.details?.length ? (
+                    <section className={styles.popOutCard__section} aria-labelledby="details-heading">
+                      <h3 id="details-heading" className={styles.popOutCard__heading}>How this works</h3>
+                      <ul className={styles.popOutCard__list}>
+                        {metadata.details.map((d: string, i: number) => (
+                          <li key={i} className={styles.popOutCard__listItem}>{d}</li>
+                        ))}
+                      </ul>
+                    </section>
+                  ) : null}
+
+                  {metadata?.failureModes?.length ? (
+                    <section className={styles.popOutCard__section} aria-labelledby="failure-modes-heading">
+                      <h3 id="failure-modes-heading" className={styles.popOutCard__heading}>Failure modes</h3>
+                      <ul className={styles.popOutCard__list}>
+                        {metadata.failureModes.map((fm: string, i: number) => (
+                          <li key={i} className={styles.popOutCard__listItem}>{fm}</li>
+                        ))}
+                      </ul>
+                    </section>
+                  ) : null}
+
+                  {metadata?.sopLink ? (
+                    <section className={styles.popOutCard__section} aria-labelledby="sop-heading">
+                      <h3 id="sop-heading" className={styles.popOutCard__heading}>Standard operating procedure</h3>
+                      <p className={styles.popOutCard__text}>
+                        <a href={metadata.sopLink} target="_blank" rel="noopener noreferrer">View SOP 																																																																																																																																																																																																																																																																									</a>
+                      </p>
+                    </section>
+                  ) : null}
+                </>
+              );
+            })()}
           </div>
-          <div
-            className={styles.popOutOverlay}
-            onClick={handleCloseCard}
-            aria-hidden="true"
-          />
         </div>
       )}
       <div className={styles.srOnly} aria-live="polite" aria-atomic="true">
-        {cardNode ? `Details for ${(cardNode.data as any)?.label} opened` : ''}
+        {cardNode ? `Details for ${(cardNode.data as BowtieNodeData).label} opened` : ""}
       </div>
 
     </div>

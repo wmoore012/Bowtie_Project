@@ -222,14 +222,6 @@
   border-radius: 4px;
 }
 
-/* Semi-transparent overlay behind card */
-.popOutOverlay {
-  position: fixed;
-  inset: 0;
-  background: transparent;
-  z-index: calc(var(--z-modal, 100) - 1);
-  cursor: pointer;
-}
 
 /* Chip list styling (if metadata includes chips) */
 .chipList {

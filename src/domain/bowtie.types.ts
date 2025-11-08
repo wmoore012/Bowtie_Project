@@ -16,6 +16,16 @@ export interface NodeMetadata {
   failureModes?: string[]; // Optional failure scenarios (for barriers only)
 }
 
+export interface BowtieNodeMetadata {
+  eli5?: string;
+  chips?: string[];
+  kpis?: string[];
+  details?: string[];
+  failureModes?: string[];
+  sopLink?: string;
+}
+
+
 export interface BowtieNode {
   id: string;
   type: BowtieNodeType;
@@ -44,7 +54,7 @@ export interface BowtieDiagram {
 export interface BowtieNodeData extends Record<string, unknown> {
   label: string;
   bowtieType: BowtieNodeType;
-  metadata?: NodeMetadata;
+  metadata?: BowtieNodeMetadata;
   // UI-only extras for styling
   role?: "prevention" | "mitigation";
 }
