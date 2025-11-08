@@ -419,7 +419,7 @@ function InnerGraph({ diagram }: { diagram: BowtieDiagram }) {
 
                   {metadata?.chips?.length ? (
                     <section className={styles.popOutCard__section} aria-labelledby="owner-type-heading">
-                      <h3 id="owner-type-heading" className={styles.popOutCard__heading}>Owner &amp; type</h3>
+                      <h3 id="owner-type-heading" className={styles.popOutCard__heading}>Owner and type</h3>
                       <ul className={styles.popOutCard__chips}>
                         {metadata.chips.map((chip: string, i: number) => (
                           <li key={i} className={styles.popOutCard__chip}>{chip}</li>
@@ -441,7 +441,7 @@ function InnerGraph({ diagram }: { diagram: BowtieDiagram }) {
 
                   {metadata?.details?.length ? (
                     <section className={styles.popOutCard__section} aria-labelledby="details-heading">
-                      <h3 id="details-heading" className={styles.popOutCard__heading}>How this works</h3>
+                      <h3 id="details-heading" className={styles.popOutCard__heading}>How it works</h3>
                       <ul className={styles.popOutCard__list}>
                         {metadata.details.map((d: string, i: number) => (
                           <li key={i} className={styles.popOutCard__listItem}>{d}</li>
