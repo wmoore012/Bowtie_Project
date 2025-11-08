@@ -58,6 +58,22 @@
 .menuItem:hover { background: var(--btn-bg-hover, #fff); }
 .menuItem:focus-visible { outline: 2px solid var(--ring); outline-offset: 2px; }
 
+.hint {
+  align-self: flex-end;
+  margin-top: 6px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid var(--border, #e5e7eb);
+  background: var(--panel-bg, rgba(255,255,255,0.95));
+  box-shadow: var(--shadow, 0 6px 18px rgba(0,0,0,0.08));
+  animation: hintBounce 1.2s ease-in-out 4;
+}
+@keyframes hintBounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-4px); }
+}
+@media (prefers-reduced-motion: reduce) { .hint { animation: none; } }
+
 /* Collapsible filters panel */
 .filtersPanel {
   align-self: flex-end;
@@ -133,9 +149,12 @@
   cursor: pointer;
 }
 .chip[data-pressed="true"] {
-  background: var(--filter-chip-active-bg, #e2e8f0);
-  border-color: var(--filter-chip-active-bg, #e2e8f0);
+  background: var(--prevent-border, #06B6D4);
+  border-color: var(--prevent-border, #06B6D4);
+  color: #fff;
+  font-weight: 600;
 }
+.chip[data-pressed="true"]::before { content: "\2713\0020"; }
 .chip:focus-visible { outline: 2px solid var(--ring); outline-offset: 2px; }
 
 .srOnly {
@@ -144,4 +163,137 @@
   padding: 0; border: 0; margin: -1px;
   overflow: hidden; clip: rect(0 0 0 0);
   white-space: nowrap; clip-path: inset(50%);
+}
+
+
+/* Pop-out card wrapper (fixed position, top-right) */
+.popOutCardWrapper {
+  position: fixed;
+  top: 16px;
+  right: 16px;
+  width: 360px;
+  max-width: calc(100vw - 32px);
+  max-height: calc(100vh - 32px);
+  z-index: var(--z-modal, 100);
+  display: flex;
+  flex-direction: column;
+  background: #fff;
+  border-radius: var(--card-radius, 12px);
+  box-shadow: var(--card-shadow, 0 10px 30px rgba(15, 23, 42, 0.08));
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  opacity: 0;
+  transform: translateY(4px);
+  animation: popIn 200ms ease forwards;
+}
+
+/* Card content container */
+.popOutCard {
+  padding: 20px var(--card-spacing, 24px);
+  position: relative;
+}
+
+/* Close button (top-right of card) */
+.closeButton {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 44px;
+  height: 44px;
+  background: transparent;
+  border: none;
+  font-size: 24px;
+  line-height: 1;
+  cursor: pointer;
+  color: #6b7280;
+  transition: color 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.closeButton:hover {
+  color: #0f172a;
+}
+
+.closeButton:focus-visible {
+  outline: 2px solid var(--ring, #2563EB);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* Semi-transparent overlay behind card */
+.popOutOverlay {
+  position: fixed;
+  inset: 0;
+  background: transparent;
+  z-index: calc(var(--z-modal, 100) - 1);
+  cursor: pointer;
+}
+
+/* Chip list styling (if metadata includes chips) */
+.chipList {
+  list-style: none;
+  padding: 0;
+  margin: 8px 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.chipList li {
+  background: var(--chip-bg, #f1f5f9);
+  color: var(--chip-text, #475569);
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+/* Responsive: full-width card on mobile */
+@media (max-width: 768px) {
+  .popOutCardWrapper {
+    top: 0;
+    right: 0;
+    left: 0;
+    width: 100%;
+    max-height: 100vh;
+    border-radius: 0;
+  }
+}
+
+/* Pop-in animation */
+@keyframes popIn {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Pop-out card BEM internals */
+.popOutCard__title {
+  margin: 0 0 16px 0;
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--card-text-color, #1f2937);
+}
+.popOutCard__section { margin-bottom: 20px; }
+.popOutCard__section:last-child { margin-bottom: 0; }
+.popOutCard__heading {
+  font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em;
+  margin: 0 0 8px 0; color: var(--card-heading-color, #4b5563);
+}
+.popOutCard__text { font-size: 14px; line-height: 1.4; margin: 0; color: var(--card-text-color, #1f2937); }
+.popOutCard__chips { display: flex; flex-wrap: wrap; gap: 8px; list-style: none; margin: 0; padding: 0; }
+.popOutCard__chip {
+  background: var(--chip-bg-inactive, #f3f4f6);
+  color: var(--chip-text-inactive, #374151);
+  padding: 4px 10px;
+  border-radius: 8px;
+  font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.02em;
+}
+.popOutCard__list { list-style: disc inside; margin: 0; padding-left: 16px; }
+.popOutCard__listItem { margin-bottom: 6px; font-size: 14px; line-height: 1.4; color: var(--card-text-color, #374151); }
+.popOutCard__listItem:last-child { margin-bottom: 0; }
+
+@media (prefers-reduced-motion: reduce) {
+  .popOutCardWrapper { animation: none; }
 }

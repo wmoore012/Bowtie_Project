@@ -26,7 +26,7 @@ export default function BarrierNode({ id, data }: NodeProps) {
       >
         <div className={styles.headerBar} />
         <div className={styles.content}>
-          <div className={styles.title}>{d?.label}</div>
+          <div className={styles.title}>{d?.label}<span className={styles.infoIcon} aria-hidden="true">ⓘ</span></div>
           {d?.metadata?.chips?.length ? (
             <div className={styles.chips}>
               {d.metadata!.chips!.map((c) => (
@@ -40,6 +40,7 @@ export default function BarrierNode({ id, data }: NodeProps) {
         <Handle type="target" position={Position.Left} />
         <Handle type="source" position={Position.Right} />
       </div>
+
       <p id={descId} hidden>
         {d?.metadata?.eli5 ?? d?.label}
       </p>

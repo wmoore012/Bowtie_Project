@@ -34,6 +34,32 @@
 
   /* Focus ring */
   --ring: #2563EB;
+  --z-modal: 100;
+
+  /* Chip states */
+  --chip-bg-inactive: #f3f4f6;
+  --chip-bg-active: #10b981;
+  --chip-text-inactive: #374151;
+  --chip-text-active: #ffffff;
+
+  /* Card design */
+  --card-shadow: 0 10px 30px rgba(15,23,42,0.08);
+  --card-radius: 12px;
+  --card-spacing: 24px;
+  --card-heading-color: #4b5563;
+  --card-text-color: #1f2937;
+
+  /* Center knot gradient */
+  --knot-gradient-start: #f97316; /* orange-500 */
+  --knot-gradient-end: #ef4444;   /* red-500 */
+  --knot-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+
+  /* Hazard pill */
+  --hazard-pill-bg: #1e293b;
+  --hazard-pill-text: #ffffff;
+  --hazard-pill-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+
+
 @media (prefers-reduced-motion: reduce) {
   * { animation: none !important; transition: none !important; }
 }

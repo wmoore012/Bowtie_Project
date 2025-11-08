@@ -23,7 +23,10 @@ export default function TopEventKnotNode({ id, data }: NodeProps) {
         onKeyDown={handleKeyDown}
         className={styles.wrap}
       >
-        <div className={styles.knot}>TE</div>
+        <div className={styles.knot}>
+          <span className={styles.icon} aria-hidden="true">525</span>
+          <span className={styles.label}>{d?.label}</span>
+        </div>
         <Handle type="target" position={Position.Left} />
         <Handle type="source" position={Position.Right} />
       </div>

@@ -23,6 +23,7 @@ export default function HazardTagNode({ id, data }: NodeProps) {
         onKeyDown={handleKeyDown}
         className={styles.tag}
       >
+        <span className={styles.icon} aria-hidden="true"></span>
         <span className={styles.label}>{d?.label}</span>
         <Handle type="target" position={Position.Left} />
         <Handle type="source" position={Position.Right} />

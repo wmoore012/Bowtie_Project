@@ -1,17 +1,17 @@
 .tag {
   display: inline-flex;
   align-items: center;
-  background: var(--hazard-bg);
-  border: 1.5px solid var(--hazard-border);
+  gap: 8px;
+  background: var(--hazard-pill-bg, #1e293b);
+  border: 2px solid var(--hazard-border);
   border-radius: 9999px;
-  box-shadow: var(--shadow);
-  color: var(--text);
-  padding: calc(var(--pad-y) - 4px) var(--pad-x);
+  box-shadow: var(--hazard-pill-shadow, 0 2px 8px rgba(0, 0, 0, 0.15));
+  color: var(--hazard-pill-text, #ffffff);
+  padding: calc(var(--pad-y) + 2px) calc(var(--pad-x) + 6px);
 }
-.label {
-  font-weight: 600;
-  font-size: 13px;
-}
+.label { font-weight: 700; font-size: 14px; text-transform: uppercase; letter-spacing: 0.05em; }
+.icon { font-size: 0; }
+.icon::before { content: "\26A0\FE0F"; font-size: 16px; }
 
 
 .tag:focus-visible {
