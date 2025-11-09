@@ -40,11 +40,11 @@
   --barrier-mitigate-border: #3b82f6;
   --barrier-mitigate-glow: rgba(59, 130, 246, 0.35);
   
-  /* 6. CONSEQUENCE - Purple (Right-side outcomes) */
-  --consequence-purple: #9333ea;
-  --consequence-bg: #9333ea;
-  --consequence-border: #7e22ce;
-  --consequence-glow: rgba(147, 51, 234, 0.45);
+  /* 6. CONSEQUENCE - Light Red (Right-side outcomes) */
+  --consequence-red: #f87171;
+  --consequence-bg: #f87171;
+  --consequence-border: #ef4444;
+  --consequence-glow: rgba(248, 113, 113, 0.45);
   
   /* 7. FAILED BARRIER - Red */
   --failed-red: #ef4444;

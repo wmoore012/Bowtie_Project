@@ -1008,8 +1008,6 @@ function InnerGraph({ diagram, initialMode = "demo" }: { diagram: BowtieDiagram;
     };
   }, [storyIdx, storyOpen, mode, activeFocusIds]);
 
-  function isFailureEdge(e: { source: string; target: string }) {
-
   // Global events: toggle Filters / Actions / Export panels from Sidebar
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -1102,21 +1100,17 @@ function InnerGraph({ diagram, initialMode = "demo" }: { diagram: BowtieDiagram;
     return () => window.removeEventListener("keydown", onKey);
   }, [mode, storyOpen]);
 
-    const st = typeById.get(e.source);
-    const tt = typeById.get(e.target);
-    return st === "topEvent" || st === "mitigationBarrier" || tt === "topEvent" || tt === "consequence";
-  }
-
-
   const typeById = useMemo(() => {
     const m = new Map<string, BowtieNodeType>();
     for (const n of renderDiagram.nodes) m.set(n.id, n.type);
     return m;
   }, [renderDiagram]);
 
-
-
-
+  function isFailureEdge(e: { source: string; target: string }) {
+    const st = typeById.get(e.source);
+    const tt = typeById.get(e.target);
+    return st === "topEvent" || st === "mitigationBarrier" || tt === "topEvent" || tt === "consequence";
+  }
 
   return (
     <div ref={wrapperRef} className={styles.graphRoot}>

@@ -1,5 +1,5 @@
 import styles from "./Legend.module.css";
-import { memo, useEffect, useMemo, useState } from "react";
+import { memo, useEffect, useState } from "react";
 import { ROLE_CUES } from "./preattentive";
 
 
@@ -21,9 +21,8 @@ export const Legend = memo(function Legend() {
 
   const contentId = "legend-content";
   const titleId = "legend-title";
-  const legendCues = useMemo(() => ROLE_CUES.slice(0, 6), []);
-  const auxCues = useMemo(() => ROLE_CUES.slice(6), []);
-  const iconClassMap: Record<string, string> = {
+
+  const iconClassMap: Record<string, string | undefined> = {
     Hazard: styles.iconHazard,
     Threat: styles.iconThreat,
     "Prevention barrier": styles.iconPrevention,
@@ -55,57 +54,65 @@ export const Legend = memo(function Legend() {
         aria-labelledby={titleId}
         aria-hidden={!expanded}
       >
-        <div className={styles.columns}>
-          <div className={styles.column}>
-            {["Hazard", "Threat", "Prevention barrier", "Escalation factor"].map((label) => {
-              const cue = ROLE_CUES.find((c) => c.label === label);
-              if (!cue) return null;
-              return (
-                <div key={label} className={styles.item}>
-                  <span className={`${styles.icon} ${iconClassMap[label] ?? styles.iconGeneric}`} aria-hidden="true">
-                    {iconClassMap[label] ? "" : cue.icon}
-                  </span>
-                  <div className={styles.textBlock}>
-                    <div className={styles.label}>{cue.label}</div>
-                    <div className={styles.help}>{cue.meaning}</div>
-                  </div>
-                </div>
-              );
-            })}
+        <div className={styles.tableContainer}>
+          <div className={styles.columnHeaders}>
+            <div className={styles.columnHeader}>LEFT WING</div>
+            <div className={styles.columnHeader}>CENTER KNOT</div>
+            <div className={styles.columnHeader}>RIGHT WING</div>
           </div>
-          <div className={styles.column}>
-            {["Top event"].map((label) => {
-              const cue = ROLE_CUES.find((c) => c.label === label);
-              if (!cue) return null;
-              return (
-                <div key={label} className={styles.item}>
-                  <span className={`${styles.icon} ${iconClassMap[label] ?? styles.iconGeneric}`} aria-hidden="true">
-                    {iconClassMap[label] ? "" : cue.icon}
-                  </span>
-                  <div className={styles.textBlock}>
-                    <div className={styles.label}>{cue.label}</div>
-                    <div className={styles.help}>{cue.meaning}</div>
+
+          <div className={styles.columns}>
+            <div className={styles.column}>
+              {["Threat", "Prevention barrier", "Escalation factor"].map((label) => {
+                const cue = ROLE_CUES.find((c) => c.label === label);
+                if (!cue) return null;
+                return (
+                  <div key={label} className={styles.item}>
+                    <span className={`${styles.icon} ${iconClassMap[label] ?? styles.iconGeneric}`} aria-hidden="true">
+                      {iconClassMap[label] ? "" : cue.icon}
+                    </span>
+                    <div className={styles.textBlock}>
+                      <div className={styles.label}>{cue.label}</div>
+                      <div className={styles.help}>{cue.meaning}</div>
+                    </div>
                   </div>
-                </div>
-              );
-            })}
-          </div>
-          <div className={styles.column}>
-            {["Mitigation barrier", "Consequence"].map((label) => {
-              const cue = ROLE_CUES.find((c) => c.label === label);
-              if (!cue) return null;
-              return (
-                <div key={label} className={styles.item}>
-                  <span className={`${styles.icon} ${iconClassMap[label] ?? styles.iconGeneric}`} aria-hidden="true">
-                    {iconClassMap[label] ? "" : cue.icon}
-                  </span>
-                  <div className={styles.textBlock}>
-                    <div className={styles.label}>{cue.label}</div>
-                    <div className={styles.help}>{cue.meaning}</div>
+                );
+              })}
+            </div>
+            <div className={styles.column}>
+              {["Hazard", "Top event"].map((label) => {
+                const cue = ROLE_CUES.find((c) => c.label === label);
+                if (!cue) return null;
+                return (
+                  <div key={label} className={styles.item}>
+                    <span className={`${styles.icon} ${iconClassMap[label] ?? styles.iconGeneric}`} aria-hidden="true">
+                      {iconClassMap[label] ? "" : cue.icon}
+                    </span>
+                    <div className={styles.textBlock}>
+                      <div className={styles.label}>{cue.label}</div>
+                      <div className={styles.help}>{cue.meaning}</div>
+                    </div>
                   </div>
-                </div>
-              );
-            })}
+                );
+              })}
+            </div>
+            <div className={styles.column}>
+              {["Consequence", "Mitigation barrier"].map((label) => {
+                const cue = ROLE_CUES.find((c) => c.label === label);
+                if (!cue) return null;
+                return (
+                  <div key={label} className={styles.item}>
+                    <span className={`${styles.icon} ${iconClassMap[label] ?? styles.iconGeneric}`} aria-hidden="true">
+                      {iconClassMap[label] ? "" : cue.icon}
+                    </span>
+                    <div className={styles.textBlock}>
+                      <div className={styles.label}>{cue.label}</div>
+                      <div className={styles.help}>{cue.meaning}</div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
           </div>
         </div>
 

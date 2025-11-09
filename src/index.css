@@ -32,12 +32,12 @@
   --mitigate-chip-bg: rgba(59, 130, 246, 0.12);
   --mitigate-chip-text: #1d4ed8;
 
-  /* Consequence: darker red */
-  --consequence-bg: #B91C1C; /* red-700 */
-  --consequence-border: #7F1D1D; /* red-900 */
+  /* Consequence: light red */
+  --consequence-bg: #F87171; /* red-400 */
+  --consequence-border: #EF4444; /* red-500 */
   --consequence-text: #111827;
-  --consequence-chip-bg: rgba(185, 28, 28, 0.15);
-  --consequence-chip-text: #7F1D1D;
+  --consequence-chip-bg: rgba(248, 113, 113, 0.15);
+  --consequence-chip-text: #DC2626;
 
   /* Barrier: metallic silver (lighter) */
   --barrier-bg-gradient: linear-gradient(135deg, #F3F4F6 0%, #D1D5DB 50%, #F3F4F6 100%);

@@ -26,7 +26,7 @@ export const ROLE_CUES: RoleCue[] = [
   { icon: "🔥", label: "Top event", hue: "Red-orange knot", meaning: "Moment control is lost", motion: "Zoom-in pulse" },
   { icon: "🛡", label: "Mitigation barrier", hue: "Blue shell", meaning: "Reduces impact after loss", motion: "Fade-in from right" },
   { icon: "⚡️", label: "Escalation factor", hue: "Yellow stripe", meaning: "Degradation that accelerates failure", motion: "Ping pulse" },
-  { icon: "❌", label: "Consequence", hue: "Magenta / purple", meaning: "Outcome we discuss", motion: "Tilt-right fade" },
+  { icon: "❌", label: "Consequence", hue: "Light red", meaning: "Outcome we want to avoid", motion: "Tilt-right fade" },
   { icon: "👷", label: "Human / manual", hue: "Graphite underline", meaning: "Actions owned by people", motion: "Single ping" },
   { icon: "📅", label: "Time / cadence", hue: "Slate border", meaning: "Scheduled or periodic tasks", motion: "Slide-up" },
 ];

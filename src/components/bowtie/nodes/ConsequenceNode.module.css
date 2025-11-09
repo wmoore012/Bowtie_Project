@@ -48,7 +48,7 @@
   outline-offset: 3px;
 }
 .card[data-highlight="true"] {
-  box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.45), 0 18px 36px rgba(127, 29, 29, 0.35);
+  box-shadow: 0 0 0 3px var(--consequence-glow), 0 18px 36px rgba(248, 113, 113, 0.35);
   animation: consequenceGlow 1.5s ease-in-out infinite;
 }
 .card[data-dimmed="true"] {
