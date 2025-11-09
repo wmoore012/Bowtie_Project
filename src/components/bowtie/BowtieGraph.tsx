@@ -34,8 +34,20 @@ import { ErrorBoundary } from "../common/ErrorBoundary";
 
 import { warehouseFireNarrative } from "../../domain/scenarios/warehouse_fire_narrative";
 
-import { HazardBanner } from "./narrative/HazardBanner";
-
+/**
+ * Determine the role/category for a given step index for visual styling.
+ * Step 1: Hazard, Step 2: TopEvent, Step 3: Threat,
+ * Steps 4-6: Prevention, Steps 7-8: Mitigation, Steps 9-10: Consequence, Steps 11-12: Meta
+ */
+function getStepRole(stepIdx: number): string {
+  if (stepIdx === 1) return "Hazard";
+  if (stepIdx === 2) return "TopEvent";
+  if (stepIdx === 3) return "Threat";
+  if (stepIdx >= 4 && stepIdx <= 6) return "Prevention";
+  if (stepIdx >= 7 && stepIdx <= 8) return "Mitigation";
+  if (stepIdx >= 9 && stepIdx <= 10) return "Consequence";
+  return "Meta"; // Steps 11-12
+}
 
 const nodeTypes = {
   threat: ThreatNode,
@@ -715,13 +727,14 @@ function InnerGraph({ diagram, initialMode = "demo" }: { diagram: BowtieDiagram;
 
       </ErrorBoundary>
         <>
-          {mode === "demo" && <HazardBanner />}
-
           {mode === "demo" && storyOpen && (
             <div className={styles.storyOverlay} role="dialog" aria-modal="false" aria-label="Demo narrative">
               <div className={styles.storyCard}>
                 <div className={styles.panelTitle}>{warehouseFireNarrative[storyIdx - 1]?.title}</div>
-                <p>{warehouseFireNarrative[storyIdx - 1]?.body}</p>
+                <p
+                  className={styles.storyBody}
+                  dangerouslySetInnerHTML={{ __html: warehouseFireNarrative[storyIdx - 1]?.body || "" }}
+                />
                 <div className={styles.storyControls}>
                   <button className={styles.bowtieButton} onClick={() => setStoryOpen(false)} type="button">Hide</button>
                   <div style={{ marginLeft: "auto", display: "flex", gap: 8 }}>
@@ -730,7 +743,12 @@ function InnerGraph({ diagram, initialMode = "demo" }: { diagram: BowtieDiagram;
                     ) : (
                       <>
                         <button className={styles.bowtieButton} onClick={() => setStoryIdx((i) => (i > 1 ? i - 1 : i))} disabled={storyIdx === 1} type="button">◀ Prev</button>
-                        <span className={styles.stepLabel} aria-live="polite">Step {storyIdx} of {warehouseFireNarrative.length}</span>
+                        <span
+                          className={`${styles.stepLabel} ${styles[`stepRole${getStepRole(storyIdx)}`] || ""}`}
+                          aria-live="polite"
+                        >
+                          Step {storyIdx} of {warehouseFireNarrative.length}
+                        </span>
                         <button className={styles.bowtieButton} onClick={() => setStoryIdx((i) => (i < warehouseFireNarrative.length ? i + 1 : i))} disabled={storyIdx === warehouseFireNarrative.length} type="button">Next ▶</button>
                       </>
                     )}

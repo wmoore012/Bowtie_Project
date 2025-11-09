@@ -29,7 +29,62 @@
 
 .stepLabel {
   font-size: 12px;
-  opacity: 0.8;
+  padding: 4px 10px;
+  border-radius: 12px;
+  background: rgba(148, 163, 184, 0.15);
+  border: 1px solid rgba(148, 163, 184, 0.3);
+  font-weight: 500;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Role-based step counter pill styling with semantic colors */
+.stepRoleHazard {
+  background: rgba(251, 191, 36, 0.15);
+  border-color: rgba(251, 191, 36, 0.4);
+  color: #d97706;
+}
+
+.stepRoleTopEvent {
+  background: rgba(220, 38, 38, 0.15);
+  border-color: rgba(220, 38, 38, 0.4);
+  color: #dc2626;
+}
+
+.stepRoleThreat {
+  background: rgba(217, 119, 6, 0.15);
+  border-color: rgba(217, 119, 6, 0.4);
+  color: #d97706;
+}
+
+.stepRolePrevention {
+  background: rgba(5, 150, 105, 0.15);
+  border-color: rgba(5, 150, 105, 0.4);
+  color: #059669;
+}
+
+.stepRoleMitigation {
+  background: rgba(5, 150, 105, 0.15);
+  border-color: rgba(5, 150, 105, 0.4);
+  color: #059669;
+}
+
+.stepRoleConsequence {
+  background: rgba(220, 38, 38, 0.15);
+  border-color: rgba(220, 38, 38, 0.4);
+  color: #dc2626;
+}
+
+.stepRoleMeta {
+  background: rgba(59, 130, 246, 0.15);
+  border-color: rgba(59, 130, 246, 0.4);
+  color: #3b82f6;
+}
+
+/* Respect reduced motion preference */
+@media (prefers-reduced-motion: reduce) {
+  .stepLabel {
+    transition: none;
+  }
 }
 
 
@@ -338,6 +393,11 @@
   box-shadow: 0 8px 24px rgba(0,0,0,0.12);
   padding: 12px 14px;
   max-width: 720px;
+}
+.storyBody {
+  margin: 8px 0;
+  line-height: 1.6;
+  font-size: 14px;
 }
 .storyControls {
   display: flex;
