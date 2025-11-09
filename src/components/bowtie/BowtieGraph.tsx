@@ -41,6 +41,12 @@ import { computeRoleFilteredDiagram, collectAvailableRoles } from "../../domain/
 import { ErrorBoundary } from "../common/ErrorBoundary";
 import { Toast } from "../common/Toast";
 import { validateConnection } from "../../domain/bowtie.validation";
+import {
+  exportDiagramToJSON,
+  importDiagramFromJSON,
+  saveDiagramToLocalStorage,
+  loadDiagramFromLocalStorage
+} from "../../utils/diagramIO";
 
 import { highwayDrivingNarrative } from "../../domain/scenarios/highway_driving_narrative";
 import gsap from "gsap";
@@ -806,15 +812,52 @@ function InnerGraph({ diagram, initialMode = "demo" }: { diagram: BowtieDiagram;
         setCardNode(null);
       } catch {}
     };
+    const onExportJSON = () => {
+      try {
+        const currentDiagram = renderOverride || diagram;
+        exportDiagramToJSON(currentDiagram);
+        setToastMessage("Diagram exported successfully!");
+      } catch (error) {
+        console.error("Export JSON error:", error);
+        setToastMessage("Failed to export diagram. Please try again.");
+      }
+    };
+    const onImportJSON = () => {
+      try {
+        const input = document.createElement("input");
+        input.type = "file";
+        input.accept = ".json,application/json";
+        input.onchange = async (e) => {
+          const file = (e.target as HTMLInputElement).files?.[0];
+          if (!file) return;
+          try {
+            const imported = await importDiagramFromJSON(file);
+            setRenderOverride(imported);
+            setToastMessage("Diagram imported successfully!");
+          } catch (error) {
+            console.error("Import JSON error:", error);
+            setToastMessage(error instanceof Error ? error.message : "Failed to import diagram.");
+          }
+        };
+        input.click();
+      } catch (error) {
+        console.error("Import JSON error:", error);
+        setToastMessage("Failed to import diagram. Please try again.");
+      }
+    };
     window.addEventListener("bowtie:exportPng", onExport as any);
     window.addEventListener("bowtie:toggleBuilder", onToggle as any);
     window.addEventListener("bowtie:clearDiagram", onClear as any);
+    window.addEventListener("bowtie:exportJSON", onExportJSON as any);
+    window.addEventListener("bowtie:importJSON", onImportJSON as any);
     return () => {
       window.removeEventListener("bowtie:exportPng", onExport as any);
       window.removeEventListener("bowtie:toggleBuilder", onToggle as any);
       window.removeEventListener("bowtie:clearDiagram", onClear as any);
+      window.removeEventListener("bowtie:exportJSON", onExportJSON as any);
+      window.removeEventListener("bowtie:importJSON", onImportJSON as any);
     };
-  }, [setMode, mode, diagram]);
+  }, [setMode, mode, diagram, renderOverride]);
 
   // Handle builder mode confirmation dialog
   const handleBuilderConfirm = useCallback((clearDiagram: boolean) => {
@@ -1179,6 +1222,44 @@ function InnerGraph({ diagram, initialMode = "demo" }: { diagram: BowtieDiagram;
     window.addEventListener("bowtie:toggleHelp", toggle as any);
     return () => window.removeEventListener("bowtie:toggleHelp", toggle as any);
   }, []);
+
+  // Auto-save to localStorage (debounced)
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    if (mode !== "builder") return; // Only auto-save in builder mode
+
+    const currentDiagram = renderOverride || diagram;
+    const timer = setTimeout(() => {
+      try {
+        saveDiagramToLocalStorage(currentDiagram, "bowtie.diagram.autosave");
+      } catch (error) {
+        console.error("Auto-save error:", error);
+      }
+    }, 2000); // 2 second debounce
+
+    return () => clearTimeout(timer);
+  }, [diagram, renderOverride, mode]);
+
+  // Auto-load from localStorage on mount
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    try {
+      const saved = loadDiagramFromLocalStorage("bowtie.diagram.autosave");
+      if (saved) {
+        // Ask user if they want to restore
+        const shouldRestore = window.confirm(
+          "A previously saved diagram was found. Would you like to restore it?"
+        );
+        if (shouldRestore) {
+          setRenderOverride(saved);
+          setToastMessage("Diagram restored from auto-save!");
+        }
+      }
+    } catch (error) {
+      console.error("Auto-load error:", error);
+    }
+  }, []); // Only run on mount
 
   useEffect(() => {
     if (!selectedRoles || selectedRoles.size === 0) return;

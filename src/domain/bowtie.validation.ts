@@ -109,6 +109,8 @@ export function validateDiagram(diagram: BowtieDiagram): ValidationResult {
     "topEvent",
     "mitigationBarrier",
     "consequence",
+    "escalationFactor",
+    "escalationBarrier",
   ];
 
   let threats = 0,

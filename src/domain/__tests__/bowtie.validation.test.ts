@@ -5,6 +5,9 @@ import { highwayDrivingExample } from "../scenarios/highway_driving.example";
 describe("validateDiagram (Highway Driving)", () => {
   it("accepts a valid highway driving bowtie", () => {
     const result = validateDiagram(highwayDrivingExample);
+    if (!result.ok) {
+      console.log("Validation errors:", result.errors);
+    }
     expect(result.ok).toBe(true);
   });
 

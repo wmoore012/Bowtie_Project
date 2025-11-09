@@ -323,10 +323,22 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
               <button
                 className={styles.dropdownButton}
                 type="button"
-                disabled
-                title="Coming soon"
+                onClick={() => {
+                  dispatch("bowtie:exportJSON");
+                  setOpenDropdown(null);
+                }}
               >
-                💾 Save JSON
+                💾 Export JSON
+              </button>
+              <button
+                className={styles.dropdownButton}
+                type="button"
+                onClick={() => {
+                  dispatch("bowtie:importJSON");
+                  setOpenDropdown(null);
+                }}
+              >
+                📥 Import JSON
               </button>
             </div>
           </div>
