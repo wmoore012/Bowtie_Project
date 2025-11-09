@@ -536,7 +536,7 @@ function InnerGraph({ diagram, initialMode = "demo" }: { diagram: BowtieDiagram;
   );
 
   const applyBuilderLayout = useCallback(() => {
-    const baseDiagram = renderOverride ?? diagram;
+    const baseDiagram = renderOverride ?? revealDiagram;
     const laid = computeSimpleLayout(baseDiagram);
     const hydrated = laid.nodes.map((n) => ({
       ...n,
@@ -544,7 +544,7 @@ function InnerGraph({ diagram, initialMode = "demo" }: { diagram: BowtieDiagram;
     }));
     setNodes(hydrated);
     setEdges(laid.edges);
-  }, [diagram, renderOverride, setEdges, setNodes]);
+  }, [renderOverride, revealDiagram, setEdges, setNodes]);
 
 
   // Fit view on initial mount
@@ -684,7 +684,7 @@ function InnerGraph({ diagram, initialMode = "demo" }: { diagram: BowtieDiagram;
     if (mode === "builder") {
       applyBuilderLayout();
     }
-  }, [mode, applyBuilderLayout]);
+  }, [mode, applyBuilderLayout, renderDiagram]);
 
   // Global events from the left Sidebar (export, toggle builder, clear diagram)
   useEffect(() => {
