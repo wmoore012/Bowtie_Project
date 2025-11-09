@@ -1,0 +1,250 @@
+/**
+ * Preattentive Animation System
+ * Animations for Demo mode story transitions
+ * CRITICAL: Only animate wrapper elements, never React Flow node transforms
+ */
+
+/* ========================================
+   ANIMATION WRAPPER (Required for all nodes)
+   ======================================== */
+
+.animationWrapper {
+  width: 100%;
+  height: 100%;
+  will-change: opacity, transform, box-shadow;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animationWrapper {
+    will-change: auto;
+  }
+}
+
+/* ========================================
+   KEYFRAME ANIMATIONS
+   ======================================== */
+
+/* 1. FADE-IN-LEFT (Threats entering attention) */
+@keyframes fadeInLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* 2. FADE-IN-RIGHT (Mitigation & consequences) */
+@keyframes fadeInRight {
+  from {
+    opacity: 0;
+    transform: translateX(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* 3. ZOOM-IN (Top Event arrival) */
+@keyframes zoomIn {
+  from {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* 4. PING (Human checkpoints) */
+@keyframes ping {
+  0% {
+    box-shadow: 0 0 0 0 var(--human-glow);
+  }
+  50% {
+    box-shadow: 0 0 0 12px rgba(107, 116, 128, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(107, 116, 128, 0);
+  }
+}
+
+/* 5. SOFT-PULSE (Active good barrier) */
+@keyframes softPulse {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.03);
+    opacity: 0.95;
+  }
+}
+
+/* 6. FLASH-ONCE (Failed barrier / alarm) */
+@keyframes flashOnce {
+  0% {
+    opacity: 1;
+    box-shadow: 0 0 0 0 var(--failed-glow);
+  }
+  50% {
+    opacity: 0.7;
+    box-shadow: 0 0 0 8px rgba(239, 68, 68, 0.6);
+  }
+  100% {
+    opacity: 0.3;
+    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0);
+  }
+}
+
+/* 7. SLIDE-UP (Time-based controls / logs) */
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* 8. FADE-OUT (Recovery / story close) */
+@keyframes fadeOut {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0.5;
+  }
+}
+
+/* ========================================
+   ROLE-BASED ANIMATION CLASSES
+   ======================================== */
+
+/* Apply these classes to .animationWrapper based on narrative role */
+
+.threat {
+  animation: fadeInLeft var(--duration-fade, 400ms) var(--easing-ease-out, ease-out) forwards;
+}
+
+.prevention {
+  animation: fadeInLeft var(--duration-fade, 400ms) var(--easing-ease-out, ease-out) forwards;
+}
+
+.topEvent {
+  animation: zoomIn var(--duration-zoom, 600ms) var(--easing-smooth, cubic-bezier(0.34, 1.56, 0.64, 1)) forwards;
+}
+
+.mitigation {
+  animation: fadeInRight var(--duration-fade, 400ms) var(--easing-ease-out, ease-out) forwards;
+}
+
+.consequence {
+  animation: fadeInRight var(--duration-fade, 400ms) var(--easing-ease-out, ease-out) forwards;
+}
+
+.human {
+  animation: ping var(--duration-ping, 600ms) var(--easing-ease-in-out, ease-in-out) 1;
+}
+
+.time {
+  animation: slideUp var(--duration-slide, 500ms) var(--easing-ease-out, ease-out) forwards;
+}
+
+.timeOverdue {
+  animation: flashOnce var(--duration-flash, 300ms) ease-out forwards;
+}
+
+.recovery {
+  animation: fadeInRight var(--duration-fade, 400ms) var(--easing-ease-out, ease-out) forwards;
+}
+
+.failed {
+  animation: flashOnce var(--duration-flash, 300ms) ease-out forwards;
+}
+
+.hazard {
+  animation: fadeInLeft var(--duration-fade, 400ms) var(--easing-ease-out, ease-out) forwards;
+}
+
+.escalation {
+  animation: slideUp var(--duration-slide, 500ms) var(--easing-ease-out, ease-out) forwards;
+}
+
+/* Active pulse for barriers */
+.barrierActive {
+  animation: softPulse var(--duration-pulse, 1600ms) var(--easing-ease-in-out, ease-in-out) 2;
+}
+
+/* ========================================
+   PREFERS-REDUCED-MOTION OVERRIDES
+   ======================================== */
+
+@media (prefers-reduced-motion: reduce) {
+  .animationWrapper,
+  .threat,
+  .prevention,
+  .topEvent,
+  .mitigation,
+  .consequence,
+  .human,
+  .time,
+  .timeOverdue,
+  .recovery,
+  .failed,
+  .hazard,
+  .escalation,
+  .barrierActive {
+    animation: none !important;
+    transition: none !important;
+  }
+  
+  /* Replace motion with static emphasis */
+  .animationWrapper[data-active="true"] {
+    opacity: 1;
+    font-weight: var(--font-weight-bold, 700);
+  }
+  
+  .animationWrapper[data-dimmed="true"] {
+    opacity: var(--opacity-dimmed, 0.3);
+  }
+}
+
+/* ========================================
+   GLOW EFFECTS (Safe CSS properties)
+   ======================================== */
+
+.glowThreat {
+  box-shadow: 0 0 0 3px var(--threat-glow), 0 15px 35px rgba(15, 23, 42, 0.25);
+}
+
+.glowPrevention {
+  box-shadow: 0 0 0 3px var(--barrier-prevent-glow), 0 15px 35px rgba(16, 185, 129, 0.35);
+}
+
+.glowMitigation {
+  box-shadow: 0 0 0 3px var(--barrier-mitigate-glow), 0 15px 35px rgba(59, 130, 246, 0.35);
+}
+
+.glowTopEvent {
+  box-shadow: 0 0 0 5px var(--top-event-glow), 0 30px 50px rgba(220, 38, 38, 0.4);
+}
+
+.glowConsequence {
+  box-shadow: 0 0 0 3px var(--consequence-glow), 0 18px 36px rgba(147, 51, 234, 0.35);
+}
+
+.glowHazard {
+  box-shadow: 0 0 0 4px var(--hazard-glow), 0 18px 36px rgba(245, 158, 11, 0.3);
+}
+
+.glowFailed {
+  box-shadow: 0 0 0 4px var(--failed-glow), 0 18px 36px rgba(239, 68, 68, 0.5);
+}
+

@@ -2,6 +2,7 @@ import { Handle, Position, type NodeProps } from "@xyflow/react";
 import { memo } from "react";
 
 import styles from "./TopEventKnotNode.module.css";
+import animStyles from "../PreattentiveAnimations.module.css";
 import type { BowtieNodeData } from "../../../domain/bowtie.types";
 
 function TopEventKnotNode({ id, data }: NodeProps) {
@@ -20,10 +21,12 @@ function TopEventKnotNode({ id, data }: NodeProps) {
         data-highlight={d?.highlighted ? "true" : undefined}
         data-dimmed={d?.dimmed ? "true" : undefined}
       >
-        <div className={styles.knot}>
-          <span className={styles.icon} aria-hidden="true"></span>
-          {d?.badge && <span className={styles.badge} aria-hidden="true">{d.badge}</span>}
-          <span className={styles.label}>{labelText}</span>
+        <div className={animStyles.animationWrapper} data-narrative-role="topEvent">
+          <div className={styles.knot}>
+            <span className={styles.icon} aria-hidden="true"></span>
+            {d?.badge && <span className={styles.badge} aria-hidden="true">{d.badge}</span>}
+            <span className={styles.label}>{labelText}</span>
+          </div>
         </div>
         <Handle
           type="target"

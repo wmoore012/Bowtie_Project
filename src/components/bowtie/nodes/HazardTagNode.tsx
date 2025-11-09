@@ -2,6 +2,7 @@ import { Handle, Position, type NodeProps } from "@xyflow/react";
 import { memo } from "react";
 
 import styles from "./HazardTagNode.module.css";
+import animStyles from "../PreattentiveAnimations.module.css";
 import type { BowtieNodeData } from "../../../domain/bowtie.types";
 
 function HazardTagNode({ id, data }: NodeProps) {
@@ -22,15 +23,17 @@ function HazardTagNode({ id, data }: NodeProps) {
         data-highlight={d?.highlighted ? "true" : undefined}
         data-dimmed={d?.dimmed ? "true" : undefined}
       >
-        {d?.badge && (
-          <span className={styles.badge} aria-hidden="true">
-            {d.badge}
-          </span>
-        )}
-        <span className={styles.icon} aria-hidden="true">⚠</span>
-        <span className="sr-only">Hazard</span>
-        {d?.emoji && <span className={styles.emoji} aria-hidden="true">{d.emoji}</span>}
-        <span className={styles.label}>{labelText}</span>
+        <div className={animStyles.animationWrapper} data-narrative-role="hazard">
+          {d?.badge && (
+            <span className={styles.badge} aria-hidden="true">
+              {d.badge}
+            </span>
+          )}
+          <span className={styles.icon} aria-hidden="true">⚠</span>
+          <span className="sr-only">Hazard</span>
+          {d?.emoji && <span className={styles.emoji} aria-hidden="true">{d.emoji}</span>}
+          <span className={styles.label}>{labelText}</span>
+        </div>
         <Handle
           type="target"
           position={Position.Top}

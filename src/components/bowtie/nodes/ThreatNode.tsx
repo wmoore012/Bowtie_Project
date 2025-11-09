@@ -2,6 +2,7 @@ import { Handle, Position, type NodeProps } from "@xyflow/react";
 import { memo } from "react";
 
 import styles from "./ThreatNode.module.css";
+import animStyles from "../PreattentiveAnimations.module.css";
 import type { BowtieNodeData } from "../../../domain/bowtie.types";
 
 function ThreatNode({ id, data }: NodeProps) {
@@ -32,15 +33,17 @@ function ThreatNode({ id, data }: NodeProps) {
         data-orientation={orientation}
         data-width={widthHint}
       >
-        {d?.badge && (
-          <span className={styles.badge} aria-hidden="true">
-            {d.badge}
-          </span>
-        )}
-        <div className={styles.content}>
-          <div className={styles.title}>
-            {d?.emoji && <span aria-hidden="true" className={styles.emoji}>{d.emoji}</span>}
-            <span>{labelText}</span>
+        <div className={animStyles.animationWrapper} data-narrative-role="threat">
+          {d?.badge && (
+            <span className={styles.badge} aria-hidden="true">
+              {d.badge}
+            </span>
+          )}
+          <div className={styles.content}>
+            <div className={styles.title}>
+              {d?.emoji && <span aria-hidden="true" className={styles.emoji}>{d.emoji}</span>}
+              <span>{labelText}</span>
+            </div>
           </div>
         </div>
         <Handle type="target" position={Position.Left} />

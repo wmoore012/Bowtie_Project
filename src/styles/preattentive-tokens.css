@@ -1,0 +1,150 @@
+/**
+ * Preattentive Visual System Design Tokens
+ * Based on established preattentive attributes & visual encoding best practices
+ * One pattern = one meaning (Krug-compliant)
+ */
+
+:root {
+  /* ========================================
+     ROLE COLORS (Primary semantic mapping)
+     ======================================== */
+  
+  /* 1. HAZARD - Amber/Yellow (Context banner) */
+  --hazard-amber: #f59e0b;
+  --hazard-amber-bg: #fef3c7;
+  --hazard-amber-border: #f59e0b;
+  --hazard-glow: rgba(245, 158, 11, 0.5);
+  
+  /* 2. TOP EVENT - Red-Orange (Point of no return) */
+  --top-event-red-orange: #dc2626;
+  --top-event-gradient-start: #f97316;
+  --top-event-gradient-end: #ef4444;
+  --top-event-glow: rgba(220, 38, 38, 0.45);
+  
+  /* 3. THREAT - Sand with amber accent (Left-side causes) */
+  --threat-sand: #fef3c7;
+  --threat-amber-accent: #f59e0b;
+  --threat-bg: #fef3c7;
+  --threat-border: #f59e0b;
+  --threat-glow: rgba(245, 158, 11, 0.5);
+  
+  /* 4. PREVENTION BARRIER - Green (Left-wing shields) */
+  --barrier-prevent-green: #10b981;
+  --barrier-prevent-bg: linear-gradient(135deg, #E5E7EB 0%, #9CA3AF 50%, #E5E7EB 100%);
+  --barrier-prevent-border: #10b981;
+  --barrier-prevent-glow: rgba(16, 185, 129, 0.4);
+  
+  /* 5. MITIGATION BARRIER - Blue (Right-wing shields) */
+  --barrier-mitigate-blue: #3b82f6;
+  --barrier-mitigate-bg: linear-gradient(135deg, #E5E7EB 0%, #9CA3AF 50%, #E5E7EB 100%);
+  --barrier-mitigate-border: #3b82f6;
+  --barrier-mitigate-glow: rgba(59, 130, 246, 0.35);
+  
+  /* 6. CONSEQUENCE - Purple (Right-side outcomes) */
+  --consequence-purple: #9333ea;
+  --consequence-bg: #9333ea;
+  --consequence-border: #7e22ce;
+  --consequence-glow: rgba(147, 51, 234, 0.45);
+  
+  /* 7. FAILED BARRIER - Red */
+  --failed-red: #ef4444;
+  --failed-glow: rgba(239, 68, 68, 0.6);
+  
+  /* 8. HUMAN-IN-LOOP - Neutral gray with glow */
+  --human-gray: #6b7280;
+  --human-glow: rgba(107, 116, 128, 0.4);
+  
+  /* 9. TIME-BASED - Gray-blue */
+  --time-gray-blue: #64748b;
+  --time-overdue-red: #ef4444;
+  
+  /* 10. RECOVERY/FIX - Confident green */
+  --recovery-green: #10b981;
+  
+  /* ========================================
+     SIZE & SCALE (Hierarchy encoding)
+     ======================================== */
+  
+  --size-hazard-banner: 1.8;  /* multiplier */
+  --size-top-event: 1.5;      /* multiplier */
+  --size-standard: 1.0;       /* baseline */
+  
+  --scale-active-bump: 1.03;  /* subtle scale increase for active nodes */
+  --scale-pulse-max: 1.15;    /* max scale for pulse animations */
+  
+  /* ========================================
+     OPACITY & DEPTH
+     ======================================== */
+  
+  --opacity-active: 1;
+  --opacity-dimmed: 0.3;
+  --opacity-inactive-bg: 0.3;
+  
+  --shadow-active: 0 0 0 3px var(--glow-color), 0 15px 35px rgba(15, 23, 42, 0.25);
+  --shadow-standard: 0 6px 18px rgba(0, 0, 0, 0.08);
+  --shadow-hover: 0 10px 28px rgba(0, 0, 0, 0.14);
+  
+  /* ========================================
+     ANIMATION TIMING (Motion encoding)
+     ======================================== */
+  
+  --duration-fade: 400ms;
+  --duration-pulse: 1600ms;
+  --duration-ping: 600ms;
+  --duration-zoom: 600ms;
+  --duration-slide: 500ms;
+  --duration-flash: 300ms;
+  
+  --easing-smooth: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --easing-ease-out: ease-out;
+  --easing-ease-in-out: ease-in-out;
+  
+  --animation-cycles-max: 2;  /* max pulse/ping cycles */
+  
+  /* ========================================
+     TYPOGRAPHY EMPHASIS
+     ======================================== */
+  
+  --font-weight-bold: 700;
+  --font-weight-normal: 400;
+  --font-style-italic: italic;
+  --text-decoration-underline: underline;
+  
+  /* ========================================
+     ICON SEMANTIC MAPPING
+     ======================================== */
+  
+  /* Icons are defined in component markup, not CSS */
+  /* Hazard: ⚡️ */
+  /* Top Event: 🔥 */
+  /* Threat: 🚚 ⚠️ 📦 (context-specific, never 🔥) */
+  /* Barrier: 🛡 */
+  /* Consequence: ❌ 🏭 🌫 (never skull per spec) */
+  /* Human: 👷 🧑‍🏭 */
+  /* Time: 📅 */
+  /* Recovery: 🛠 */
+  
+  /* ========================================
+     ACCESSIBILITY
+     ======================================== */
+  
+  --focus-ring: #2563eb;
+  --focus-ring-width: 2px;
+  --focus-ring-offset: 3px;
+}
+
+/* ========================================
+   PREFERS-REDUCED-MOTION OVERRIDES
+   ======================================== */
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --duration-fade: 0ms;
+    --duration-pulse: 0ms;
+    --duration-ping: 0ms;
+    --duration-zoom: 0ms;
+    --duration-slide: 0ms;
+    --duration-flash: 0ms;
+  }
+}
+

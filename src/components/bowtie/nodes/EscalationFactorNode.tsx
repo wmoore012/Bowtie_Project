@@ -2,6 +2,7 @@ import { Handle, Position, type NodeProps } from "@xyflow/react";
 import { memo } from "react";
 
 import styles from "./EscalationFactorNode.module.css";
+import animStyles from "../PreattentiveAnimations.module.css";
 import type { BowtieNodeData } from "../../../domain/bowtie.types";
 
 function EscalationFactorNode({ id, data }: NodeProps) {
@@ -27,9 +28,11 @@ function EscalationFactorNode({ id, data }: NodeProps) {
         data-highlight={d?.highlighted ? "true" : undefined}
         data-dimmed={d?.dimmed ? "true" : undefined}
       >
-        <div className={styles.badge}>Escalation</div>
-        <div className={styles.content}>
-          <div className={styles.title}>{d?.label}</div>
+        <div className={animStyles.animationWrapper} data-narrative-role="escalation">
+          <div className={styles.badge}>Escalation</div>
+          <div className={styles.content}>
+            <div className={styles.title}>{d?.label}</div>
+          </div>
         </div>
         <Handle type="target" position={Position.Left} />
         <Handle type="source" position={Position.Right} />

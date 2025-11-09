@@ -33,10 +33,12 @@ import { computeStepDiagram, type StepIndex } from "../../domain/stepMode";
 import { PREVENTION_GROUPS, MITIGATION_GROUPS } from "../../domain/scenarios/highway_driving.groups";
 import styles from "./BowtieGraph.module.css";
 import "../../styles/theme.css";
+import "../../styles/preattentive-tokens.css";
 import { computeRoleFilteredDiagram, collectAvailableRoles } from "../../domain/filters";
 import { ErrorBoundary } from "../common/ErrorBoundary";
 
 import { highwayDrivingNarrative } from "../../domain/scenarios/highway_driving_narrative";
+import gsap from "gsap";
 
 /**
  * Determine the role/category for a given step index for visual styling.
@@ -829,6 +831,183 @@ function InnerGraph({ diagram, initialMode = "demo" }: { diagram: BowtieDiagram;
     }
   }, [storyIdx, storyOpen, mode]);
 
+  // GSAP Animation System - Animate wrapper elements on story step changes
+  useEffect(() => {
+    if (!storyOpen || mode !== "demo" || activeFocusIds.size === 0) return;
+    if (typeof window === "undefined") return; // SSR safety
+
+    // Check for reduced motion preference
+    const prefersReducedMotion = window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches ?? false;
+
+    // Small delay to ensure DOM is ready after React Flow layout
+    const timer = setTimeout(() => {
+      activeFocusIds.forEach((nodeId) => {
+        // Find the React Flow node element
+        const nodeElement = document.querySelector(`[data-id="${nodeId}"]`);
+        if (!nodeElement) return;
+
+        // Find the animation wrapper inside the node
+        const wrapper = nodeElement.querySelector('[data-narrative-role]') as HTMLElement;
+        if (!wrapper) return;
+
+        const role = wrapper.getAttribute('data-narrative-role');
+        if (!role) return;
+
+        // If reduced motion, apply static emphasis only
+        if (prefersReducedMotion) {
+          wrapper.style.opacity = "1";
+          wrapper.style.fontWeight = "700";
+          return;
+        }
+
+        // Map narrative roles to GSAP animations (SAFE properties only)
+        switch (role) {
+          case "threat":
+            // Fade-in-left with amber glow
+            gsap.fromTo(
+              wrapper,
+              { opacity: 0, x: -30 },
+              {
+                opacity: 1,
+                x: 0,
+                duration: 0.4,
+                ease: "power2.out",
+                clearProps: "transform" // Clear transform after animation
+              }
+            );
+            break;
+
+          case "prevention":
+            // Fade-in-left + soft pulse (green glow)
+            gsap.fromTo(
+              wrapper,
+              { opacity: 0, x: -30 },
+              {
+                opacity: 1,
+                x: 0,
+                duration: 0.4,
+                ease: "power2.out",
+                clearProps: "transform",
+                onComplete: () => {
+                  // Add soft pulse after fade-in
+                  gsap.to(wrapper, {
+                    scale: 1.03,
+                    duration: 0.8,
+                    yoyo: true,
+                    repeat: 1,
+                    ease: "sine.inOut",
+                    clearProps: "transform"
+                  });
+                }
+              }
+            );
+            break;
+
+          case "topEvent":
+            // Zoom-in with red-orange glow
+            gsap.fromTo(
+              wrapper,
+              { opacity: 0, scale: 0.8 },
+              {
+                opacity: 1,
+                scale: 1,
+                duration: 0.6,
+                ease: "back.out(1.7)",
+                clearProps: "transform"
+              }
+            );
+            break;
+
+          case "mitigation":
+            // Fade-in-right + soft pulse (blue glow)
+            gsap.fromTo(
+              wrapper,
+              { opacity: 0, x: 30 },
+              {
+                opacity: 1,
+                x: 0,
+                duration: 0.4,
+                ease: "power2.out",
+                clearProps: "transform",
+                onComplete: () => {
+                  gsap.to(wrapper, {
+                    scale: 1.03,
+                    duration: 0.8,
+                    yoyo: true,
+                    repeat: 1,
+                    ease: "sine.inOut",
+                    clearProps: "transform"
+                  });
+                }
+              }
+            );
+            break;
+
+          case "consequence":
+            // Fade-in-right with purple glow
+            gsap.fromTo(
+              wrapper,
+              { opacity: 0, x: 30 },
+              {
+                opacity: 1,
+                x: 0,
+                duration: 0.4,
+                ease: "power2.out",
+                clearProps: "transform"
+              }
+            );
+            break;
+
+          case "hazard":
+            // Simple fade-in (1x only)
+            gsap.fromTo(
+              wrapper,
+              { opacity: 0 },
+              {
+                opacity: 1,
+                duration: 0.4,
+                ease: "power2.out"
+              }
+            );
+            break;
+
+          case "escalation":
+            // Slide-up
+            gsap.fromTo(
+              wrapper,
+              { opacity: 0, y: 20 },
+              {
+                opacity: 1,
+                y: 0,
+                duration: 0.5,
+                ease: "power2.out",
+                clearProps: "transform"
+              }
+            );
+            break;
+
+          default:
+            // Default fade-in
+            gsap.fromTo(
+              wrapper,
+              { opacity: 0 },
+              {
+                opacity: 1,
+                duration: 0.4,
+                ease: "power2.out"
+              }
+            );
+        }
+      });
+    }, 100); // Small delay for DOM readiness
+
+    return () => {
+      clearTimeout(timer);
+      // Kill all GSAP animations on cleanup
+      gsap.killTweensOf('[data-narrative-role]');
+    };
+  }, [storyIdx, storyOpen, mode, activeFocusIds]);
+
   function isFailureEdge(e: { source: string; target: string }) {
 
   // Global events: toggle Filters / Actions / Export panels from Sidebar
@@ -865,6 +1044,13 @@ function InnerGraph({ diagram, initialMode = "demo" }: { diagram: BowtieDiagram;
 
     window.addEventListener("bowtie:filterChanged", onFilterChanged as any);
     return () => window.removeEventListener("bowtie:filterChanged", onFilterChanged as any);
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const toggle = () => setHelpOpen((open) => !open);
+    window.addEventListener("bowtie:toggleHelp", toggle as any);
+    return () => window.removeEventListener("bowtie:toggleHelp", toggle as any);
   }, []);
 
   useEffect(() => {
