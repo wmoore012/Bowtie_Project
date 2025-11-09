@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Design Tokens - Incident Timeline Framework</title>
+<style>
+/**
+ * PREATTENTIVE VISUAL SYSTEM - INCIDENT TIMELINE FRAMEWORK
+ * One pattern = one meaning (Krug-compliant)
+ * Framework: Normal → Latent → Deviation → Detection → Escalation → Top Event → Consequences → Recovery
+ */
+
+:root {
+  /* ========================================
+     SEMANTIC COLORS (Role mapping)
+     ======================================== */
+  
+  /* Hazard - Amber/Yellow (Context) */
+  --hazard-amber: #f59e0b;
+  --hazard-bg: #fef3c7;
+  --hazard-border: #f59e0b;
+  --hazard-glow: rgba(245, 158, 11, 0.5);
+  
+  /* Top Event - Red-Orange (Point of no return) */
+  --top-event-red-orange: #dc2626;
+  --top-event-bg: #ef44441f;
+  --top-event-border: #ef4444;
+  --top-event-glow: rgba(220, 38, 38, 0.45);
+  --top-gradient-start: #f97316;
+  --top-gradient-end: #ef4444;
+  
+  /* Threat - Sand with amber accent */
+  --threat-sand: #fef3c7;
+  --threat-bg: #ea580c1f;
+  --threat-border: #ea580c;
+  --threat-accent-amber: #f59e0b;
+  --threat-glow: rgba(234, 88, 12, 0.5);
+  
+  /* Prevention Barrier - Green */
+  --barrier-prevent-green: #10b981;
+  --barrier-prevent-bg: #06b6d41f;
+  --barrier-prevent-border: #06b6d4;
+  --barrier-prevent-glow: rgba(16, 185, 129, 0.4);
+  
+  /* Mitigation Barrier - Blue */
+  --barrier-mitigate-blue: #3b82f6;
+  --barrier-mitigate-bg: #3b82f61f;
+  --barrier-mitigate-border: #3b82f6;
+  --barrier-mitigate-glow: rgba(59, 130, 246, 0.35);
+  
+  /* Consequence - Red */
+  --consequence-red: #b91c1c;
+  --consequence-bg: #b91c1c1f;
+  --consequence-border: #b91c1c;
+  --consequence-glow: rgba(185, 28, 28, 0.45);
+  
+  /* Failed Barrier - Bright red */
+  --failed-red: #ef4444;
+  --failed-glow: rgba(239, 68, 68, 0.6);
+  
+  /* ========================================
+     INCIDENT TIMELINE STAGE COLORS
+     ======================================== */
+  
+  /* Normal State - Calm gray */
+  --normal-gray: #6b7280;
+  --normal-bg: #6b72801f;
+  --normal-glow: rgba(107, 116, 128, 0.3);
+  
+  /* Latent Conditions - Warning yellow */
+  --latent-yellow: #eab308;
+  --latent-bg: #fef9c3;
+  --latent-glow: rgba(234, 179, 8, 0.4);
+  
+  /* Deviation - Orange alert */
+  --deviation-orange: #f97316;
+  --deviation-bg: #ffedd5;
+  --deviation-glow: rgba(249, 115, 22, 0.5);
+  
+  /* Detection - Blue alert */
+  --detection-blue: #0ea5e9;
+  --detection-bg: #e0f2fe;
+  --detection-glow: rgba(14, 165, 233, 0.4);
+  
+  /* Escalation - Red alert */
+  --escalation-red: #dc2626;
+  --escalation-bg: #fee2e2;
+  --escalation-glow: rgba(220, 38, 38, 0.5);
+  
+  /* Recovery - Green success */
+  --recovery-green: #10b981;
+  --recovery-bg: #d1fae5;
+  --recovery-glow: rgba(16, 185, 129, 0.4);
+  
+  /* ========================================
+     SPECIAL STATES
+     ======================================== */
+  
+  /* Human-in-loop */
+  --human-gray: #6b7280;
+  --human-glow: rgba(107, 116, 128, 0.4);
+  
+  /* Time-based / Overdue */
+  --time-gray-blue: #64748b;
+  --time-overdue-red: #ef4444;
+  
+  /* ========================================
+     SIZE & SCALE HIERARCHY
+     ======================================== */
+  
+  --size-banner: 1.8;
+  --size-top-event: 1.5;
+  --size-standard: 1.0;
+  --scale-active: 1.03;
+  --scale-pulse-max: 1.15;
+  
+  /* ========================================
+     OPACITY & DEPTH
+     ======================================== */
+  
+  --opacity-active: 1;
+  --opacity-dimmed: 0.3;
+  --opacity-inactive: 0.3;
+  
+  --shadow-active: 0 0 0 3px var(--glow-color), 0 15px 35px rgba(15, 23, 42, 0.25);
+  --shadow-standard: 0 6px 18px rgba(0, 0, 0, 0.08);
+  --shadow-hover: 0 10px 28px rgba(0, 0, 0, 0.14);
+  --shadow-knot: 0 4px 12px rgba(239, 68, 68, 0.3);
+  
+  /* ========================================
+     ANIMATION TIMING
+     ======================================== */
+  
+  --duration-fade: 400ms;
+  --duration-pulse: 1600ms;
+  --duration-ping: 600ms;
+  --duration-zoom: 600ms;
+  --duration-slide: 500ms;
+  --duration-flash: 300ms;
+  
+  --easing-smooth: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --easing-ease-out: ease-out;
+  --easing-ease-in-out: ease-in-out;
+  
+  --animation-cycles-max: 2;
+  
+  /* ========================================
+     TYPOGRAPHY EMPHASIS
+     ======================================== */
+  
+  --font-weight-bold: 700;
+  --font-weight-semibold: 600;
+  --font-weight-normal: 400;
+  --font-style-italic: italic;
+  
+  /* ========================================
+     UI COMPONENTS
+     ======================================== */
+  
+  --panel-bg: rgba(255, 255, 255, 0.85);
+  --border: #e5e7eb;
+  --btn-bg: rgba(255, 255, 255, 0.95);
+  --btn-bg-hover: #ffffff;
+  
+  --chip-bg: #0f172a0f;
+  --chip-text: #475569;
+  --chip-bg-inactive: #f3f4f6;
+  --chip-bg-active: #10b981;
+  --chip-text-inactive: #374151;
+  --chip-text-active: #ffffff;
+  
+  --text: #0f172a;
+  --edge: #64748b;
+  --edge-dim: #cbd5e1;
+  --edge-fail: #ef4444;
+  
+  /* ========================================
+     SPACING & RADII
+     ======================================== */
+  
+  --pad-x: 14px;
+  --pad-y: 10px;
+  --radius-card: 12px;
+  --radius-pill: 14px;
+  --card-spacing: 24px;
+  
+  /* ========================================
+     ACCESSIBILITY
+     ======================================== */
+  
+  --focus-ring: #2563eb;
+  --focus-ring-width: 2px;
+  --focus-ring-offset: 3px;
+  
+  --z-modal: 100;
+}
+
+/* ========================================
+   PREFERS-REDUCED-MOTION
+   ======================================== */
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --duration-fade: 0ms;
+    --duration-pulse: 0ms;
+    --duration-ping: 0ms;
+    --duration-zoom: 0ms;
+    --duration-slide: 0ms;
+    --duration-flash: 0ms;
+  }
+  * {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+
+/* ========================================
+   ICON SEMANTIC MAPPING (Reference)
+   ======================================== */
+
+/*
+  INCIDENT TIMELINE ICONS:
+  🛣️ Normal state
+  🕳️ Latent conditions
+  🚚📱🌧️ Deviations
+  🚨🔍 Detection
+  ⚠️🔥 Escalation
+  🎯💥 Top event
+  ❌🤕🌫️ Consequences
+  🛠️✅ Recovery
+  
+  ROLE ICONS:
+  ⚡️ Hazard (amber context)
+  🔥 Top Event (red-orange knot)
+  🚚⚠️📦 Threats (sand + amber, never 🔥)
+  🛡 Barriers (green/blue)
+  👷🧑‍🏭 Human-in-loop
+  📅 Time-based controls
+  
+  MAX 1 EMOJI PER LABEL
+*/
+
+/* ========================================
+   VISUAL ENCODING SUMMARY
+   ======================================== */
+
+/*
+  COLOR = ROLE/STAGE
+  Amber (#f59e0b) = Hazard context
+  Sand (#fef3c7) + Amber accent = Threats
+  Green (#10b981) = Prevention barriers
+  Blue (#3b82f6) = Mitigation barriers
+  Red-Orange (#dc2626) = Top Event
+  Red (#b91c1c) = Consequences
+  Yellow (#eab308) = Latent conditions
+  Orange (#f97316) = Deviation
+  
+  SIZE = IMPORTANCE
+  1.8× = Hazard banner
+  1.5× = Top Event (only circular node)
+  1.0× = Standard nodes
+  
+  OPACITY = NARRATIVE FOCUS
+  1.0 = Active in current step
+  0.3 = Dimmed/inactive
+  
+  GLOW = ATTENTION
+  Role-colored box-shadow = Active emphasis
+  
+  MOTION = STATE CHANGE
+  1-2 pulse cycles = Node activation
+  No animation = Builder mode or reduced-motion
+  
+  SHAPE = CATEGORY
+  Circle = Top Event ONLY
+  Rectangle with left accent = Threats
+  Rectangle with diagonal stripes = Hazard banner
+  Standard rectangle = Barriers/Consequences
+*/
+</style>
+</head>
+<body style="font-family: system-ui; padding: 40px; max-width: 900px; margin: 0 auto; line-height: 1.6;">
+  <h1>Preattentive Design System - Incident Timeline Framework</h1>
+
+  <h2>Quick Reference</h2>
+
+  <h3>Incident Timeline Stages</h3>
+  <div style="display: grid; gap: 12px; margin: 20px 0;">
+    <div style="background: var(--normal-bg); border-left: 4px solid var(--normal-gray); padding: 12px;">
+      <strong>🛣️ NORMAL:</strong> Baseline operations, all barriers in place
+    </div>
+    <div style="background: var(--latent-bg); border-left: 4px solid var(--latent-yellow); padding: 12px;">
+      <strong>🕳️ LATENT:</strong> Hidden weaknesses (budget cuts, drift, normalization)
+    </div>
+    <div style="background: var(--deviation-bg); border-left: 4px solid var(--deviation-orange); padding: 12px;">
+      <strong>🚚 DEVIATION:</strong> Active error or violation introduces threat
+    </div>
+    <div style="background: var(--detection-bg); border-left: 4px solid var(--detection-blue); padding: 12px;">
+      <strong>🚨 DETECTION:</strong> Alarm/monitoring catches deviation (or fails to)
+    </div>
+    <div style="background: var(--escalation-bg); border-left: 4px solid var(--escalation-red); padding: 12px;">
+      <strong>⚠️ ESCALATION:</strong> Situation worsens, multiple barriers down
+    </div>
+    <div style="background: var(--top-event-bg); border-left: 4px solid var(--top-event-red-orange); padding: 12px;">
+      <strong>🎯 TOP EVENT:</strong> Control lost—prevention ends, mitigation begins
+    </div>
+    <div style="background: var(--consequence-bg); border-left: 4px solid var(--consequence-red); padding: 12px;">
+      <strong>💥 CONSEQUENCES:</strong> Harm occurs despite mitigation
+    </div>
+    <div style="background: var(--recovery-bg); border-left: 4px solid var(--recovery-green); padding: 12px;">
+      <strong>🛠️ RECOVERY:</strong> Lessons learned, barriers strengthened
+    </div>
+  </div>
+
+  <h3>Bowtie Role Colors</h3>
+  <div style="display: grid; gap: 8px; margin: 20px 0;">
+    <div style="background: var(--hazard-bg); border: 2px solid var(--hazard-border); padding: 10px; border-radius: 8px;">
+      <strong>⚡️ HAZARD</strong> - Amber (#f59e0b)
+    </div>
+    <div style="background: var(--threat-bg); border-left: 4px solid var(--threat-border); padding: 10px; border-radius: 8px;">
+      <strong>🚚 THREAT</strong> - Sand (#fef3c7) + Amber accent
+    </div>
+    <div style="background: var(--barrier-prevent-bg); border: 2px solid var(--barrier-prevent-border); padding: 10px; border-radius: 8px;">
+      <strong>🛡 PREVENTION BARRIER</strong> - Green (#10b981)
+    </div>
+    <div style="background: var(--top-event-bg); border: 2px solid var(--top-event-border); padding: 10px; border-radius: 50%; text-align: center;">
+      <strong>🔥 TOP EVENT</strong> - Red-Orange (#dc2626)
+    </div>
+    <div style="background: var(--barrier-mitigate-bg); border: 2px solid var(--barrier-mitigate-border); padding: 10px; border-radius: 8px;">
+      <strong>🛡 MITIGATION BARRIER</strong> - Blue (#3b82f6)
+    </div>
+    <div style="background: var(--consequence-bg); border: 2px solid var(--consequence-border); padding: 10px; border-radius: 8px;">
+      <strong>❌ CONSEQUENCE</strong> - Red (#b91c1c)
+    </div>
+  </div>
+
+  <h3>Preattentive Attributes</h3>
+  <ul>
+    <li><strong>COLOR:</strong> Role/stage identification (see above)</li>
+    <li><strong>SIZE:</strong> Importance (1.8× banner, 1.5× top event, 1.0× standard)</li>
+    <li><strong>SHAPE:</strong> Circle = top event ONLY, rectangles for all others</li>
+    <li><strong>OPACITY:</strong> 1.0 = active, 0.3 = dimmed</li>
+    <li><strong>GLOW:</strong> Role-colored box-shadow for active emphasis</li>
+    <li><strong>MOTION:</strong> 1-2 pulse cycles on activation, then static</li>
+    <li><strong>POSITION:</strong> Left = prevention, Center = top event, Right = mitigation</li>
+    <li><strong>ACCENT:</strong> Left border bar for threats (amber)</li>
+  </ul>
+
+  <p style="margin-top: 40px; padding: 20px; background: #f3f4f6; border-radius: 8px;">
+    <strong>Design Principle:</strong> One pattern = one meaning. Each visual attribute maps to exactly one semantic category. No reuse across different roles. Maximum clarity at a glance.
+  </p>
+</body>
+</html>
+
