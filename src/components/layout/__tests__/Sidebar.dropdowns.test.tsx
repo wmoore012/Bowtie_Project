@@ -352,5 +352,23 @@ describe("Filter chips in Filters dropdown", () => {
     expect(humanChip).toHaveAttribute("aria-checked", "false");
     expect(policyChip).toHaveAttribute("aria-checked", "false");
   });
-});
 
+  it("dispatches bowtie:toggleHelp when Help button is clicked", async () => {
+    const user = userEvent.setup();
+    const originalDispatch = window.dispatchEvent;
+    const spy = vi.fn();
+
+    window.dispatchEvent = ((event: Event) => {
+      spy(event);
+      return originalDispatch.call(window, event);
+    }) as typeof window.dispatchEvent;
+
+    render(<Sidebar collapsed={false} onToggle={vi.fn()} />);
+    const helpButton = screen.getByRole("button", { name: /show visual help/i });
+    await user.click(helpButton);
+
+    expect(spy).toHaveBeenCalledWith(expect.objectContaining({ type: "bowtie:toggleHelp" }));
+
+    window.dispatchEvent = originalDispatch;
+  });
+});

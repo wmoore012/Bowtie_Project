@@ -79,12 +79,12 @@
   cursor: pointer;
   text-align: left;
 }
-.helpBtn {
-  align-self: flex-start;
-  background: rgba(255,255,255,0.06);
-  width: 100%;
-  justify-content: flex-start;
-}
+.helpBtn,
+.profileBtn,
+.themeBtn,
+.settingsBtn,
+.exportBtn { justify-content: flex-start; }
+.helpBtn:hover,
 .profileBtn:hover,
 .themeBtn:hover,
 .settingsBtn:hover,
