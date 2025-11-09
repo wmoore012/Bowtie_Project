@@ -65,6 +65,7 @@
 }
 
 .footer { margin-top: auto; padding: 8px; display: grid; gap: 4px; }
+.helpBtn,
 .profileBtn,
 .themeBtn,
 .settingsBtn,
@@ -214,5 +215,72 @@
   }
   .dropdownButton {
     transition: none;
+  }
+}
+
+/* Filter chips */
+.filterChips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 8px;
+  margin-bottom: 8px;
+}
+
+.filterChip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  border: 1.5px solid;
+  background: transparent;
+  transition: all 0.2s ease;
+  font-family: inherit;
+  color: inherit;
+}
+
+/* Unselected state - subtle border and text */
+.filterChip[aria-checked="false"] {
+  border-color: rgba(148, 163, 184, 0.4);
+  color: #94a3b8;
+  opacity: 0.7;
+}
+
+/* Selected state - solid background with checkmark */
+.filterChip[aria-checked="true"] {
+  background: var(--prevent-border, #06B6D4);
+  border-color: var(--prevent-border, #06B6D4);
+  color: #fff;
+  opacity: 1;
+  font-weight: 600;
+}
+
+.filterChip[aria-checked="true"]::before {
+  content: "\2713\0020"; /* Checkmark + space */
+}
+
+.filterChip:hover:not(:disabled) {
+  opacity: 1;
+  transform: translateY(-1px);
+  border-color: rgba(148, 163, 184, 0.6);
+}
+
+.filterChip[aria-checked="true"]:hover {
+  border-color: var(--prevent-border, #06B6D4);
+}
+
+.filterChip:focus-visible {
+  outline: 2px solid var(--ring, #2563EB);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .filterChip {
+    transition: none;
+    transform: none !important;
   }
 }

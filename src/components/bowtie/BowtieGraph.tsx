@@ -15,6 +15,7 @@ import {
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 import type { Node as RFNode } from "@xyflow/react";
+import gsap from "gsap";
 
 import type { BowtieDiagram, BowtieNodeType, BowtieNodeData } from "../../domain/bowtie.types";
 import { computeSimpleLayout, computeElkLayout } from "./layout";
@@ -821,6 +822,122 @@ function InnerGraph({ diagram, initialMode = "demo" }: { diagram: BowtieDiagram;
     }
   }, [storyIdx, storyOpen, mode]);
 
+  // GSAP-powered story transition animations
+  useEffect(() => {
+    if (!storyOpen || mode !== "demo" || typeof window === "undefined") return;
+
+    // Check for reduced motion preference
+    const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (prefersReducedMotion) return;
+
+    const revealedNodes = Array.from(storyRevealIds);
+    const focusedNodes = Array.from(storyFocusIds);
+    const animations: gsap.core.Tween[] = [];
+
+    // Animate revealed nodes (barriers appearing)
+    revealedNodes.forEach((nodeId, index) => {
+      const nodeElement = document.querySelector(`[data-id="${nodeId}"]`);
+      if (!nodeElement) return;
+
+      const node = diagram.nodes.find((n) => n.id === nodeId);
+      const nodeType = node?.type;
+
+      // Map node type to animation pattern
+      if (nodeType === "preventionBarrier") {
+        // Fade-in from left (prevention becoming active)
+        const anim = gsap.fromTo(
+          nodeElement,
+          { opacity: 0, x: -30 },
+          { opacity: 1, x: 0, duration: 0.7, ease: "power2.out", delay: index * 0.1 }
+        );
+        animations.push(anim);
+      } else if (nodeType === "mitigationBarrier") {
+        // Fade-in from right (recovery/mitigation focus)
+        const anim = gsap.fromTo(
+          nodeElement,
+          { opacity: 0, x: 30 },
+          { opacity: 1, x: 0, duration: 0.7, ease: "power2.out", delay: index * 0.1 }
+        );
+        animations.push(anim);
+      } else if (nodeType === "escalationFactor") {
+        // Slide-up (rising concern)
+        const anim = gsap.fromTo(
+          nodeElement,
+          { opacity: 0, y: 20 },
+          { opacity: 1, y: 0, duration: 0.6, ease: "power3.out", delay: index * 0.1 }
+        );
+        animations.push(anim);
+      } else if (nodeType === "threat") {
+        // Ping effect (alert/human touchpoint)
+        const anim = gsap.fromTo(
+          nodeElement,
+          { boxShadow: "0 0 0 0 rgba(59, 130, 246, 0.7)" },
+          {
+            boxShadow: "0 0 0 8px rgba(59, 130, 246, 0)",
+            duration: 0.5,
+            ease: "power2.out",
+            delay: index * 0.1,
+          }
+        );
+        animations.push(anim);
+      } else if (nodeType === "consequence") {
+        // Tilt-right (physical consequence like rollover)
+        const anim = gsap.fromTo(
+          nodeElement,
+          { rotation: 0 },
+          {
+            rotation: 8,
+            duration: 0.3,
+            ease: "power2.out",
+            yoyo: true,
+            repeat: 1,
+            delay: index * 0.1,
+          }
+        );
+        animations.push(anim);
+      } else {
+        // Default fade-in for other node types
+        const anim = gsap.fromTo(
+          nodeElement,
+          { opacity: 0 },
+          { opacity: 1, duration: 0.5, ease: "power2.out", delay: index * 0.1 }
+        );
+        animations.push(anim);
+      }
+    });
+
+    // Animate focused nodes (zoom pulse for emphasis)
+    focusedNodes.forEach((nodeId, index) => {
+      const nodeElement = document.querySelector(`[data-id="${nodeId}"]`);
+      if (!nodeElement) return;
+
+      const node = diagram.nodes.find((n) => n.id === nodeId);
+      const nodeType = node?.type;
+
+      if (nodeType === "topEvent" || nodeType === "hazard") {
+        // Zoom pulse (top event moment/climax emphasis)
+        const anim = gsap.fromTo(
+          nodeElement,
+          { scale: 1 },
+          {
+            scale: 1.15,
+            duration: 0.3,
+            ease: "power2.out",
+            yoyo: true,
+            repeat: 1,
+            delay: index * 0.1,
+          }
+        );
+        animations.push(anim);
+      }
+    });
+
+    // Cleanup function to kill all animations
+    return () => {
+      animations.forEach((anim) => anim.kill());
+    };
+  }, [storyRevealIds, storyFocusIds, storyOpen, mode, diagram.nodes]);
+
   function isFailureEdge(e: { source: string; target: string }) {
 
   // Global events: toggle Filters / Actions / Export panels from Sidebar
@@ -986,14 +1103,6 @@ function InnerGraph({ diagram, initialMode = "demo" }: { diagram: BowtieDiagram;
           )}
 
           <div className={styles.floatingTopRight} style={{ top: storyOpen ? 80 : 12 }}>
-            <button
-              className={styles.bowtieButton}
-              type="button"
-              aria-haspopup="dialog"
-              onClick={() => setHelpOpen(true)}
-            >
-              ? Help
-            </button>
             <button
               className={styles.bowtieButton}
               aria-controls="filters-panel"

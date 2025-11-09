@@ -428,3 +428,14 @@
   from { opacity: 0; transform: translateX(8px); }
   to { opacity: 1; transform: translateX(0); }
 }
+
+/* GSAP animation performance hints */
+.canvasHost [data-id] {
+  will-change: transform, opacity;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .canvasHost [data-id] {
+    will-change: auto;
+  }
+}

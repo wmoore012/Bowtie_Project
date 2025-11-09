@@ -12,6 +12,7 @@ type DropdownPanel = "filters" | "actions" | "export" | null;
 export function Sidebar({ collapsed, onToggle }: SidebarProps) {
   const [mode, setMode] = useState<"demo" | "builder">("demo");
   const [openDropdown, setOpenDropdown] = useState<DropdownPanel>(null);
+  const [selectedRoles, setSelectedRoles] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -64,6 +65,24 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
 
   const toggleDropdown = (panel: DropdownPanel) => {
     setOpenDropdown((current) => (current === panel ? null : panel));
+  };
+
+  const toggleRole = (role: string) => {
+    setSelectedRoles((prev) => {
+      const next = new Set(prev);
+      if (next.has(role)) {
+        next.delete(role);
+      } else {
+        next.add(role);
+      }
+      // Dispatch event to BowtieGraph with updated filter set
+      if (typeof window !== "undefined") {
+        window.dispatchEvent(new CustomEvent("bowtie:filterChanged", {
+          detail: { roles: Array.from(next) }
+        }));
+      }
+      return next;
+    });
   };
 
   return (
@@ -140,13 +159,90 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
           <div className={styles.dropdown} role="region" aria-label="Filters">
             <div className={styles.dropdownContent}>
               <p className={styles.dropdownHint}>Filter by role to focus discussion</p>
-              <button
-                className={styles.dropdownButton}
-                type="button"
-                onClick={() => dispatch("bowtie:toggleFilters")}
-              >
-                Open Filter Panel
-              </button>
+              <div className={styles.filterChips} role="group" aria-label="Filter by role">
+                <button
+                  type="button"
+                  role="switch"
+                  aria-checked={selectedRoles.has("Human")}
+                  aria-label="Toggle Human filter"
+                  className={styles.filterChip}
+                  data-role="Human"
+                  onClick={() => toggleRole("Human")}
+                >
+                  👤 Human
+                </button>
+                <button
+                  type="button"
+                  role="switch"
+                  aria-checked={selectedRoles.has("Supervisor")}
+                  aria-label="Toggle Supervisor filter"
+                  className={styles.filterChip}
+                  data-role="Supervisor"
+                  onClick={() => toggleRole("Supervisor")}
+                >
+                  👔 Supervisor
+                </button>
+                <button
+                  type="button"
+                  role="switch"
+                  aria-checked={selectedRoles.has("Policy")}
+                  aria-label="Toggle Policy filter"
+                  className={styles.filterChip}
+                  data-role="Policy"
+                  onClick={() => toggleRole("Policy")}
+                >
+                  📋 Policy
+                </button>
+                <button
+                  type="button"
+                  role="switch"
+                  aria-checked={selectedRoles.has("Maintenance")}
+                  aria-label="Toggle Maintenance filter"
+                  className={styles.filterChip}
+                  data-role="Maintenance"
+                  onClick={() => toggleRole("Maintenance")}
+                >
+                  🔧 Maintenance
+                </button>
+                <button
+                  type="button"
+                  role="switch"
+                  aria-checked={selectedRoles.has("Active hardware")}
+                  aria-label="Toggle Active hardware filter"
+                  className={styles.filterChip}
+                  data-role="Active hardware"
+                  onClick={() => toggleRole("Active hardware")}
+                >
+                  🖥️ Active hardware
+                </button>
+                <button
+                  type="button"
+                  role="switch"
+                  aria-checked={selectedRoles.has("Operations")}
+                  aria-label="Toggle Operations filter"
+                  className={styles.filterChip}
+                  data-role="Operations"
+                  onClick={() => toggleRole("Operations")}
+                >
+                  🏢 Operations
+                </button>
+              </div>
+              {selectedRoles.size > 0 && (
+                <button
+                  className={styles.dropdownButton}
+                  type="button"
+                  onClick={() => {
+                    setSelectedRoles(new Set());
+                    if (typeof window !== "undefined") {
+                      window.dispatchEvent(new CustomEvent("bowtie:filterChanged", {
+                        detail: { roles: [] }
+                      }));
+                    }
+                  }}
+                >
+                  Clear All Filters
+                </button>
+              )}
             </div>
           </div>
         )}
@@ -238,6 +334,16 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
       </nav>
 
       <div className={styles.footer}>
+        <button
+          className={styles.helpBtn}
+          type="button"
+          aria-label="Open help"
+          title="Open visual help"
+          onClick={() => dispatch("bowtie:toggleHelp")}
+        >
+          <span className={styles.icon}>?</span>
+          {!collapsed && <span className={styles.label}>Help</span>}
+        </button>
         <button className={styles.themeBtn} type="button" title="Theme toggle - coming soon in future release" aria-label="Theme toggle">
           <span className={styles.icon}>🌙</span>
           {!collapsed && <span className={styles.label}>Theme</span>}

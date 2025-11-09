@@ -7,8 +7,14 @@ interface Props {
 
 export function PreAttentiveHelp({ onClose }: Props) {
   return (
-    <div className={styles.backdrop} role="dialog" aria-modal="true" aria-labelledby="help-title">
-      <div className={styles.panel}>
+    <div
+      className={styles.backdrop}
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="help-title"
+      onClick={onClose}
+    >
+      <div className={styles.panel} onClick={(e) => e.stopPropagation()}>
         <header className={styles.header}>
           <div>
             <p className={styles.kicker}>Visual system</p>

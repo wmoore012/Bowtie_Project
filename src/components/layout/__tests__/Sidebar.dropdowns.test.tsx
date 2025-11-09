@@ -189,16 +189,168 @@ describe("Sidebar inline dropdown panels", () => {
     render(<Sidebar collapsed={false} onToggle={vi.fn()} />);
 
     const filtersButton = screen.getByRole("button", { name: /toggle filters panel/i });
-    
+
     // Initially closed
     expect(filtersButton).toHaveAttribute("aria-expanded", "false");
 
     // Open
     await user.click(filtersButton);
     expect(filtersButton).toHaveAttribute("aria-expanded", "true");
-    
+
     const dropdown = screen.getByRole("region", { name: /filters/i });
     expect(dropdown).toBeInTheDocument();
+  });
+});
+
+describe("Filter chips in Filters dropdown", () => {
+  it("renders 6 role filter chips when Filters dropdown is open", async () => {
+    const user = userEvent.setup();
+    render(<Sidebar collapsed={false} onToggle={vi.fn()} />);
+
+    const filtersButton = screen.getByRole("button", { name: /toggle filters panel/i });
+    await user.click(filtersButton);
+
+    expect(screen.getByRole("switch", { name: /toggle human filter/i })).toBeInTheDocument();
+    expect(screen.getByRole("switch", { name: /toggle supervisor filter/i })).toBeInTheDocument();
+    expect(screen.getByRole("switch", { name: /toggle policy filter/i })).toBeInTheDocument();
+    expect(screen.getByRole("switch", { name: /toggle maintenance filter/i })).toBeInTheDocument();
+    expect(screen.getByRole("switch", { name: /toggle active hardware filter/i })).toBeInTheDocument();
+    expect(screen.getByRole("switch", { name: /toggle operations filter/i })).toBeInTheDocument();
+  });
+
+  it("toggles chip selected state when clicked", async () => {
+    const user = userEvent.setup();
+    render(<Sidebar collapsed={false} onToggle={vi.fn()} />);
+
+    const filtersButton = screen.getByRole("button", { name: /toggle filters panel/i });
+    await user.click(filtersButton);
+
+    const humanChip = screen.getByRole("switch", { name: /toggle human filter/i });
+    expect(humanChip).toHaveAttribute("aria-checked", "false");
+
+    await user.click(humanChip);
+    expect(humanChip).toHaveAttribute("aria-checked", "true");
+
+    await user.click(humanChip);
+    expect(humanChip).toHaveAttribute("aria-checked", "false");
+  });
+
+  it("allows multiple chips to be selected simultaneously", async () => {
+    const user = userEvent.setup();
+    render(<Sidebar collapsed={false} onToggle={vi.fn()} />);
+
+    const filtersButton = screen.getByRole("button", { name: /toggle filters panel/i });
+    await user.click(filtersButton);
+
+    const humanChip = screen.getByRole("switch", { name: /toggle human filter/i });
+    const policyChip = screen.getByRole("switch", { name: /toggle policy filter/i });
+
+    await user.click(humanChip);
+    await user.click(policyChip);
+
+    expect(humanChip).toHaveAttribute("aria-checked", "true");
+    expect(policyChip).toHaveAttribute("aria-checked", "true");
+  });
+
+  it("dispatches bowtie:filterChanged event with selected roles", async () => {
+    const user = userEvent.setup();
+    const dispatchSpy = vi.fn();
+    window.dispatchEvent = dispatchSpy;
+
+    render(<Sidebar collapsed={false} onToggle={vi.fn()} />);
+
+    const filtersButton = screen.getByRole("button", { name: /toggle filters panel/i });
+    await user.click(filtersButton);
+
+    const humanChip = screen.getByRole("switch", { name: /toggle human filter/i });
+    await user.click(humanChip);
+
+    expect(dispatchSpy).toHaveBeenCalledWith(
+      expect.objectContaining({
+        type: "bowtie:filterChanged",
+        detail: expect.objectContaining({
+          roles: expect.arrayContaining(["Human"])
+        })
+      })
+    );
+  });
+
+  it("maintains filter state when dropdown is closed and reopened", async () => {
+    const user = userEvent.setup();
+    render(<Sidebar collapsed={false} onToggle={vi.fn()} />);
+
+    const filtersButton = screen.getByRole("button", { name: /toggle filters panel/i });
+
+    // Open and select a chip
+    await user.click(filtersButton);
+    const humanChip = screen.getByRole("switch", { name: /toggle human filter/i });
+    await user.click(humanChip);
+    expect(humanChip).toHaveAttribute("aria-checked", "true");
+
+    // Close dropdown
+    await user.click(filtersButton);
+
+    // Reopen and verify state persisted
+    await user.click(filtersButton);
+    const humanChipAgain = screen.getByRole("switch", { name: /toggle human filter/i });
+    expect(humanChipAgain).toHaveAttribute("aria-checked", "true");
+  });
+
+  it("supports keyboard navigation with Space key", async () => {
+    const user = userEvent.setup();
+    render(<Sidebar collapsed={false} onToggle={vi.fn()} />);
+
+    const filtersButton = screen.getByRole("button", { name: /toggle filters panel/i });
+    await user.click(filtersButton);
+
+    const humanChip = screen.getByRole("switch", { name: /toggle human filter/i });
+    humanChip.focus();
+
+    await user.keyboard(" "); // Space key
+    expect(humanChip).toHaveAttribute("aria-checked", "true");
+  });
+
+  it("shows Clear All Filters button when filters are selected", async () => {
+    const user = userEvent.setup();
+    render(<Sidebar collapsed={false} onToggle={vi.fn()} />);
+
+    const filtersButton = screen.getByRole("button", { name: /toggle filters panel/i });
+    await user.click(filtersButton);
+
+    // Initially no clear button
+    expect(screen.queryByRole("button", { name: /clear all filters/i })).not.toBeInTheDocument();
+
+    // Select a chip
+    const humanChip = screen.getByRole("switch", { name: /toggle human filter/i });
+    await user.click(humanChip);
+
+    // Clear button should appear
+    expect(screen.getByRole("button", { name: /clear all filters/i })).toBeInTheDocument();
+  });
+
+  it("clears all filters when Clear All Filters button is clicked", async () => {
+    const user = userEvent.setup();
+    render(<Sidebar collapsed={false} onToggle={vi.fn()} />);
+
+    const filtersButton = screen.getByRole("button", { name: /toggle filters panel/i });
+    await user.click(filtersButton);
+
+    // Select multiple chips
+    const humanChip = screen.getByRole("switch", { name: /toggle human filter/i });
+    const policyChip = screen.getByRole("switch", { name: /toggle policy filter/i });
+    await user.click(humanChip);
+    await user.click(policyChip);
+
+    expect(humanChip).toHaveAttribute("aria-checked", "true");
+    expect(policyChip).toHaveAttribute("aria-checked", "true");
+
+    // Click clear button
+    const clearButton = screen.getByRole("button", { name: /clear all filters/i });
+    await user.click(clearButton);
+
+    // All chips should be deselected
+    expect(humanChip).toHaveAttribute("aria-checked", "false");
+    expect(policyChip).toHaveAttribute("aria-checked", "false");
   });
 });
 
