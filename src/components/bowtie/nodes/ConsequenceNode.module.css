@@ -7,7 +7,11 @@
   min-width: 220px;
   max-width: 300px;
   cursor: pointer;
+  transition: transform 160ms ease, box-shadow 160ms ease;
+  position: relative;
 }
+.card[data-width="wide"] { max-width: 360px; }
+.card[data-orientation="right"] { text-align: right; }
 .content {
   padding: var(--pad-y) var(--pad-x);
 }
@@ -16,6 +20,26 @@
   font-size: 14px;
   line-height: 1.25;
   color: var(--consequence-text, #111827);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.emoji { font-size: 18px; }
+.badge {
+  position: absolute;
+  top: -11px;
+  right: 12px;
+  background: rgba(255, 255, 255, 0.15);
+  color: #fff;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  font-weight: 700;
+}
+.card[data-orientation="left"] .badge {
+  right: auto;
+  left: 12px;
 }
 
 
@@ -42,6 +66,9 @@
   gap: 6px;
   margin-top: 8px;
   flex-wrap: wrap;
+}
+.card[data-orientation="right"] .chips {
+  justify-content: flex-end;
 }
 .chip {
   font-size: 11px;

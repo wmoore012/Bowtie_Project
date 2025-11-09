@@ -109,7 +109,7 @@ export const Legend = memo(function Legend() {
       </div>
 
       <div className={styles.note}>
-        Barriers stay collapsed until you select a card or run the story; escalation factors remain visible for context.
+        Badges (PB-1.2, MB-1.6, etc.) show sequence order; wings stay collapsed until you click a card or run the story.
       </div>
       </div>
     </aside>

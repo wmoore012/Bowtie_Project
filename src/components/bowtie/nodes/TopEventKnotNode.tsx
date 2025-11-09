@@ -8,6 +8,7 @@ function TopEventKnotNode({ id, data }: NodeProps) {
   const d = data as BowtieNodeData;
   const title = d?.metadata?.eli5 ?? d?.label;
   const descId = `${id}-desc`;
+  const labelText = d?.displayLabel ?? d?.label;
   return (
     <>
       <button
@@ -21,7 +22,8 @@ function TopEventKnotNode({ id, data }: NodeProps) {
       >
         <div className={styles.knot}>
           <span className={styles.icon} aria-hidden="true"></span>
-          <span className={styles.label}>{d?.label}</span>
+          {d?.badge && <span className={styles.badge} aria-hidden="true">{d.badge}</span>}
+          <span className={styles.label}>{labelText}</span>
         </div>
         <Handle
           type="target"

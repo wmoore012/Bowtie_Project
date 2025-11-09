@@ -48,6 +48,19 @@
 
 .label { font-weight: 700; font-size: 14px; text-transform: uppercase; letter-spacing: 0.05em; }
 .icon { font-size: 16px; }
+.emoji { font-size: 18px; }
+.badge {
+  position: absolute;
+  top: -10px;
+  right: 12px;
+  background: rgba(0,0,0,0.6);
+  color: #fff;
+  padding: 2px 8px;
+  border-radius: 8px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+}
 
 
 .tag:focus-visible {

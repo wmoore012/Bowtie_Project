@@ -8,6 +8,7 @@ This document summarizes the current state of the Bowtie Builder Pro Track‑2 i
 - Current deployment: https://bowtie-project.vercel.app
 - Repository location: `/Users/jsmash/PycharmProjects/Bowtie Project/bowtie-lithium-warehouse`
 - Working directory for npm commands: `/Users/jsmash/PycharmProjects/Bowtie Project/bowtie-lithium-warehouse`
+  > ⚠️ Run every `npm` command from this directory. Running `npm run build` from `/Users/jsmash/PycharmProjects/Bowtie Project` will fail because there is no `package.json` there.
 
 ### 2. Completed Work (Status as of Last Agent)
 - ✅ Priority 1 & 2: Symmetric bow tie layout with Hazard → Top Event hierarchy

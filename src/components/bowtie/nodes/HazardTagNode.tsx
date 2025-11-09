@@ -7,6 +7,7 @@ import type { BowtieNodeData } from "../../../domain/bowtie.types";
 function HazardTagNode({ id, data }: NodeProps) {
   const d = data as BowtieNodeData;
   const title = d?.metadata?.eli5 ?? d?.label;
+  const labelText = d?.displayLabel ?? d?.label;
   const descId = `${id}-desc`;
   return (
     <>
@@ -21,9 +22,15 @@ function HazardTagNode({ id, data }: NodeProps) {
         data-highlight={d?.highlighted ? "true" : undefined}
         data-dimmed={d?.dimmed ? "true" : undefined}
       >
+        {d?.badge && (
+          <span className={styles.badge} aria-hidden="true">
+            {d.badge}
+          </span>
+        )}
         <span className={styles.icon} aria-hidden="true">⚠</span>
         <span className="sr-only">Hazard</span>
-        <span className={styles.label}>{d?.label}</span>
+        {d?.emoji && <span className={styles.emoji} aria-hidden="true">{d.emoji}</span>}
+        <span className={styles.label}>{labelText}</span>
         <Handle
           type="target"
           position={Position.Top}

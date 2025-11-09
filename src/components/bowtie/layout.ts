@@ -1,7 +1,38 @@
-import type { BowtieDiagram, BowtieNodeType } from "../../domain/bowtie.types";
+import type { BowtieDiagram, BowtieNodeType, BowtieNodeData } from "../../domain/bowtie.types";
 import type { Edge, Node } from "@xyflow/react";
 import { MarkerType, Position } from "@xyflow/react";
-import type { BowtieNodeData } from "../../domain/bowtie.types";
+
+const leftTypes = new Set<BowtieNodeType>([
+  "threat",
+  "preventionBarrier",
+  "escalationFactor",
+  "escalationBarrier",
+]);
+const rightTypes = new Set<BowtieNodeType>(["mitigationBarrier", "consequence"]);
+
+function isEmoji(char: string | undefined): boolean {
+  if (!char) return false;
+  const cp = char.codePointAt(0);
+  if (!cp) return false;
+  return cp >= 0x1f000;
+}
+
+function parseVisualLabel(label: string): { badge?: string; emoji?: string; text: string } {
+  let remaining = label.trim();
+  let badge: string | undefined;
+  const badgeMatch = remaining.match(/^([A-Z]{1,3}[-\d\.]*)\s+(.*)$/);
+  if (badgeMatch) {
+    badge = badgeMatch[1];
+    remaining = badgeMatch[2];
+  }
+  const firstChar = Array.from(remaining)[0];
+  let emoji: string | undefined;
+  if (isEmoji(firstChar)) {
+    emoji = firstChar;
+    remaining = remaining.slice(firstChar.length).trim();
+  }
+  return { badge, emoji, text: remaining };
+}
 
 
 export function computeSimpleLayout(diagram: BowtieDiagram): {
@@ -77,10 +108,28 @@ export function computeSimpleLayout(diagram: BowtieDiagram): {
   const nodes: Node<BowtieNodeData>[] = diagram.nodes.map((n) => {
     const p = pos.get(n.id) ?? { x: 0, y: 0 };
     const role = asRole(n);
+    const { badge, emoji, text } = parseVisualLabel(n.label);
+    const orientation = leftTypes.has(n.type)
+      ? "left"
+      : rightTypes.has(n.type)
+        ? "right"
+        : "center";
+    const widthHint: "narrow" | "medium" | "wide" =
+      n.type === "hazard" || n.type === "topEvent" ? "wide" : n.type === "threat" ? "medium" : "narrow";
     return {
       id: n.id,
       type: n.type,
-      data: { label: n.label, bowtieType: n.type, metadata: n.metadata, role },
+      data: {
+        label: text || n.label,
+        bowtieType: n.type,
+        metadata: n.metadata,
+        role,
+        badge,
+        emoji,
+        displayLabel: text || n.label,
+        orientation,
+        widthHint,
+      },
       position: p,
       sourcePosition: Position.Right,
       targetPosition: Position.Left,

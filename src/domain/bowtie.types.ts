@@ -62,6 +62,11 @@ export interface BowtieNodeData extends Record<string, unknown> {
   role?: "prevention" | "mitigation" | "escalation-left" | "escalation-right" | "escalation";
   highlighted?: boolean;
   dimmed?: boolean;
+  displayLabel?: string;
+  badge?: string;
+  emoji?: string;
+  orientation?: "left" | "right" | "center";
+  widthHint?: "narrow" | "medium" | "wide";
 }
 
 export function isBowtieNodeData(v: unknown): v is BowtieNodeData {

@@ -15,6 +15,9 @@ function BarrierNode({ id, data }: NodeProps) {
         : "prevention";
   const title = d?.metadata?.eli5 ?? d?.label;
   const descId = `${id}-desc`;
+  const labelText = d?.displayLabel ?? d?.label;
+  const orientation = d?.orientation ?? "left";
+  const widthHint = d?.widthHint ?? "medium";
   const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
     if (e.key === "Enter" || e.key === " ") {
       e.preventDefault();
@@ -36,10 +39,21 @@ function BarrierNode({ id, data }: NodeProps) {
         data-role={role}
         data-highlight={d?.highlighted ? "true" : undefined}
         data-dimmed={d?.dimmed ? "true" : undefined}
+        data-orientation={orientation}
+        data-width={widthHint}
       >
+        {d?.badge && (
+          <span className={styles.badge} aria-hidden="true">
+            {d.badge}
+          </span>
+        )}
         <div className={`${styles.headerBar} ${styles[role]}`} />
         <div className={styles.content}>
-          <div className={styles.title}>{d?.label}<span className={styles.infoIcon} aria-hidden="true">ⓘ</span></div>
+          <div className={styles.title}>
+            {d?.emoji && <span className={styles.emoji} aria-hidden="true">{d.emoji}</span>}
+            <span>{labelText}</span>
+            <span className={styles.infoIcon} aria-hidden="true">ⓘ</span>
+          </div>
           {d?.metadata?.chips?.length ? (
             <div className={styles.chips}>
               {d.metadata!.chips!.map((c) => (
