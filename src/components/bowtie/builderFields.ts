@@ -2,6 +2,7 @@ import type {
   BowtieNodeData,
   BowtieNodeType,
   BuilderNodeFields,
+  BuilderNodeStatus,
 } from "../../domain/bowtie.types";
 
 const BASE_DEFAULTS: BuilderNodeFields = {
@@ -78,7 +79,9 @@ export function buildBuilderFields(
     ...(existing || {}),
   };
   merged.tags = normalizeTags(existing?.tags ?? defaults.tags ?? BASE_DEFAULTS.tags);
-  if (typeof merged.status === "undefined") merged.status = defaults.status ?? BASE_DEFAULTS.status;
+  if (typeof merged.status === "undefined") {
+    merged.status = (defaults.status ?? BASE_DEFAULTS.status) as BuilderNodeStatus;
+  }
   return merged;
 }
 

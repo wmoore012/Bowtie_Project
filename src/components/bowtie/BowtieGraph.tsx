@@ -28,7 +28,8 @@ import TopEventKnotNode from "./nodes/TopEventKnotNode";
 import { PreAttentiveHelp } from "./PreAttentiveHelp";
 import EscalationFactorNode from "./nodes/EscalationFactorNode";
 import { BuilderInspector, type BuilderInspectorChange } from "./BuilderInspector";
-import { buildBuilderFields, ensureBuilderData, mergeBuilderPatch } from "./builderFields";
+import { BuilderModeConfirmDialog } from "./BuilderModeConfirmDialog";
+import { ensureBuilderData, mergeBuilderPatch } from "./builderFields";
 
 
 import { computeStepDiagram, type StepIndex } from "../../domain/stepMode";
@@ -134,6 +135,9 @@ function InnerGraph({ diagram, initialMode = "demo" }: { diagram: BowtieDiagram;
   const [mode, setMode] = useState<"demo" | "builder">(initialMode);
   // Collapsible UI panels
   const [paletteOpen, setPaletteOpen] = useState(false);
+  // First-time builder mode confirmation
+  const [showBuilderConfirm, setShowBuilderConfirm] = useState(false);
+  const hasSeenBuilderConfirmRef = useRef(false);
   useEffect(() => { setMode(initialMode); }, [initialMode]);
   useEffect(() => { setPaletteOpen(mode === "builder"); }, [mode]);
   useEffect(() => {
@@ -226,7 +230,7 @@ function InnerGraph({ diagram, initialMode = "demo" }: { diagram: BowtieDiagram;
       return;
     }
     setCardNode(node);
-    if (mode !== "builder") {
+    if (mode === "demo") {
       const reveal = collectRevealForNode(node.id);
       const revealArr = Array.from(reveal);
       setManualRevealIds(new Set(revealArr));
@@ -756,7 +760,16 @@ function InnerGraph({ diagram, initialMode = "demo" }: { diagram: BowtieDiagram;
   useEffect(() => {
     if (typeof window === "undefined") return;
     const onExport = () => { void exportPng(); };
-    const onToggle = () => setMode((m) => (m === "builder" ? "demo" : "builder"));
+    const onToggle = () => {
+      setMode((m) => {
+        if (m === "demo" && !hasSeenBuilderConfirmRef.current) {
+          // First time switching to builder mode - show confirmation
+          setShowBuilderConfirm(true);
+          return m; // Don't change mode yet
+        }
+        return m === "builder" ? "demo" : "builder";
+      });
+    };
     const onClear = () => {
       if (mode !== "builder") return;
       try {
@@ -792,6 +805,39 @@ function InnerGraph({ diagram, initialMode = "demo" }: { diagram: BowtieDiagram;
       window.removeEventListener("bowtie:clearDiagram", onClear as any);
     };
   }, [setMode, mode, diagram]);
+
+  // Handle builder mode confirmation dialog
+  const handleBuilderConfirm = useCallback((clearDiagram: boolean) => {
+    hasSeenBuilderConfirmRef.current = true;
+    setShowBuilderConfirm(false);
+
+    if (clearDiagram) {
+      // Clear diagram to just hazard + top event
+      try {
+        const hazard = diagram.nodes.find((n) => n.type === "hazard");
+        const topEvent = diagram.nodes.find((n) => n.type === "topEvent");
+        const hazardLabel = hazard?.label || "Hazard";
+        const topLabel = topEvent?.label || "Thermal runaway";
+        const cleared: BowtieDiagram = {
+          id: "cleared",
+          title: diagram.title,
+          createdAt: diagram.createdAt,
+          updatedAt: new Date().toISOString(),
+          nodes: [
+            { id: "hazard", type: "hazard", label: hazardLabel },
+            { id: "topEvent", type: "topEvent", label: topLabel },
+          ],
+          edges: [
+            { id: "h_to_top", source: "hazard", target: "topEvent" },
+          ],
+        };
+        setRenderOverride(cleared);
+      } catch {}
+    }
+
+    // Switch to builder mode
+    setMode("builder");
+  }, [diagram]);
 
 
   // Broadcast mode changes so Sidebar can reflect state
@@ -1367,6 +1413,15 @@ function InnerGraph({ diagram, initialMode = "demo" }: { diagram: BowtieDiagram;
                 >
                   Palette ▾
                 </button>
+                <button
+                  className={styles.bowtieButton}
+                  onClick={applyBuilderLayout}
+                  type="button"
+                  title="Reset node positions to default layout"
+                  aria-label="Reset layout"
+                >
+                  ↻ Reset Layout
+                </button>
                 {paletteOpen && (
                   <div id="builder-palette-panel" className={styles.filtersFloatingPanel} role="dialog" aria-label="Builder palette" data-testid="builder-palette">
                     <div className={styles.panelTitle} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -1510,6 +1565,11 @@ function InnerGraph({ diagram, initialMode = "demo" }: { diagram: BowtieDiagram;
       </div>
 
       {helpOpen && <PreAttentiveHelp onClose={() => setHelpOpen(false)} />}
+
+      <BuilderModeConfirmDialog
+        open={showBuilderConfirm}
+        onConfirm={handleBuilderConfirm}
+      />
 
     </div>
   );

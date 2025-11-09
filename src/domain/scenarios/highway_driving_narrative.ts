@@ -6,153 +6,161 @@ export type StoryStep = {
 };
 
 export const highwayDrivingNarrative: StoryStep[] = [
+  // NORMAL STATE
   {
-    title: "⚠️ Framing the hazard",
-    body: "<span style=\"color:#ea580c;font-weight:700;\">⚠️ Hazard</span> → <span style=\"color:#ef4444;font-weight:700;\">🎯 Top event</span>. The yellow striped card feeds the glowing knot so everyone immediately sees where energy flows.",
+    title: "🛣️ NORMAL: Fleet Operations Running Smooth",
+    body: "<strong>40 trucks</strong> running interstate routes.<br>• Drivers sober and trained<br>• Vehicles maintained and inspected<br>• ADAS systems calibrated<br>• Weather monitoring active<br><em>Every barrier in place, every shift.</em>",
     focusIds: ["hz-highway", "te-loss-control"],
   },
+
+  // THREAT LANDSCAPE
   {
-    title: "🎯 Threat landscape",
-    body: "<strong>Threat roll call:</strong> 🍸 intoxication, 🛰️ miscalibration, 📱 distraction, 🌧️ slippery roads, 🔧 impaired machines, 🌫️ visibility. <em>Blue frames = anticipation.</em> Tap any card and watch its cyan shields slide in from the left.",
-    focusIds: [
-      "th-intoxicated",
-      "th-miscalibrated",
-      "th-distracted",
-      "th-slippery",
-      "th-impaired-vehicle",
-      "th-visibility",
-    ],
+    title: "⚠️ SIX THREATS: What Can Go Wrong",
+    body: "<strong>Any one can trigger loss of control:</strong><br>• 🍸 <strong>Intoxicated driver</strong> (impaired judgment)<br>• 🛰️ <strong>Sensor drift</strong> (bad feedback)<br>• 📱 <strong>Distraction</strong> (eyes off road)<br>• 🌧️ <strong>Slippery surface</strong> (no traction)<br>• 🔧 <strong>Mechanical failure</strong> (brakes, steering)<br>• 🌫️ <strong>Poor visibility</strong> (fog, darkness)",
+    focusIds: ["th-intoxicated", "th-miscalibrated", "th-distracted", "th-slippery", "th-impaired-vehicle", "th-visibility"],
   },
+
+  // LATENT CONDITIONS
   {
-    title: "⚡️ Escalation factors",
-    body: "⚡️ <strong>Degradation guardrail:</strong> 🛠️ calibration slips, 📉 backlog drag, ❌ seatbelt drift, 🌀 rollover readiness. <u>Yellow stripes never hide</u> so facilitators can call out frailty before it grows.",
-    focusIds: ["ef-miscalibration", "ef-maint-backlog", "ef-seatbelt", "ef-rollover"],
+    title: "🕳️ LATENT: Cracks in the Foundation",
+    body: "<strong>Hidden weaknesses building over months:</strong><br>• <strong>ADAS calibration overdue</strong> after windshield replacements<br>• <strong>ABS faults ignored</strong>—not escalated to maintenance<br>• <strong>Seatbelt alarms disconnected</strong> by drivers (too annoying)<br>• <strong>Weather alerts skipped</strong> when dispatch busy<br>• <strong>Defensive training postponed</strong> 6 months (budget cuts)",
+    focusIds: ["ef-miscalibration", "ef-maint-backlog", "ef-seatbelt", "pb-weather-report", "pb-defensive-driving"],
   },
+
+  // PREVENTION: Intoxication
   {
-    title: "🛡 Preventing intoxicated driving",
-    body: "🍸 threat opens to <strong>PB-1.x</strong>: 🧪 screening, 🧍‍♂️ designated buddies, 🔐 ignition locks, 🚨 lane nudges. Cyan underline = <u>human checkpoints</u> so the room instantly spots accountability.",
+    title: "🛡 PREVENTION: Stopping Impaired Driving",
+    body: "<strong>Four barriers between 🍸 intoxication and the wheel:</strong><br>• <strong>Random alcohol & drug screening</strong> (pre-hire + periodic testing)<br>• <strong>Designated driver pairs</strong> for company events<br>• <strong>Breath interlock ignition locks</strong> won't start truck without sober test<br>• <strong>Lane departure warnings</strong> catch impaired drift early<br><em>Screening catches problems before keys turn.</em>",
     focusIds: ["th-intoxicated", "pb-screening", "pb-designated-driver", "pb-ignition-lock", "pb-lane-warning"],
     revealIds: ["pb-screening", "pb-designated-driver", "pb-ignition-lock", "pb-lane-warning"],
   },
+
+  // PREVENTION: Weather & Visibility
   {
-    title: "🌧 Managing slippery or low-visibility routes",
-    body: "<strong>PB-4 / PB-6 carousel:</strong> 🌧️ <span style=\"color:#0369a1;font-weight:600;\">weather intel</span>, 🗓️ <span style=\"color:#7c3aed;font-style:italic;\">schedule shifts</span>, 🛡️ defensive coaching, 🛞 ABS pulse, 💡 lighting policy. Each icon locks to its card so crews can skim left wing like a dashboard.",
-    focusIds: [
-      "th-slippery",
-      "th-visibility",
-      "pb-weather-report",
-      "pb-adjust-schedule",
-      "pb-no-high-risk",
-      "pb-defensive-driving",
-      "pb-abs",
-      "pb-lights-always",
-      "pb-light-spec",
-      "pb-preferred-hire",
-    ],
-    revealIds: [
-      "pb-weather-report",
-      "pb-adjust-schedule",
-      "pb-no-high-risk",
-      "pb-defensive-driving",
-      "pb-abs",
-      "pb-lights-always",
-      "pb-light-spec",
-      "pb-preferred-hire",
-    ],
+    title: "🛡 PREVENTION: Handling Bad Weather",
+    body: "<strong>Six barriers for 🌧️ slippery roads and 🌫️ low visibility:</strong><br>• 🌧️ <strong>Hourly weather alerts</strong> to dispatch<br>• 🗓️ <strong>Schedule adjustments</strong>—shift to safer routes/times<br>• 🚧 <strong>No-drive thresholds</strong> when conditions critical<br>• 🛡️ <strong>Defensive driving training</strong> for slick-surface recovery<br>• 🛞 <strong>ABS braking</strong> preserves steering control<br>• 💡 <strong>Running lights always on</strong> increases visibility",
+    focusIds: ["th-slippery", "th-visibility", "pb-weather-report", "pb-adjust-schedule", "pb-no-high-risk", "pb-defensive-driving", "pb-abs", "pb-lights-always"],
+    revealIds: ["pb-weather-report", "pb-adjust-schedule", "pb-no-high-risk", "pb-defensive-driving", "pb-abs", "pb-lights-always"],
   },
+
+  // PREVENTION: Maintenance
   {
-    title: "🚧 Crash mitigation barriers",
-    body: "When 🎯 flashes, the right wing fans out: 🚨 forward-warning radar, 🛡️ slip recovery coaching, and 🚙 crumple structure (<em>car shell emoji, not a brick</em>) feed the 💥 crash chain. <u>Blue glow means reaction, not panic.</u>",
-    focusIds: ["mb-forward-warning", "mb-defensive-competence", "mb-crumple-zone", "c-fixed-object"],
-    revealIds: ["mb-forward-warning", "mb-defensive-competence", "mb-crumple-zone"],
+    title: "🛡 PREVENTION: Mechanical Integrity",
+    body: "<strong>Catching 🔧 defects before they matter:</strong><br>• 🧰 <strong>Scheduled PM inspections</strong> every 5,000 miles<br>• 📝 <strong>Pre-trip DVIR</strong>—no truck leaves with open defects<br>• 🚨 <strong>Warning light protocol</strong>—immediate escalation<br>• 🛠️ <strong>Critical defects ground trucks</strong> until repaired",
+    focusIds: ["th-impaired-vehicle", "pb-inspection-maint", "ef-maint-backlog", "eb-maintenance-discipline"],
+    revealIds: ["pb-inspection-maint", "eb-maintenance-discipline"],
   },
+
+  // DEVIATION BEGINS
   {
-    title: "🧍 Occupant protection",
-    body: "<strong>Occupant comfort sequence:</strong> 🎈 airbags lift the impact, 🪑 headrests steady the spine, 🤕 interior injury node shifts from red to lavender. Mention the calm, not the glow.",
-    focusIds: ["mb-airbag", "mb-headrest", "c-driver-impacts"],
-    revealIds: ["mb-airbag", "mb-headrest"],
+    title: "🌧️ DEVIATION: Storm Hits, Alert Missed",
+    body: "<strong>Friday 4:00 PM:</strong> Freezing rain moving toward I-80.<br>• <strong>WHO:</strong> Dispatcher handling 6 simultaneous calls<br>• <strong>WHAT:</strong> Weather alert system not checked<br>• <strong>WHY:</strong> Staffing shortage, no backup protocol<br>• <strong>IMPACT:</strong> Driver unaware—first barrier down",
+    focusIds: ["th-slippery", "pb-weather-report"],
   },
+
   {
-    title: "🔔 Seatbelt compliance loop",
-    body: "<u>Culture loop:</u> 📣 campaigns, 🔔 cab alarms, ⚠️ refusal consequence, ✅ EF discipline. Speak to trust, incentives, and peer pressure—not software.",
-    focusIds: ["mb-seatbelt-campaign", "mb-seatbelt-alarm", "c-seatbelt-missed", "ef-seatbelt", "eb-seatbelt-discipline"],
-    revealIds: ["mb-seatbelt-campaign", "mb-seatbelt-alarm", "eb-seatbelt-discipline"],
+    title: "📱 DEVIATION: Eyes Off Road for 5 Seconds",
+    body: "<strong>Friday 5:15 PM:</strong> Driver checks phone to reroute around traffic.<br>• <strong>WHO:</strong> Driver with clean 10-year record<br>• <strong>WHAT:</strong> Lane departure warning doesn't trigger<br>• <strong>WHY:</strong> ADAS calibration overdue 3 months<br>• <strong>IMPACT:</strong> Two barriers down—distraction + failed detection",
+    focusIds: ["th-distracted", "pb-lane-warning", "ef-miscalibration"],
   },
+
+  // ESCALATION
   {
-    title: "🔄 Rollover readiness",
-    body: "🔄 <strong>Rollover duet:</strong> 🛞 cage structure + 🚒 readiness drills counter the 🌀 escalation factor. Describe the relief of watching a truck stay upright, not the animation.",
-    focusIds: ["mb-rollover-protection", "c-rollover", "ef-rollover", "eb-rollover-readiness"],
-    revealIds: ["mb-rollover-protection", "eb-rollover-readiness"],
+    title: "❄️ ESCALATION: Black Ice Forms",
+    body: "<strong>Friday 5:17 PM:</strong> Temperature drops under bridge, pavement ices.<br>• <strong>WHAT:</strong> Rear wheels lose traction at 65 mph<br>• <strong>COMPOUNDING FACTOR:</strong> ABS fault from last week not fixed<br>• <strong>WHY:</strong> Maintenance backlog—non-critical items deferred<br>• <strong>IMPACT:</strong> Braking asymmetric, truck starts rotating",
+    focusIds: ["th-slippery", "th-impaired-vehicle", "ef-maint-backlog"],
   },
+
+  // TOP EVENT
   {
-    title: "💚 Barrier win: sober start",
-    body: "PB-1.x shines: 🧪 screening, 🧍‍♂️ buddies, 🔐 ignition locks catch impairment before wheels roll. Celebrate the calm breath supervisors take when every truck leaves clear.",
-    focusIds: ["pb-screening", "pb-designated-driver", "pb-ignition-lock", "pb-lane-warning"],
-    revealIds: ["pb-screening", "pb-designated-driver", "pb-ignition-lock", "pb-lane-warning"],
+    title: "🎯 TOP EVENT: Loss of Control",
+    body: "<strong>Friday 5:17:03 PM:</strong> Truck rotates 45° in lane, crosses centerline.<br><em>Prevention has failed. Mitigation is now the only hope.</em>",
+    focusIds: ["te-loss-control"],
   },
+
+  // MITIGATION ENGAGES
   {
-    title: "🌤 Weather shift handled",
-    body: "Dispatcher sees the radar, taps 🗓️ adjust schedule, and the driver parks before hail hits. Mention the shared exhale when 🌧 threat cards fade without ever touching the knot.",
-    focusIds: ["pb-weather-report", "pb-adjust-schedule", "pb-no-high-risk"],
-    revealIds: ["pb-weather-report", "pb-adjust-schedule", "pb-no-high-risk"],
-  },
-  {
-    title: "🚨 Radar nudge saves a family",
-    body: "Forward warning + slip coaching kick in together: 🚨 radar chirps, 🛡 coach training takes over, 🚙 crumple shell never has to burn energy. Tell the room what stayed whole.",
+    title: "🛡 MITIGATION: Tech + Training Respond",
+    body: "<strong>Friday 5:17:04 PM:</strong> Three mitigation barriers activate:<br>• 🚨 <strong>Forward collision radar</strong> chirps—car 200 feet ahead<br>• 🛡️ <strong>Defensive training kicks in</strong>—driver countersteers smoothly<br>• 🧱 <strong>Crumple zone ready</strong> if impact occurs<br><em>Driver fighting for control.</em>",
     focusIds: ["mb-forward-warning", "mb-defensive-competence", "mb-crumple-zone"],
     revealIds: ["mb-forward-warning", "mb-defensive-competence", "mb-crumple-zone"],
   },
+
   {
-    title: "👷 Rescue choreography",
-    body: "Emergency partners drill the playbook: 🚒 readiness, ✅ EF discipline, ❌ consequence shrinks. Shine a light on people shaking hands after a clean lift-out.",
-    focusIds: ["eb-seatbelt-discipline", "eb-rollover-readiness", "mb-seatbelt-campaign", "mb-rollover-protection"],
-    revealIds: ["eb-seatbelt-discipline", "eb-rollover-readiness"],
+    title: "🛡 MITIGATION: Occupant Protection Standby",
+    body: "<strong>If crash occurs, three more barriers:</strong><br>• 🎈 <strong>Airbags ready</strong> (sensors tested quarterly)<br>• 🪑 <strong>Headrest adjusted properly</strong> (prevents whiplash)<br>• 🔔 <strong>Seatbelt alarm active</strong>—except driver bypassed it last month<br><em>One mitigation barrier already compromised.</em>",
+    focusIds: ["mb-airbag", "mb-headrest", "mb-seatbelt-alarm", "ef-seatbelt"],
+    revealIds: ["mb-airbag", "mb-headrest", "mb-seatbelt-alarm"],
   },
+
+  // OUTCOME: BARRIER WIN
   {
-    title: "📊 Lessons loop back",
-    body: "Fleet reviews near-miss telemetry, pins it to 📣 campaign boards, updates 📅 cadence. Close the story on the feeling of teams learning faster than the risk mutates.",
-    focusIds: ["hz-highway", "pb-coaching", "pb-inspection-maint", "mb-seatbelt-alarm"],
-    revealIds: ["pb-coaching", "pb-inspection-maint", "mb-seatbelt-alarm"],
+    title: "✅ BARRIER WIN: Control Regained",
+    body: "<strong>Friday 5:17:08 PM:</strong> Driver regains lane position.<br>• <strong>WHAT WORKED:</strong> Radar alert + defensive training<br>• <strong>RESULT:</strong> No collision, truck intact<br>• <strong>HUMAN COST:</strong> Driver's hands shaking, heart racing<br><em>Mitigation held—this time.</em>",
+    focusIds: ["mb-forward-warning", "mb-defensive-competence"],
   },
+
+  // ALTERNATE OUTCOME
   {
-    title: "🛡 Green lane day",
-    body: "Operations stack PB cards like dominoes: 🌧 intel, 🗓 routes, 🛡 coaching, 🛞 ABS. Show the satisfaction when a treacherous corridor turns into a boring ride home.",
-    focusIds: ["pb-weather-report", "pb-adjust-schedule", "pb-defensive-driving", "pb-abs"],
-    revealIds: ["pb-weather-report", "pb-adjust-schedule", "pb-defensive-driving", "pb-abs"],
+    title: "💥 ALTERNATE: If Mitigation Failed",
+    body: "<strong>Without radar and training, four consequences likely:</strong><br>• 💥 <strong>Crash into barrier</strong> at 40 mph (property damage)<br>• 🤕 <strong>Driver impacts interior</strong> (whiplash, head trauma)<br>• ⚠️ <strong>Unbuckled = ejection risk</strong> (potential fatality)<br>• 🌀 <strong>Rollover</strong> if shoulder unstable (cargo spill, multi-vehicle)<br><em>Every near-miss is a warning.</em>",
+    focusIds: ["c-fixed-object", "c-driver-impacts", "c-seatbelt-missed", "c-rollover"],
   },
+
+  // RECOVERY
   {
-    title: "📣 Culture proof point",
-    body: "A driver shares a belt-save story at stand-up. 📣 Campaign chips, 🔔 cab alarms, ✅ EF discipline all rise together. Let the room feel the pride—not the chart.",
-    focusIds: ["mb-seatbelt-campaign", "mb-seatbelt-alarm", "eb-seatbelt-discipline"],
-    revealIds: ["mb-seatbelt-campaign", "mb-seatbelt-alarm", "eb-seatbelt-discipline"],
+    title: "🛠️ RECOVERY: Near-Miss Triggers Changes",
+    body: "<strong>Actions taken within 48 hours:</strong><br>• 🔧 <strong>Fleet-wide ADAS calibration</strong> (3-day blitz)<br>• 🌧️ <strong>Weather alert automation</strong> with failsafe backup<br>• 🛡️ <strong>Defensive driving refreshers</strong> moved up 6 months<br>• 🔔 <strong>Seatbelt alarm bypass = disciplinary action</strong><br>• 🛠️ <strong>ABS faults escalation protocol</strong> revised",
+    focusIds: ["pb-calibration", "pb-weather-report", "pb-defensive-driving", "mb-seatbelt-alarm", "pb-abs"],
+    revealIds: ["pb-calibration", "pb-weather-report", "pb-defensive-driving"],
   },
+
+  // HUMAN FACTORS
   {
-    title: "🛠 Maintenance heroes",
-    body: "Technicians close PB-5.1 & EF backlog tickets in a single shift. Mention the greasy smiles, the clear defect board, and the simple joy of a truck that behaves when brakes matter.",
+    title: "👷 ROOT CAUSES: System Failed People First",
+    body: "<strong>Three decision points where the system set people up to fail:</strong><br>• <strong>Dispatcher:</strong> No backup when call volume spikes (staffing issue)<br>• <strong>Maintenance:</strong> Deferred calibration under budget pressure (prioritization issue)<br>• <strong>Driver:</strong> Bypassed alarm due to annoyance (design issue)<br><em>People adapted to broken systems—until the day they couldn't.</em>",
+    focusIds: ["pb-weather-report", "ef-miscalibration", "ef-seatbelt"],
+  },
+
+  // LESSONS
+  {
+    title: "🎯 LESSONS: The Swiss Cheese Aligned",
+    body: "<strong>Why control was nearly lost:</strong><br>• <strong>Economic pressure</strong> (deferred maintenance)<br>• <strong>Workload spikes</strong> (dispatcher bandwidth)<br>• <strong>Normalization of deviance</strong> (bypassing alarms)<br>• <strong>Environmental surprise</strong> (black ice)<br><br><strong>Why mitigation held:</strong><br>• <strong>Redundant barriers</strong> (radar + training)<br>• <strong>Investment in fundamentals</strong> (defensive driving)<br><em>Defense in depth saved a life.</em>",
+    focusIds: ["hz-highway", "te-loss-control", "mb-forward-warning", "mb-defensive-competence"],
+  },
+
+  // CULTURE WINS (positive examples)
+  {
+    title: "💚 CULTURE WIN: Weather Intel Prevents Incident",
+    body: "<strong>Tuesday morning:</strong> Dispatcher sees radar, adjusts schedule.<br>• <strong>WHAT:</strong> Driver parks before hail hits<br>• <strong>RESULT:</strong> Threat never touches top event<br>• <strong>IMPACT:</strong> Shared exhale across ops team<br><em>Barriers working as designed.</em>",
+    focusIds: ["pb-weather-report", "pb-adjust-schedule", "pb-no-high-risk"],
+    revealIds: ["pb-weather-report", "pb-adjust-schedule", "pb-no-high-risk"],
+  },
+
+  {
+    title: "💚 CULTURE WIN: Maintenance Heroes",
+    body: "<strong>Wednesday night shift:</strong> Technicians close backlog in single push.<br>• <strong>WHO:</strong> 4 mechanics, overtime approved<br>• <strong>WHAT:</strong> ABS faults, calibration tickets, brake wear—all cleared<br>• <strong>WHY:</strong> Leadership prioritized fleet readiness over cost<br>• <strong>IMPACT:</strong> Every truck leaves inspection bay safe<br><em>Greasy smiles and clear defect boards.</em>",
     focusIds: ["pb-inspection-maint", "ef-maint-backlog", "eb-maintenance-discipline"],
     revealIds: ["pb-inspection-maint", "eb-maintenance-discipline"],
   },
+
   {
-    title: "👀 Coaching in the cab",
-    body: "Telematics flags a near-miss, coach and driver replay it calmly. PB coaching + MB radar cues mean the story ends with gratitude instead of paperwork.",
-    focusIds: ["pb-coaching", "mb-forward-warning", "mb-defensive-competence"],
-    revealIds: ["pb-coaching", "mb-forward-warning", "mb-defensive-competence"],
+    title: "💚 CULTURE WIN: Seatbelt Save Story",
+    body: "<strong>Friday stand-up:</strong> Driver shares how belt saved them in rear-end collision.<br>• <strong>IMPACT:</strong> Campaign messaging reinforced by lived experience<br>• <strong>RESULT:</strong> Compliance rises, alarm bypass stops<br>• <strong>FEELING:</strong> Pride, not preaching<br><em>Culture change through storytelling.</em>",
+    focusIds: ["mb-seatbelt-campaign", "mb-seatbelt-alarm", "eb-seatbelt-discipline"],
+    revealIds: ["mb-seatbelt-campaign", "mb-seatbelt-alarm", "eb-seatbelt-discipline"],
   },
+
+  // CLOSING
   {
-    title: "🏁 Fleet finish line",
-    body: "Week wraps with hazard steady, threats quiet, barriers glowing. Close on a slide that thanks every role—Ops, Maintenance, Drivers, Vendors—for keeping the bowtie balanced.",
-    focusIds: [
-      "hz-highway",
-      "th-intoxicated",
-      "pb-screening",
-      "mb-seatbelt-campaign",
-      "eb-rollover-readiness",
-      "c-fixed-object",
-    ],
+    title: "🏁 EVERY ROLE MATTERS",
+    body: "<strong>Keeping the bowtie balanced requires:</strong><br>• <strong>Operations:</strong> Weather monitoring, schedule adjustments<br>• <strong>Maintenance:</strong> Inspections, calibrations, defect closure<br>• <strong>Drivers:</strong> Training, pre-trip checks, protocol adherence<br>• <strong>Vendors:</strong> Quality parts, timely service<br>• <strong>Leadership:</strong> Budget prioritization, culture reinforcement<br><em>Barriers only work when everyone commits.</em>",
+    focusIds: ["hz-highway", "th-intoxicated", "pb-screening", "mb-seatbelt-campaign", "eb-rollover-readiness", "c-fixed-object"],
   },
+
   {
-    title: "📤 Export & present",
-    body: "📤 Share/Export hides chrome for screenshots, while ⌨️ arrow keys advance the glowing story. Restart snaps the bowtie back to its minimal threat/hazard spine for the next audience.",
+    title: "📤 SHARE THIS STORY",
+    body: "<strong>Use this bowtie in your stand-ups and safety briefings.</strong><br>• Export clean PNG for presentations<br>• Arrow keys navigate the timeline<br>• Filters show role-specific accountability<br><em>Every near-miss is a gift—unwrap the lessons before the real crash.</em>",
     focusIds: ["hz-highway", "te-loss-control"],
   },
 ];

@@ -127,12 +127,12 @@ export function computeSimpleLayout(diagram: BowtieDiagram): {
     const baseData: BowtieNodeData = {
         label: text || n.label,
         bowtieType: n.type,
-        metadata: n.metadata,
-        role,
-        badge,
-        emoji,
+        ...(n.metadata && { metadata: n.metadata }),
+        ...(role && { role }),
+        ...(badge && { badge }),
+        ...(emoji && { emoji }),
         displayLabel: text || n.label,
-        orientation,
+        ...(orientation && { orientation }),
         widthHint,
       };
     return {

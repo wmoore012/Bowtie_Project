@@ -2,6 +2,7 @@ import { useMemo } from "react";
 import type { Node as RFNode } from "@xyflow/react";
 import type { BowtieNodeData, BuilderNodeFields, BuilderNodeStatus } from "../../domain/bowtie.types";
 import { ensureBuilderData } from "./builderFields";
+import { TagInput } from "./TagInput";
 import styles from "./BuilderInspector.module.css";
 
 type BuilderInspectorChange = {
@@ -56,16 +57,16 @@ export function BuilderInspector({ node, open, onClose, onChange }: BuilderInspe
   }, [node]);
 
   const builderFields = nodeData?.builder;
-  const roleLabel = node ? ROLE_LABEL[node.type] ?? node.type.toUpperCase() : "Select a node";
+  const roleLabel = node && node.type ? (ROLE_LABEL[node.type] ?? node.type.toUpperCase()) : "Select a node";
   const nodeLabel = nodeData?.label ?? "Select a node to edit";
-  const tagsValue = builderFields?.tags?.join(", ") ?? "";
+  const tags = builderFields?.tags ?? [];
 
   const handleBuilderChange = (patch: Partial<BuilderNodeFields>) => {
     if (!node) return;
     onChange(node.id, { builder: patch });
   };
 
-  const handleLabelChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleLabelChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     if (!node) return;
     onChange(node.id, { label: e.target.value.trimStart() === "" ? "" : e.target.value });
   };
@@ -76,23 +77,26 @@ export function BuilderInspector({ node, open, onClose, onChange }: BuilderInspe
   const handleOwnerChange = (e: React.ChangeEvent<HTMLInputElement>) =>
     handleBuilderChange({ owner: e.target.value });
 
-  const handleTagsChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    handleBuilderChange({
-      tags: e.target.value
-        .split(",")
-        .map((token) => token.trim())
-        .filter(Boolean),
-    });
+  const handleTagsChange = (newTags: string[]) => {
+    handleBuilderChange({ tags: newTags });
   };
 
   const handleStatusChange = (e: React.ChangeEvent<HTMLSelectElement>) =>
     handleBuilderChange({ status: e.target.value as BuilderNodeStatus });
 
-  const handleLikelihoodChange = (e: React.ChangeEvent<HTMLSelectElement>) =>
-    handleBuilderChange({ likelihood: e.target.value as BuilderNodeFields["likelihood"] });
+  const handleLikelihoodChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const value = e.target.value as BuilderNodeFields["likelihood"];
+    if (value) {
+      handleBuilderChange({ likelihood: value });
+    }
+  };
 
-  const handleSeverityChange = (e: React.ChangeEvent<HTMLSelectElement>) =>
-    handleBuilderChange({ severity: e.target.value as BuilderNodeFields["severity"] });
+  const handleSeverityChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const value = e.target.value as BuilderNodeFields["severity"];
+    if (value) {
+      handleBuilderChange({ severity: value });
+    }
+  };
 
   const handleTestIntervalChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const val = e.target.value;
@@ -132,13 +136,13 @@ export function BuilderInspector({ node, open, onClose, onChange }: BuilderInspe
             <label className={styles.fieldLabel} htmlFor="builder-label">
               Label
             </label>
-            <input
+            <textarea
               id="builder-label"
-              type="text"
               value={nodeData?.label ?? ""}
               onChange={handleLabelChange}
-              className={styles.input}
+              className={styles.textarea}
               placeholder="Name this node"
+              rows={2}
             />
           </section>
 
@@ -174,13 +178,11 @@ export function BuilderInspector({ node, open, onClose, onChange }: BuilderInspe
             <label className={styles.fieldLabel} htmlFor="builder-tags">
               Tags
             </label>
-            <input
+            <TagInput
               id="builder-tags"
-              type="text"
-              className={styles.input}
-              value={tagsValue}
+              tags={tags}
               onChange={handleTagsChange}
-              placeholder="Comma separated (policy, human, hardware)"
+              placeholder="Type and press Enter (policy, human, hardware)"
             />
           </section>
 

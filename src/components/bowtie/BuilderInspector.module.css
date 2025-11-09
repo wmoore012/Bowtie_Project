@@ -69,6 +69,8 @@
   border: 1px solid #e2e8f0;
   border-radius: 12px;
   padding: 12px;
+  box-sizing: border-box;
+  overflow: hidden;
 }
 
 .fieldLabel {
@@ -83,8 +85,10 @@
 .select,
 .textarea {
   width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
   border-radius: 10px;
-  border: 1px solid #cbd5f5;
+  border: 1px solid #cbd5e1;
   padding: 10px 12px;
   font-size: 14px;
   background: #fff;
