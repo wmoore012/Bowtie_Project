@@ -1,6 +1,7 @@
 import type { BowtieDiagram, BowtieNodeType, BowtieNodeData } from "../../domain/bowtie.types";
 import type { Edge, Node } from "@xyflow/react";
 import { MarkerType, Position } from "@xyflow/react";
+import { ensureBuilderData } from "./builderFields";
 
 const leftTypes = new Set<BowtieNodeType>([
   "threat",
@@ -123,10 +124,7 @@ export function computeSimpleLayout(diagram: BowtieDiagram): {
         : "center";
     const widthHint: "narrow" | "medium" | "wide" =
       n.type === "hazard" || n.type === "topEvent" ? "wide" : n.type === "threat" ? "medium" : "narrow";
-    return {
-      id: n.id,
-      type: n.type,
-      data: {
+    const baseData: BowtieNodeData = {
         label: text || n.label,
         bowtieType: n.type,
         metadata: n.metadata,
@@ -136,7 +134,11 @@ export function computeSimpleLayout(diagram: BowtieDiagram): {
         displayLabel: text || n.label,
         orientation,
         widthHint,
-      },
+      };
+    return {
+      id: n.id,
+      type: n.type,
+      data: ensureBuilderData(baseData),
       position: p,
       sourcePosition: Position.Right,
       targetPosition: Position.Left,

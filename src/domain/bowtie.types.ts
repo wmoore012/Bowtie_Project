@@ -8,6 +8,27 @@ export type BowtieNodeType =
   | "mitigationBarrier"
   | "consequence";
 
+export type BuilderNodeStatus = "ok" | "weak" | "failed";
+export type LikelihoodBand = "rare" | "unlikely" | "possible" | "likely" | "frequent";
+export type SeverityBand = "minor" | "serious" | "major" | "catastrophic";
+
+export interface BuilderNodeFields {
+  description?: string;
+  owner?: string;
+  status?: BuilderNodeStatus;
+  tags?: string[];
+  sopLink?: string;
+  initiatingEventCode?: string;
+  likelihood?: LikelihoodBand;
+  severity?: SeverityBand;
+  testIntervalDays?: number | null;
+  critical?: boolean;
+  coverageNote?: string;
+  kpi?: string;
+  driver?: string;
+  controlPlan?: string;
+}
+
 export interface NodeMetadata {
   eli5: string; // Plain-language 1–2 sentences
   details: string[]; // 3–5 specific, auditable statements
@@ -67,6 +88,7 @@ export interface BowtieNodeData extends Record<string, unknown> {
   emoji?: string;
   orientation?: "left" | "right" | "center";
   widthHint?: "narrow" | "medium" | "wide";
+  builder?: BuilderNodeFields;
 }
 
 export function isBowtieNodeData(v: unknown): v is BowtieNodeData {

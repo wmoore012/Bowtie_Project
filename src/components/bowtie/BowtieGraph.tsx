@@ -27,6 +27,8 @@ import HazardTagNode from "./nodes/HazardTagNode";
 import TopEventKnotNode from "./nodes/TopEventKnotNode";
 import { PreAttentiveHelp } from "./PreAttentiveHelp";
 import EscalationFactorNode from "./nodes/EscalationFactorNode";
+import { BuilderInspector, type BuilderInspectorChange } from "./BuilderInspector";
+import { buildBuilderFields, ensureBuilderData, mergeBuilderPatch } from "./builderFields";
 
 
 import { computeStepDiagram, type StepIndex } from "../../domain/stepMode";
@@ -142,6 +144,14 @@ function InnerGraph({ diagram, initialMode = "demo" }: { diagram: BowtieDiagram;
     }
   }, [mode]);
   useEffect(() => {
+    if (mode === "builder") {
+      setCardNode(null);
+    } else {
+      setInspectorOpen(false);
+      setSelectedInspectorId(null);
+    }
+  }, [mode]);
+  useEffect(() => {
     if (mode === "demo") {
       lastDemoStepRef.current = step;
     }
@@ -163,6 +173,7 @@ function InnerGraph({ diagram, initialMode = "demo" }: { diagram: BowtieDiagram;
 
 
   const [inspectorOpen, setInspectorOpen] = useState<boolean>(false);
+  const [selectedInspectorId, setSelectedInspectorId] = useState<string | null>(null);
   // Persist sidebar open/close across sessions
 
 
@@ -208,6 +219,12 @@ function InnerGraph({ diagram, initialMode = "demo" }: { diagram: BowtieDiagram;
 
   const handleNodeClick = (node: RFNode<BowtieNodeData>) => {
     setLastFocusedNodeId(node.id);
+    if (mode === "builder") {
+      setSelectedInspectorId(node.id);
+      setInspectorOpen(true);
+      setCardNode(null);
+      return;
+    }
     setCardNode(node);
     if (mode !== "builder") {
       const reveal = collectRevealForNode(node.id);
@@ -249,11 +266,12 @@ function InnerGraph({ diagram, initialMode = "demo" }: { diagram: BowtieDiagram;
       if (exportOpen) { setExportOpen(false); handled = true; }
       if (paletteOpen) { setPaletteOpen(false); handled = true; }
       if (helpOpen) { setHelpOpen(false); handled = true; }
+      if (inspectorOpen) { setInspectorOpen(false); setSelectedInspectorId(null); handled = true; }
       if (handled) e.stopPropagation();
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [filtersOpen, actionsOpen, exportOpen, paletteOpen, helpOpen]);
+  }, [filtersOpen, actionsOpen, exportOpen, paletteOpen, helpOpen, inspectorOpen]);
 
 
   // Focus management for popup panels
@@ -500,8 +518,45 @@ function InnerGraph({ diagram, initialMode = "demo" }: { diagram: BowtieDiagram;
   }, [diagram]);
   const base = useMemo(() => computeSimpleLayout(renderDiagram), [renderDiagram]);
   const [nodes, setNodes, onNodesChange] = useNodesState(base.nodes);
+  const selectedInspectorNode = useMemo(
+    () => (selectedInspectorId ? nodes.find((n) => n.id === selectedInspectorId) ?? null : null),
+    [nodes, selectedInspectorId]
+  );
   const [edges, setEdges, onEdgesChange] = useEdgesState(base.edges);
   const rf = useReactFlow();
+
+  useEffect(() => {
+    if (!selectedInspectorId) return;
+    const exists = nodes.some((n) => n.id === selectedInspectorId);
+    if (!exists) {
+      setSelectedInspectorId(null);
+      setInspectorOpen(false);
+    }
+  }, [nodes, selectedInspectorId]);
+
+  const handleInspectorChange = useCallback(
+    (nodeId: string, change: BuilderInspectorChange) => {
+      setNodes((nds) =>
+        nds.map((n) => {
+          if (n.id !== nodeId) return n;
+          const prevData = ensureBuilderData(n.data as BowtieNodeData);
+          let nextData: BowtieNodeData = prevData;
+          if (typeof change.label === "string") {
+            nextData = {
+              ...nextData,
+              label: change.label,
+              displayLabel: change.label,
+            };
+          }
+          if (change.builder) {
+            nextData = mergeBuilderPatch(nextData, change.builder);
+          }
+          return { ...n, data: nextData };
+        })
+      );
+    },
+    [setNodes]
+  );
 
   const handleConnect = useCallback(
     (connection: Connection) => {
@@ -635,14 +690,25 @@ function InnerGraph({ diagram, initialMode = "demo" }: { diagram: BowtieDiagram;
             : undefined;
     const snappedX = getSnapXForType(t, pos.x);
 
-    setNodes((nds) => nds.concat({
-      id,
-      type: t,
-      data: { label: defaultLabel[t], bowtieType: t, role } as BowtieNodeData,
-      position: { x: snappedX, y: pos.y },
-      sourcePosition: Position.Right,
-      targetPosition: Position.Left,
-    } as RFNode<BowtieNodeData>));
+    const nodeData = ensureBuilderData({
+      label: defaultLabel[t],
+      bowtieType: t,
+      role,
+      displayLabel: defaultLabel[t],
+    } as BowtieNodeData);
+
+    setNodes((nds) =>
+      nds.concat({
+        id,
+        type: t,
+        data: nodeData,
+        position: { x: snappedX, y: pos.y },
+        sourcePosition: Position.Right,
+        targetPosition: Position.Left,
+      } as RFNode<BowtieNodeData>)
+    );
+    setSelectedInspectorId(id);
+    setInspectorOpen(true);
   };
   useEffect(() => {
     const t = setTimeout(() => {
@@ -713,6 +779,7 @@ function InnerGraph({ diagram, initialMode = "demo" }: { diagram: BowtieDiagram;
         };
         setRenderOverride(cleared);
         setInspectorOpen(false);
+        setSelectedInspectorId(null);
         setCardNode(null);
       } catch {}
     };
@@ -1112,6 +1179,8 @@ function InnerGraph({ diagram, initialMode = "demo" }: { diagram: BowtieDiagram;
     return st === "topEvent" || st === "mitigationBarrier" || tt === "topEvent" || tt === "consequence";
   }
 
+  const inspectorActive = mode === "builder" && inspectorOpen;
+
   return (
     <div ref={wrapperRef} className={styles.graphRoot}>
 
@@ -1141,7 +1210,13 @@ function InnerGraph({ diagram, initialMode = "demo" }: { diagram: BowtieDiagram;
         onNodesChange={onNodesChange}
         onEdgesChange={onEdgesChange}
         onConnect={handleConnect}
-        onPaneClick={() => { if (cardNode) handleCloseCard(); }}
+        onPaneClick={() => {
+          if (cardNode) handleCloseCard();
+          if (mode === "builder") {
+            setInspectorOpen(false);
+            setSelectedInspectorId(null);
+          }
+        }}
 
         onNodeClick={(_, n) => {
           const dn = diagram.nodes.find((x) => x.id === n.id) || null;
@@ -1316,13 +1391,22 @@ function InnerGraph({ diagram, initialMode = "demo" }: { diagram: BowtieDiagram;
 
           </div>
         </main>
-        <aside id="bowtie-inspector" className={`${styles.inspector} ${!inspectorOpen ? styles.collapsed : ""}`} aria-label="Inspector" aria-hidden={!inspectorOpen}>
-          <div className={styles.panelHeader}>
-            <div className={styles.panelTitle}>Details</div>
-            <button className={styles.panelClose} type="button" aria-label="Close details" onClick={() => setInspectorOpen(false)}>x</button>
-          </div>
-
-          <div className={styles.inspectorEmpty}>Details appear here in Builder mode.</div>
+        <aside
+          id="bowtie-inspector"
+          className={`${styles.inspector} ${!inspectorActive ? styles.collapsed : ""}`}
+          aria-label="Inspector"
+          aria-hidden={!inspectorActive}
+          data-testid="builder-inspector"
+        >
+          <BuilderInspector
+            node={selectedInspectorNode}
+            open={inspectorActive}
+            onClose={() => {
+              setSelectedInspectorId(null);
+              setInspectorOpen(false);
+            }}
+            onChange={handleInspectorChange}
+          />
         </aside>
 
       {cardNode && (
