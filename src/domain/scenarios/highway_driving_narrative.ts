@@ -85,6 +85,36 @@ export const highwayDrivingNarrative: StoryStep[] = [
     revealIds: ["mb-rollover-protection", "eb-rollover-readiness"],
   },
   {
+    title: "💚 Barrier win: sober start",
+    body: "PB-1.x shines: 🧪 screening, 🧍‍♂️ buddies, 🔐 ignition locks catch impairment before wheels roll. Celebrate the calm breath supervisors take when every truck leaves clear.",
+    focusIds: ["pb-screening", "pb-designated-driver", "pb-ignition-lock", "pb-lane-warning"],
+    revealIds: ["pb-screening", "pb-designated-driver", "pb-ignition-lock", "pb-lane-warning"],
+  },
+  {
+    title: "🌤 Weather shift handled",
+    body: "Dispatcher sees the radar, taps 🗓️ adjust schedule, and the driver parks before hail hits. Mention the shared exhale when 🌧 threat cards fade without ever touching the knot.",
+    focusIds: ["pb-weather-report", "pb-adjust-schedule", "pb-no-high-risk"],
+    revealIds: ["pb-weather-report", "pb-adjust-schedule", "pb-no-high-risk"],
+  },
+  {
+    title: "🚨 Radar nudge saves a family",
+    body: "Forward warning + slip coaching kick in together: 🚨 radar chirps, 🛡 coach training takes over, 🚙 crumple shell never has to burn energy. Tell the room what stayed whole.",
+    focusIds: ["mb-forward-warning", "mb-defensive-competence", "mb-crumple-zone"],
+    revealIds: ["mb-forward-warning", "mb-defensive-competence", "mb-crumple-zone"],
+  },
+  {
+    title: "👷 Rescue choreography",
+    body: "Emergency partners drill the playbook: 🚒 readiness, ✅ EF discipline, ❌ consequence shrinks. Shine a light on people shaking hands after a clean lift-out.",
+    focusIds: ["eb-seatbelt-discipline", "eb-rollover-readiness", "mb-seatbelt-campaign", "mb-rollover-protection"],
+    revealIds: ["eb-seatbelt-discipline", "eb-rollover-readiness"],
+  },
+  {
+    title: "📊 Lessons loop back",
+    body: "Fleet reviews near-miss telemetry, pins it to 📣 campaign boards, updates 📅 cadence. Close the story on the feeling of teams learning faster than the risk mutates.",
+    focusIds: ["hz-highway", "pb-coaching", "pb-inspection-maint", "mb-seatbelt-alarm"],
+    revealIds: ["pb-coaching", "pb-inspection-maint", "mb-seatbelt-alarm"],
+  },
+  {
     title: "📤 Export & present",
     body: "📤 Share/Export hides chrome for screenshots, while ⌨️ arrow keys advance the glowing story. Restart snaps the bowtie back to its minimal threat/hazard spine for the next audience.",
     focusIds: ["hz-highway", "te-loss-control"],
