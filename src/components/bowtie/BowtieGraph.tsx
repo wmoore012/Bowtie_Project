@@ -882,6 +882,18 @@ function InnerGraph({ diagram, initialMode = "demo" }: { diagram: BowtieDiagram;
     }
     if (hasLeft) setLeftExpanded(true);
     if (hasRight) setRightExpanded(true);
+    const reveal = new Set<string>();
+    const focus = new Set<string>();
+    for (const node of diagram.nodes) {
+      const chips = node.metadata?.chips;
+      if (!chips) continue;
+      const matches = chips.some((chip) => selectedRoles.has(chip));
+      if (!matches) continue;
+      reveal.add(node.id);
+      focus.add(node.id);
+    }
+    if (reveal.size) setManualRevealIds(reveal);
+    if (focus.size) setManualFocusIds(focus);
   }, [selectedRoles, diagram.nodes]);
 
   // Keyboard navigation for narrative steps (1..N)
