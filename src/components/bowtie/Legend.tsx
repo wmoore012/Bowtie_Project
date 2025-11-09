@@ -55,36 +55,63 @@ export const Legend = memo(function Legend() {
         aria-labelledby={titleId}
         aria-hidden={!expanded}
       >
-
-      <div className={styles.rowGroup}>
-        {legendCues.map((cue) => (
-          <div key={cue.label} className={styles.item}>
-            <span className={`${styles.icon} ${iconClassMap[cue.label] ?? styles.iconGeneric}`} aria-hidden="true">
-              {iconClassMap[cue.label] ? "" : cue.icon}
-            </span>
-            <div className={styles.textBlock}>
-              <div className={styles.label}>{cue.label}</div>
-              <div className={styles.help}>{cue.meaning}</div>
-            </div>
+        <div className={styles.columns}>
+          <div className={styles.column}>
+            {["Hazard", "Threat", "Prevention barrier", "Escalation factor"].map((label) => {
+              const cue = ROLE_CUES.find((c) => c.label === label);
+              if (!cue) return null;
+              return (
+                <div key={label} className={styles.item}>
+                  <span className={`${styles.icon} ${iconClassMap[label] ?? styles.iconGeneric}`} aria-hidden="true">
+                    {iconClassMap[label] ? "" : cue.icon}
+                  </span>
+                  <div className={styles.textBlock}>
+                    <div className={styles.label}>{cue.label}</div>
+                    <div className={styles.help}>{cue.meaning}</div>
+                  </div>
+                </div>
+              );
+            })}
           </div>
-        ))}
-      </div>
-
-      <div className={styles.auxRow}>
-        {auxCues.map((cue) => (
-          <div key={cue.label} className={styles.auxItem}>
-            <div className={styles.auxIcon} aria-hidden="true">{cue.icon}</div>
-            <div>
-              <div className={styles.auxLabel}>{cue.label}</div>
-              <div className={styles.auxHelp}>{cue.meaning}</div>
-            </div>
+          <div className={styles.column}>
+            {["Top event"].map((label) => {
+              const cue = ROLE_CUES.find((c) => c.label === label);
+              if (!cue) return null;
+              return (
+                <div key={label} className={styles.item}>
+                  <span className={`${styles.icon} ${iconClassMap[label] ?? styles.iconGeneric}`} aria-hidden="true">
+                    {iconClassMap[label] ? "" : cue.icon}
+                  </span>
+                  <div className={styles.textBlock}>
+                    <div className={styles.label}>{cue.label}</div>
+                    <div className={styles.help}>{cue.meaning}</div>
+                  </div>
+                </div>
+              );
+            })}
           </div>
-        ))}
-      </div>
+          <div className={styles.column}>
+            {["Mitigation barrier", "Consequence"].map((label) => {
+              const cue = ROLE_CUES.find((c) => c.label === label);
+              if (!cue) return null;
+              return (
+                <div key={label} className={styles.item}>
+                  <span className={`${styles.icon} ${iconClassMap[label] ?? styles.iconGeneric}`} aria-hidden="true">
+                    {iconClassMap[label] ? "" : cue.icon}
+                  </span>
+                  <div className={styles.textBlock}>
+                    <div className={styles.label}>{cue.label}</div>
+                    <div className={styles.help}>{cue.meaning}</div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
 
-      <div className={styles.note}>
-        Badges (PB-1.2, MB-1.6, etc.) show sequence order; wings stay collapsed until you click a card or run the story.
-      </div>
+        <div className={styles.note}>
+          Badges (PB-1.2, MB-1.6, etc.) show sequence order; wings stay collapsed until you click a card or run the story.
+        </div>
       </div>
     </aside>
   );

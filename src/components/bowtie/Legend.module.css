@@ -71,12 +71,16 @@
   }
 }
 
-.rowGroup {
+.columns {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  grid-template-columns: repeat(3, minmax(180px, 1fr));
   gap: 12px;
 }
-
+.column {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
 .item {
   display: grid;
   grid-template-columns: 28px 1fr;
