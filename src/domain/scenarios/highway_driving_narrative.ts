@@ -115,6 +115,42 @@ export const highwayDrivingNarrative: StoryStep[] = [
     revealIds: ["pb-coaching", "pb-inspection-maint", "mb-seatbelt-alarm"],
   },
   {
+    title: "🛡 Green lane day",
+    body: "Operations stack PB cards like dominoes: 🌧 intel, 🗓 routes, 🛡 coaching, 🛞 ABS. Show the satisfaction when a treacherous corridor turns into a boring ride home.",
+    focusIds: ["pb-weather-report", "pb-adjust-schedule", "pb-defensive-driving", "pb-abs"],
+    revealIds: ["pb-weather-report", "pb-adjust-schedule", "pb-defensive-driving", "pb-abs"],
+  },
+  {
+    title: "📣 Culture proof point",
+    body: "A driver shares a belt-save story at stand-up. 📣 Campaign chips, 🔔 cab alarms, ✅ EF discipline all rise together. Let the room feel the pride—not the chart.",
+    focusIds: ["mb-seatbelt-campaign", "mb-seatbelt-alarm", "eb-seatbelt-discipline"],
+    revealIds: ["mb-seatbelt-campaign", "mb-seatbelt-alarm", "eb-seatbelt-discipline"],
+  },
+  {
+    title: "🛠 Maintenance heroes",
+    body: "Technicians close PB-5.1 & EF backlog tickets in a single shift. Mention the greasy smiles, the clear defect board, and the simple joy of a truck that behaves when brakes matter.",
+    focusIds: ["pb-inspection-maint", "ef-maint-backlog", "eb-maintenance-discipline"],
+    revealIds: ["pb-inspection-maint", "eb-maintenance-discipline"],
+  },
+  {
+    title: "👀 Coaching in the cab",
+    body: "Telematics flags a near-miss, coach and driver replay it calmly. PB coaching + MB radar cues mean the story ends with gratitude instead of paperwork.",
+    focusIds: ["pb-coaching", "mb-forward-warning", "mb-defensive-competence"],
+    revealIds: ["pb-coaching", "mb-forward-warning", "mb-defensive-competence"],
+  },
+  {
+    title: "🏁 Fleet finish line",
+    body: "Week wraps with hazard steady, threats quiet, barriers glowing. Close on a slide that thanks every role—Ops, Maintenance, Drivers, Vendors—for keeping the bowtie balanced.",
+    focusIds: [
+      "hz-highway",
+      "th-intoxicated",
+      "pb-screening",
+      "mb-seatbelt-campaign",
+      "eb-rollover-readiness",
+      "c-fixed-object",
+    ],
+  },
+  {
     title: "📤 Export & present",
     body: "📤 Share/Export hides chrome for screenshots, while ⌨️ arrow keys advance the glowing story. Restart snaps the bowtie back to its minimal threat/hazard spine for the next audience.",
     focusIds: ["hz-highway", "te-loss-control"],
