@@ -25,6 +25,7 @@ import ThreatNode from "./nodes/ThreatNode";
 import ConsequenceNode from "./nodes/ConsequenceNode";
 import HazardTagNode from "./nodes/HazardTagNode";
 import TopEventKnotNode from "./nodes/TopEventKnotNode";
+import { PreAttentiveHelp } from "./PreAttentiveHelp";
 import EscalationFactorNode from "./nodes/EscalationFactorNode";
 
 
@@ -138,6 +139,7 @@ function InnerGraph({ diagram, initialMode = "demo" }: { diagram: BowtieDiagram;
 
   // Optional render override (e.g., Clear Diagram in Builder)
   const [renderOverride, setRenderOverride] = useState<BowtieDiagram | null>(null);
+  const [helpOpen, setHelpOpen] = useState(false);
 
   // Demo story overlay
   const [storyOpen, setStoryOpen] = useState(false);
@@ -231,14 +233,17 @@ function InnerGraph({ diagram, initialMode = "demo" }: { diagram: BowtieDiagram;
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key !== "Escape") return;
-      if (filtersOpen) setFiltersOpen(false);
-      if (actionsOpen) setActionsOpen(false);
-      if (exportOpen) setExportOpen(false);
-      if (paletteOpen) setPaletteOpen(false);
+      let handled = false;
+      if (filtersOpen) { setFiltersOpen(false); handled = true; }
+      if (actionsOpen) { setActionsOpen(false); handled = true; }
+      if (exportOpen) { setExportOpen(false); handled = true; }
+      if (paletteOpen) { setPaletteOpen(false); handled = true; }
+      if (helpOpen) { setHelpOpen(false); handled = true; }
+      if (handled) e.stopPropagation();
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [filtersOpen, actionsOpen, exportOpen, paletteOpen]);
+  }, [filtersOpen, actionsOpen, exportOpen, paletteOpen, helpOpen]);
 
 
   // Focus management for popup panels
@@ -983,6 +988,14 @@ function InnerGraph({ diagram, initialMode = "demo" }: { diagram: BowtieDiagram;
           <div className={styles.floatingTopRight} style={{ top: storyOpen ? 80 : 12 }}>
             <button
               className={styles.bowtieButton}
+              type="button"
+              aria-haspopup="dialog"
+              onClick={() => setHelpOpen(true)}
+            >
+              ? Help
+            </button>
+            <button
+              className={styles.bowtieButton}
               aria-controls="filters-panel"
               aria-expanded={filtersOpen}
               onClick={() => { setFiltersOpen((o) => !o); }}
@@ -1202,6 +1215,8 @@ function InnerGraph({ diagram, initialMode = "demo" }: { diagram: BowtieDiagram;
       <div className={styles.srOnly} aria-live="polite" aria-atomic="true">
         {cardNode ? `Details for ${(cardNode.data as BowtieNodeData).label} opened` : ""}
       </div>
+
+      {helpOpen && <PreAttentiveHelp onClose={() => setHelpOpen(false)} />}
 
     </div>
   );

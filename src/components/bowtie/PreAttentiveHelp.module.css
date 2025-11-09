@@ -1,0 +1,125 @@
+.backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.45);
+  backdrop-filter: blur(6px);
+  z-index: 150;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+.panel {
+  width: min(960px, 100%);
+  max-height: 90vh;
+  overflow-y: auto;
+  background: #fff;
+  border-radius: 18px;
+  box-shadow: 0 30px 80px rgba(15, 23, 42, 0.25);
+  padding: 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: flex-start;
+}
+
+.kicker {
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  font-size: 11px;
+  color: #94a3b8;
+}
+
+.header h2 {
+  margin: 4px 0 0 0;
+  font-size: 24px;
+  color: #0f172a;
+}
+
+.close {
+  border: none;
+  background: rgba(15, 23, 42, 0.08);
+  width: 40px;
+  height: 40px;
+  border-radius: 999px;
+  font-size: 20px;
+  cursor: pointer;
+}
+.close:hover {
+  background: rgba(15, 23, 42, 0.15);
+}
+.close:focus-visible {
+  outline: 2px solid var(--ring, #2563eb);
+  outline-offset: 2px;
+}
+
+.sectionHeader {
+  margin-bottom: 8px;
+}
+.sectionHeader h3 {
+  margin: 0;
+  font-size: 18px;
+  color: #0f172a;
+}
+.sectionHeader p {
+  margin: 4px 0 0 0;
+  color: #64748b;
+  font-size: 13px;
+}
+
+.table {
+  display: grid;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  overflow: hidden;
+}
+.tableHead,
+.tableRow {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr 1.2fr;
+  gap: 12px;
+  padding: 12px 16px;
+  align-items: center;
+}
+.tableHead {
+  background: #f8fafc;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #475569;
+}
+.tableRow:nth-child(even) {
+  background: rgba(248, 250, 252, 0.7);
+}
+.tableRow span {
+  font-size: 14px;
+  color: #0f172a;
+}
+.roleCell strong {
+  margin-right: 6px;
+}
+
+.footer {
+  border-top: 1px solid #e2e8f0;
+  padding-top: 12px;
+  font-size: 13px;
+  color: #475569;
+}
+
+@media (max-width: 768px) {
+  .panel {
+    padding: 20px;
+  }
+  .tableHead,
+  .tableRow {
+    grid-template-columns: 1fr;
+  }
+}

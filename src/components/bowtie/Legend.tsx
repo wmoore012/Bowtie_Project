@@ -1,5 +1,6 @@
 import styles from "./Legend.module.css";
-import { memo, useEffect, useState } from "react";
+import { memo, useEffect, useMemo, useState } from "react";
+import { ROLE_CUES } from "./preattentive";
 
 
 export const Legend = memo(function Legend() {
@@ -20,6 +21,17 @@ export const Legend = memo(function Legend() {
 
   const contentId = "legend-content";
   const titleId = "legend-title";
+  const legendCues = useMemo(() => ROLE_CUES.slice(0, 6), []);
+  const auxCues = useMemo(() => ROLE_CUES.slice(6), []);
+  const iconClassMap: Record<string, string> = {
+    Hazard: styles.iconHazard,
+    Threat: styles.iconThreat,
+    "Prevention barrier": styles.iconPrevention,
+    "Mitigation barrier": styles.iconMitigation,
+    "Top event": styles.iconTopEvent,
+    Consequence: styles.iconConsequence,
+    "Escalation factor": styles.iconEscalation,
+  };
   return (
     <aside className={styles.legend} aria-label="Bowtie legend">
       <div className={styles.header}>
@@ -45,67 +57,29 @@ export const Legend = memo(function Legend() {
       >
 
       <div className={styles.rowGroup}>
-        <div className={styles.column}>
-          <div className={styles.item}>
-            <span className={`${styles.icon} ${styles.iconThreat}`} aria-hidden="true" />
+        {legendCues.map((cue) => (
+          <div key={cue.label} className={styles.item}>
+            <span className={`${styles.icon} ${iconClassMap[cue.label] ?? styles.iconGeneric}`} aria-hidden="true">
+              {iconClassMap[cue.label] ? "" : cue.icon}
+            </span>
             <div className={styles.textBlock}>
-              <div className={styles.label}>Threats</div>
-              <div className={styles.help}>Things that can start trouble (left)</div>
+              <div className={styles.label}>{cue.label}</div>
+              <div className={styles.help}>{cue.meaning}</div>
             </div>
           </div>
+        ))}
+      </div>
 
-          <div className={styles.item}>
-            <span className={`${styles.icon} ${styles.iconEscalation}`} aria-hidden="true" />
-            <div className={styles.textBlock}>
-              <div className={styles.label}>Escalation factors</div>
-              <div className={styles.help}>Degradation that accelerates failure</div>
+      <div className={styles.auxRow}>
+        {auxCues.map((cue) => (
+          <div key={cue.label} className={styles.auxItem}>
+            <div className={styles.auxIcon} aria-hidden="true">{cue.icon}</div>
+            <div>
+              <div className={styles.auxLabel}>{cue.label}</div>
+              <div className={styles.auxHelp}>{cue.meaning}</div>
             </div>
           </div>
-
-          <div className={styles.item}>
-            <span className={`${styles.icon} ${styles.iconPrevention}`} aria-hidden="true" />
-            <div className={styles.textBlock}>
-              <div className={styles.label}>Prevention barriers</div>
-              <div className={styles.help}>Stop trouble before control is lost</div>
-            </div>
-          </div>
-        </div>
-
-        <div className={styles.column}>
-          <div className={styles.item}>
-            <span className={`${styles.icon} ${styles.iconHazard}`} aria-hidden="true" />
-            <div className={styles.textBlock}>
-              <div className={styles.label}>Hazard</div>
-              <div className={styles.help}>Risky situation you&apos;re managing</div>
-            </div>
-          </div>
-
-          <div className={styles.item}>
-            <span className={`${styles.icon} ${styles.iconTopEvent}`} aria-hidden="true" />
-            <div className={styles.textBlock}>
-              <div className={styles.label}>Top event</div>
-              <div className={styles.help}>Moment you lose control</div>
-            </div>
-          </div>
-        </div>
-
-        <div className={styles.column}>
-          <div className={styles.item}>
-            <span className={`${styles.icon} ${styles.iconMitigation}`} aria-hidden="true" />
-            <div className={styles.textBlock}>
-              <div className={styles.label}>Mitigation barriers</div>
-              <div className={styles.help}>Soften the impact after loss</div>
-            </div>
-          </div>
-
-          <div className={styles.item}>
-            <span className={`${styles.icon} ${styles.iconConsequence}`} aria-hidden="true" />
-            <div className={styles.textBlock}>
-              <div className={styles.label}>Consequences</div>
-              <div className={styles.help}>What happens in the end (right)</div>
-            </div>
-          </div>
-        </div>
+        ))}
       </div>
 
       <div className={styles.note}>
