@@ -7,8 +7,11 @@ export type SidebarProps = {
   onToggle(): void;
 };
 
+type DropdownPanel = "filters" | "actions" | "export" | null;
+
 export function Sidebar({ collapsed, onToggle }: SidebarProps) {
   const [mode, setMode] = useState<"demo" | "builder">("demo");
+  const [openDropdown, setOpenDropdown] = useState<DropdownPanel>(null);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -23,6 +26,18 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
       window.removeEventListener("bowtie:modeChanged", onMode as any);
     };
   }, []);
+
+  // Close dropdown on Escape key
+  useEffect(() => {
+    if (!openDropdown) return;
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setOpenDropdown(null);
+      }
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [openDropdown]);
 
   const handleToggle = () => {
     try {
@@ -45,6 +60,10 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
   const dispatch = (type: string) => {
     if (typeof window === "undefined") return;
     window.dispatchEvent(new CustomEvent(type));
+  };
+
+  const toggleDropdown = (panel: DropdownPanel) => {
+    setOpenDropdown((current) => (current === panel ? null : panel));
   };
 
   return (
@@ -106,31 +125,116 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
           <span className={styles.icon}>�</span>
         */}
 
-        <button type="button" className={styles.navItem} onClick={() => dispatch("bowtie:toggleFilters")} aria-label="Toggle filters panel">
+        <button
+          type="button"
+          className={`${styles.navItem} ${openDropdown === "filters" ? styles.navItemActive : ""}`}
+          onClick={() => toggleDropdown("filters")}
+          aria-label="Toggle filters panel"
+          aria-expanded={openDropdown === "filters"}
+        >
           <span className={styles.icon}>{"\u{1F50E}"}</span>
           {!collapsed && <span className={styles.label}>Filters</span>}
+          {!collapsed && <span className={styles.chevron}>{openDropdown === "filters" ? "▼" : "▶"}</span>}
         </button>
+        {!collapsed && openDropdown === "filters" && (
+          <div className={styles.dropdown} role="region" aria-label="Filters">
+            <div className={styles.dropdownContent}>
+              <p className={styles.dropdownHint}>Filter by role to focus discussion</p>
+              <button
+                className={styles.dropdownButton}
+                type="button"
+                onClick={() => dispatch("bowtie:toggleFilters")}
+              >
+                Open Filter Panel
+              </button>
+            </div>
+          </div>
+        )}
 
-        <button type="button" className={styles.navItem} onClick={() => dispatch("bowtie:toggleActions")} aria-label="Open actions panel">
+        <button
+          type="button"
+          className={`${styles.navItem} ${openDropdown === "actions" ? styles.navItemActive : ""}`}
+          onClick={() => toggleDropdown("actions")}
+          aria-label="Open actions panel"
+          aria-expanded={openDropdown === "actions"}
+        >
           <span className={styles.icon}>🛠️</span>
           {!collapsed && <span className={styles.label}>Actions</span>}
+          {!collapsed && <span className={styles.chevron}>{openDropdown === "actions" ? "▼" : "▶"}</span>}
         </button>
-
-        {mode === "builder" && (
-          <button type="button" className={styles.navItem} onClick={() => dispatch("bowtie:clearDiagram")} aria-label="Clear diagram (Hazard + Top Event only)">
-            <span className={styles.icon}>🧹</span>
-            {!collapsed && <span className={styles.label}>Clear Diagram</span>}
-          </button>
+        {!collapsed && openDropdown === "actions" && (
+          <div className={styles.dropdown} role="region" aria-label="Actions">
+            <div className={styles.dropdownContent}>
+              <button
+                className={styles.dropdownButton}
+                type="button"
+                onClick={() => {
+                  dispatch("bowtie:clearDiagram");
+                  setOpenDropdown(null);
+                }}
+              >
+                🧹 Clear Diagram
+              </button>
+              <button
+                className={styles.dropdownButton}
+                type="button"
+                onClick={() => dispatch("bowtie:toggleActions")}
+              >
+                🛠️ More Actions
+              </button>
+            </div>
+          </div>
         )}
 
         <a href="#settings" className={styles.navItem} aria-current={isCurrent("#settings")}>
           <span className={styles.icon}>⚙️</span>
           {!collapsed && <span className={styles.label}>Settings</span>}
         </a>
-        <button type="button" className={`${styles.navItem} ${styles.exportBtn}`} onClick={() => dispatch("bowtie:toggleExport")} aria-label="Open export panel" title="Share / Export">
+
+        <button
+          type="button"
+          className={`${styles.navItem} ${styles.exportBtn} ${openDropdown === "export" ? styles.navItemActive : ""}`}
+          onClick={() => toggleDropdown("export")}
+          aria-label="Open export panel"
+          title="Share / Export"
+          aria-expanded={openDropdown === "export"}
+        >
           <span className={styles.icon}>📤</span>
           {!collapsed && <span className={styles.label}>Share / Export</span>}
+          {!collapsed && <span className={styles.chevron}>{openDropdown === "export" ? "▼" : "▶"}</span>}
         </button>
+        {!collapsed && openDropdown === "export" && (
+          <div className={styles.dropdown} role="region" aria-label="Export">
+            <div className={styles.dropdownContent}>
+              <button
+                className={styles.dropdownButton}
+                type="button"
+                onClick={() => {
+                  dispatch("bowtie:exportPng");
+                  setOpenDropdown(null);
+                }}
+              >
+                📤 Export PNG
+              </button>
+              <button
+                className={styles.dropdownButton}
+                type="button"
+                disabled
+                title="Coming soon"
+              >
+                📋 Copy Link
+              </button>
+              <button
+                className={styles.dropdownButton}
+                type="button"
+                disabled
+                title="Coming soon"
+              >
+                💾 Save JSON
+              </button>
+            </div>
+          </div>
+        )}
       </nav>
 
       <div className={styles.footer}>
