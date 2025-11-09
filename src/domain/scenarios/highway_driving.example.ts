@@ -558,7 +558,7 @@ export const highwayDrivingExample: BowtieDiagram = {
     {
       id: "c-rollover",
       type: "consequence",
-      label: "C-4 🚗💫 Vehicle roll-over",
+      label: "C-4 ❌ Vehicle roll-over",
       metadata: {
         eli5: "Vehicle tips onto side or roof, possibly ejecting people.",
         details: [

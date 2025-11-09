@@ -19,20 +19,27 @@ function isEmoji(char: string | undefined): boolean {
 
 function parseVisualLabel(label: string): { badge?: string; emoji?: string; text: string } {
   let remaining = label.trim();
-  let badge: string | undefined;
-  const badgeMatch = remaining.match(/^([A-Z]{1,3}[-\d\.]*)\s+(.*)$/);
+  const parsed: { badge?: string; emoji?: string; text: string } = { text: remaining };
+  const badgeMatch = remaining.match(/^([A-Z]{1,3}[-\d\.]+)\s+(.*)$/);
   if (badgeMatch) {
-    badge = badgeMatch[1];
-    remaining = badgeMatch[2];
+    const [, maybeBadge, rest] = badgeMatch;
+    if (maybeBadge) parsed.badge = maybeBadge;
+    if (typeof rest === "string" && rest.length) {
+      remaining = rest;
+    }
   }
-  const firstChar = Array.from(remaining)[0];
-  let emoji: string | undefined;
-  if (isEmoji(firstChar)) {
-    emoji = firstChar;
-    remaining = remaining.slice(firstChar.length).trim();
+  const chars = Array.from(remaining);
+  const firstChar = chars.length > 0 ? chars[0] : undefined;
+  if (firstChar && isEmoji(firstChar)) {
+    parsed.emoji = firstChar;
+    const sliceLen = firstChar.length;
+    remaining = remaining.slice(sliceLen).trim();
   }
-  return { badge, emoji, text: remaining };
+  parsed.text = remaining;
+  return parsed;
 }
+
+
 
 
 export function computeSimpleLayout(diagram: BowtieDiagram): {
