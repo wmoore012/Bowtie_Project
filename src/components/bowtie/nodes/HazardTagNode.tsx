@@ -18,6 +18,8 @@ function HazardTagNode({ id, data }: NodeProps) {
         title={title}
         data-testid="bowtie-hazard-node"
         data-label={d?.label}
+        data-highlight={d?.highlighted ? "true" : undefined}
+        data-dimmed={d?.dimmed ? "true" : undefined}
       >
         <span className={styles.icon} aria-hidden="true">⚠</span>
         <span className="sr-only">Hazard</span>
@@ -32,5 +34,4 @@ function HazardTagNode({ id, data }: NodeProps) {
   );
 }
 export default memo(HazardTagNode);
-
 

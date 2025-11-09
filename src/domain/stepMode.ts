@@ -18,7 +18,7 @@ export interface StepModeOptions {
 export function computeStepDiagram(full: BowtieDiagram, opts: StepModeOptions): BowtieDiagram {
   const { step, leftExpanded, rightExpanded, preventionGroups, mitigationGroups } = opts;
 
-  const includeTypes = new Set<BowtieNodeType>(["hazard", "topEvent"]);
+  const includeTypes = new Set<BowtieNodeType>(["hazard", "topEvent", "escalationFactor"]);
   const allowNodeIds = new Set<string>();
 
   // Step 1 adds threats + consequences (no barriers yet)
@@ -75,7 +75,7 @@ export function computeStepDiagram(full: BowtieDiagram, opts: StepModeOptions): 
   // Filter nodes by type and (for barriers during partial group steps) by allowNodeIds
   const visibleNodes = full.nodes.filter((n) => {
     if (!includeTypes.has(n.type)) return n.type === "hazard" || n.type === "topEvent"; // always include spine
-    if (n.type === "preventionBarrier" || n.type === "mitigationBarrier") {
+    if (n.type === "preventionBarrier" || n.type === "mitigationBarrier" || n.type === "escalationBarrier") {
       // If the wing is entirely visible (step >= 6 left or step >= 10 right), allowNodeIds already includes all
       // Otherwise require explicit ID allowance
       return allowNodeIds.size === 0 || allowNodeIds.has(n.id);
@@ -88,4 +88,3 @@ export function computeStepDiagram(full: BowtieDiagram, opts: StepModeOptions): 
 
   return { ...full, nodes: visibleNodes, edges: visibleEdges };
 }
-

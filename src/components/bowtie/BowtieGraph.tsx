@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   ReactFlow,
   Background,
@@ -23,6 +23,7 @@ import ThreatNode from "./nodes/ThreatNode";
 import ConsequenceNode from "./nodes/ConsequenceNode";
 import HazardTagNode from "./nodes/HazardTagNode";
 import TopEventKnotNode from "./nodes/TopEventKnotNode";
+import EscalationFactorNode from "./nodes/EscalationFactorNode";
 
 
 import { computeStepDiagram, type StepIndex } from "../../domain/stepMode";
@@ -32,7 +33,7 @@ import "../../styles/theme.css";
 import { computeRoleFilteredDiagram, collectAvailableRoles } from "../../domain/filters";
 import { ErrorBoundary } from "../common/ErrorBoundary";
 
-import { warehouseFireNarrative } from "../../domain/scenarios/warehouse_fire_narrative";
+import { highwayDrivingNarrative } from "../../domain/scenarios/highway_driving_narrative";
 
 /**
  * Determine the role/category for a given step index for visual styling.
@@ -45,13 +46,16 @@ function getStepRole(stepIdx: number): string {
   if (stepIdx === 3) return "Threat";
   if (stepIdx >= 4 && stepIdx <= 6) return "Prevention";
   if (stepIdx >= 7 && stepIdx <= 8) return "Mitigation";
-  if (stepIdx >= 9 && stepIdx <= 10) return "Consequence";
-  return "Meta"; // Steps 11-12
+  if (stepIdx === 9) return "Consequence";
+  if (stepIdx >= 10) return "Meta";
+  return "Meta";
 }
 
 const nodeTypes = {
   threat: ThreatNode,
+  escalationFactor: EscalationFactorNode,
   preventionBarrier: BarrierNode,
+  escalationBarrier: BarrierNode,
   mitigationBarrier: BarrierNode,
   hazard: HazardTagNode,
   topEvent: TopEventKnotNode,
@@ -94,7 +98,7 @@ function InnerGraph({ diagram, initialMode = "demo" }: { diagram: BowtieDiagram;
   // Default to expanded, full-step view
   const [leftExpanded, setLeftExpanded] = useState(true);
   const [rightExpanded, setRightExpanded] = useState(true);
-  const [step, setStep] = useState<StepIndex>(10 as StepIndex);
+  const [step, setStep] = useState<StepIndex>(1 as StepIndex);
   const [selectedRoles, setSelectedRoles] = useState<Set<string>>(new Set());
   const allRoles = useMemo(() => collectAvailableRoles(diagram), [diagram]);
   const [filtersOpen, setFiltersOpen] = useState(false);
@@ -106,6 +110,18 @@ function InnerGraph({ diagram, initialMode = "demo" }: { diagram: BowtieDiagram;
   const [paletteOpen, setPaletteOpen] = useState(false);
   useEffect(() => { setMode(initialMode); }, [initialMode]);
   useEffect(() => { setPaletteOpen(mode === "builder"); }, [mode]);
+  useEffect(() => {
+    if (mode === "builder") {
+      setStep(10 as StepIndex);
+    } else {
+      setStep(lastDemoStepRef.current ?? (1 as StepIndex));
+    }
+  }, [mode]);
+  useEffect(() => {
+    if (mode === "demo") {
+      lastDemoStepRef.current = step;
+    }
+  }, [mode, step]);
 
   // Optional render override (e.g., Clear Diagram in Builder)
   const [renderOverride, setRenderOverride] = useState<BowtieDiagram | null>(null);
@@ -113,7 +129,12 @@ function InnerGraph({ diagram, initialMode = "demo" }: { diagram: BowtieDiagram;
   // Demo story overlay
   const [storyOpen, setStoryOpen] = useState(false);
   // Narrative step index is 1-based; initialize to last step so UI shows "Step N of N" before starting
-  const [storyIdx, setStoryIdx] = useState<number>(warehouseFireNarrative.length);
+  const [storyIdx, setStoryIdx] = useState<number>(highwayDrivingNarrative.length);
+  const [manualRevealIds, setManualRevealIds] = useState<Set<string>>(new Set());
+  const [manualFocusIds, setManualFocusIds] = useState<Set<string>>(new Set());
+  const [storyRevealIds, setStoryRevealIds] = useState<Set<string>>(new Set());
+  const [storyFocusIds, setStoryFocusIds] = useState<Set<string>>(new Set());
+  const lastDemoStepRef = useRef<StepIndex>(1 as StepIndex);
 
 
   const [inspectorOpen, setInspectorOpen] = useState<boolean>(false);
@@ -123,13 +144,58 @@ function InnerGraph({ diagram, initialMode = "demo" }: { diagram: BowtieDiagram;
   const [cardNode, setCardNode] = useState<RFNode<BowtieNodeData> | null>(null);
   const [lastFocusedNodeId, setLastFocusedNodeId] = useState<string | null>(null);
 
+  const nodeById = useMemo(() => new Map(diagram.nodes.map((n) => [n.id, n])), [diagram]);
+  const adjacency = useMemo(() => {
+    const map = new Map<string, Set<string>>();
+    for (const edge of diagram.edges) {
+      if (!map.has(edge.source)) map.set(edge.source, new Set());
+      map.get(edge.source)!.add(edge.target);
+      if (!map.has(edge.target)) map.set(edge.target, new Set());
+      map.get(edge.target)!.add(edge.source);
+    }
+    return map;
+  }, [diagram]);
+  const barrierTypes = useMemo(
+    () => new Set<BowtieNodeType>(["preventionBarrier", "mitigationBarrier", "escalationBarrier"]),
+    []
+  );
+
+  const collectRevealForNode = useCallback(
+    (nodeId: string) => {
+      const reveal = new Set<string>();
+      const node = nodeById.get(nodeId);
+      if (node && barrierTypes.has(node.type)) {
+        reveal.add(nodeId);
+      }
+      const neighbors = adjacency.get(nodeId);
+      if (neighbors) {
+        neighbors.forEach((neighborId) => {
+          const neighbor = nodeById.get(neighborId);
+          if (neighbor && barrierTypes.has(neighbor.type)) {
+            reveal.add(neighborId);
+          }
+        });
+      }
+      return reveal;
+    },
+    [adjacency, barrierTypes, nodeById]
+  );
+
   const handleNodeClick = (node: RFNode<BowtieNodeData>) => {
     setLastFocusedNodeId(node.id);
     setCardNode(node);
+    if (mode !== "builder") {
+      const reveal = collectRevealForNode(node.id);
+      const revealArr = Array.from(reveal);
+      setManualRevealIds(new Set(revealArr));
+      setManualFocusIds(new Set<string>([node.id, ...revealArr]));
+    }
   };
 
   const handleCloseCard = () => {
     setCardNode(null);
+    setManualRevealIds(new Set());
+    setManualFocusIds(new Set());
     if (lastFocusedNodeId) {
       const elem = document.querySelector(`[data-nodeid="${lastFocusedNodeId}"], [data-id="${lastFocusedNodeId}"]`) as HTMLElement | null;
       elem?.focus();
@@ -332,20 +398,54 @@ function InnerGraph({ diagram, initialMode = "demo" }: { diagram: BowtieDiagram;
 
 
   const visibleDiagram = useMemo(() => {
+    if (mode === "builder") return diagram;
     return computeStepDiagram(diagram, {
       step,
       leftExpanded,
       rightExpanded,
-
       preventionGroups: PREVENTION_GROUPS,
       mitigationGroups: MITIGATION_GROUPS,
     });
-  }, [diagram, step, leftExpanded, rightExpanded]);
+  }, [diagram, step, leftExpanded, rightExpanded, mode]);
 
   const filteredDiagram = useMemo(
     () => computeRoleFilteredDiagram(visibleDiagram, selectedRoles),
     [visibleDiagram, selectedRoles]
   );
+
+  const activeRevealIds = useMemo(() => {
+    if (mode === "builder") return new Set<string>();
+    const union = new Set<string>();
+    manualRevealIds.forEach((id) => union.add(id));
+    storyRevealIds.forEach((id) => union.add(id));
+    return union;
+  }, [manualRevealIds, storyRevealIds, mode]);
+
+  const revealDiagram = useMemo(() => {
+    if (mode === "builder" || activeRevealIds.size === 0) return filteredDiagram;
+    const ids = new Set(filteredDiagram.nodes.map((n) => n.id));
+    const extraNodes: typeof diagram.nodes = [];
+    activeRevealIds.forEach((id) => {
+      if (!ids.has(id)) {
+        const n = nodeById.get(id);
+        if (n) {
+          extraNodes.push(n);
+          ids.add(id);
+        }
+      }
+    });
+    if (!extraNodes.length) return filteredDiagram;
+    const existingEdgeIds = new Set(filteredDiagram.edges.map((e) => e.id));
+    const mergedEdges = [...filteredDiagram.edges];
+    for (const edge of diagram.edges) {
+      if (existingEdgeIds.has(edge.id)) continue;
+      if (ids.has(edge.source) && ids.has(edge.target)) {
+        mergedEdges.push(edge);
+        existingEdgeIds.add(edge.id);
+      }
+    }
+    return { ...filteredDiagram, nodes: [...filteredDiagram.nodes, ...extraNodes], edges: mergedEdges };
+  }, [activeRevealIds, filteredDiagram, nodeById, diagram, mode]);
 
   // When opening the card, move focus to its close button for accessibility
   useEffect(() => {
@@ -354,7 +454,14 @@ function InnerGraph({ diagram, initialMode = "demo" }: { diagram: BowtieDiagram;
     btn?.focus();
   }, [cardNode]);
 
-  const renderDiagram = renderOverride ?? filteredDiagram;
+  const renderDiagram = renderOverride ?? revealDiagram;
+  const activeFocusIds = useMemo(() => {
+    const ids = new Set<string>();
+    manualFocusIds.forEach((id) => ids.add(id));
+    storyFocusIds.forEach((id) => ids.add(id));
+    return ids;
+  }, [manualFocusIds, storyFocusIds]);
+  const shouldDim = storyOpen && activeFocusIds.size > 0;
   const base = useMemo(() => computeSimpleLayout(renderDiagram), [renderDiagram]);
   const [nodes, setNodes, onNodesChange] = useNodesState(base.nodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(base.edges);
@@ -429,7 +536,9 @@ function InnerGraph({ diagram, initialMode = "demo" }: { diagram: BowtieDiagram;
     // Default labels for quick scaffolding
     const defaultLabel: Record<BowtieNodeType, string> = {
       threat: "New threat",
+      escalationFactor: "New escalation factor",
       preventionBarrier: "New prevention barrier",
+      escalationBarrier: "New escalation barrier",
       hazard: "Hazard",
       topEvent: "Top event",
       mitigationBarrier: "New mitigation barrier",
@@ -437,7 +546,14 @@ function InnerGraph({ diagram, initialMode = "demo" }: { diagram: BowtieDiagram;
     };
 
     const id = `${t}-${Math.random().toString(36).slice(2, 9)}`;
-    const role = t === "preventionBarrier" ? "prevention" : t === "mitigationBarrier" ? "mitigation" : undefined;
+    const role =
+      t === "preventionBarrier"
+        ? "prevention"
+        : t === "mitigationBarrier"
+          ? "mitigation"
+          : t === "escalationBarrier"
+            ? "escalation"
+            : undefined;
     const snappedX = getSnapXForType(t, pos.x);
 
     setNodes((nds) => nds.concat({
@@ -458,15 +574,23 @@ function InnerGraph({ diagram, initialMode = "demo" }: { diagram: BowtieDiagram;
   }, []);
 
 
-  // Compute ELK auto-layout after initial render and when wing visibility changes
+  // Compute layout + highlight states (demo mode)
   useEffect(() => {
     if (mode === "builder") return; // don't override manual positions in Builder mode
     let alive = true;
     (async () => {
       try {
-        const laid = await computeElkLayout(filteredDiagram);
+        const laid = await computeElkLayout(renderDiagram);
         if (!alive) return;
-        setNodes(laid.nodes);
+        const hydrated = laid.nodes.map((n) => ({
+          ...n,
+          data: {
+            ...(n.data as BowtieNodeData),
+            highlighted: activeFocusIds.has(n.id),
+            dimmed: shouldDim && !activeFocusIds.has(n.id),
+          },
+        }));
+        setNodes(hydrated);
         setEdges(laid.edges);
       } catch (e) {
         console.warn("ELK layout failed, using simple layout", e);
@@ -475,7 +599,7 @@ function InnerGraph({ diagram, initialMode = "demo" }: { diagram: BowtieDiagram;
     return () => {
       alive = false;
     };
-  }, [filteredDiagram, mode]);
+  }, [renderDiagram, mode, activeFocusIds, shouldDim]);
 
   // Global events from the left Sidebar (export, toggle builder, clear diagram)
   useEffect(() => {
@@ -532,6 +656,7 @@ function InnerGraph({ diagram, initialMode = "demo" }: { diagram: BowtieDiagram;
 
   // Focus dimming + failed-path highlight + barrier group expansion on card open
   useEffect(() => {
+    if (storyOpen) return;
     const baseStrokeFor = (e: any) => {
       const failureEdge = failedMode && isFailureEdge(e);
       return failureEdge ? "var(--edge-fail)" : "var(--edge)";
@@ -580,7 +705,7 @@ function InnerGraph({ diagram, initialMode = "demo" }: { diagram: BowtieDiagram;
         };
       })
     );
-  }, [cardNode, failedMode]);
+  }, [cardNode, failedMode, storyOpen]);
 
   async function exportPng() {
     const el = wrapperRef.current;
@@ -607,6 +732,19 @@ function InnerGraph({ diagram, initialMode = "demo" }: { diagram: BowtieDiagram;
   useEffect(() => {
     setStoryOpen(mode === "demo");
   }, [mode]);
+  useEffect(() => {
+    if (storyOpen && mode === "demo") {
+      const stepData = highwayDrivingNarrative[storyIdx - 1];
+      setStoryFocusIds(new Set(stepData?.focusIds ?? []));
+      const revealList = stepData?.revealIds ?? stepData?.focusIds ?? [];
+      setStoryRevealIds(new Set(revealList));
+      setManualFocusIds(new Set());
+      setManualRevealIds(new Set());
+    } else {
+      setStoryFocusIds(new Set());
+      setStoryRevealIds(new Set());
+    }
+  }, [storyIdx, storyOpen, mode]);
 
   function isFailureEdge(e: { source: string; target: string }) {
 
@@ -626,6 +764,26 @@ function InnerGraph({ diagram, initialMode = "demo" }: { diagram: BowtieDiagram;
     };
   }, []);
 
+  // Listen for filter changes from sidebar
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    const onFilterChanged = (e: Event) => {
+      try {
+        const detail = (e as CustomEvent).detail as { roles: string[] } | undefined;
+        const roles = detail?.roles || [];
+
+        // Update selectedRoles state to match sidebar
+        setSelectedRoles(new Set(roles));
+      } catch (err) {
+        console.error("Filter change error:", err);
+      }
+    };
+
+    window.addEventListener("bowtie:filterChanged", onFilterChanged as any);
+    return () => window.removeEventListener("bowtie:filterChanged", onFilterChanged as any);
+  }, []);
+
   // Keyboard navigation for narrative steps (1..N)
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -633,7 +791,7 @@ function InnerGraph({ diagram, initialMode = "demo" }: { diagram: BowtieDiagram;
       if (!(mode === "demo" && storyOpen)) return;
       const target = e.target as HTMLElement | null;
       if (target && target.closest('input, textarea, [contenteditable="true"], [role="dialog"], [aria-expanded="true"]')) return;
-      const total = warehouseFireNarrative.length;
+      const total = highwayDrivingNarrative.length;
       if (e.key === "ArrowRight") {
         e.preventDefault();
         setStoryIdx((i) => (i < total ? i + 1 : i));
@@ -662,7 +820,11 @@ function InnerGraph({ diagram, initialMode = "demo" }: { diagram: BowtieDiagram;
   useEffect(() => {
     if (mode !== "builder") return;
     const laid = computeSimpleLayout(renderDiagram);
-    setNodes(laid.nodes);
+    const hydrated = laid.nodes.map((n) => ({
+      ...n,
+      data: { ...(n.data as BowtieNodeData), highlighted: false, dimmed: false },
+    }));
+    setNodes(hydrated);
     setEdges(laid.edges);
   }, [renderDiagram, mode]);
 
@@ -687,7 +849,7 @@ function InnerGraph({ diagram, initialMode = "demo" }: { diagram: BowtieDiagram;
         </div>
 
         <Legend />
-          <div className={`${styles.canvasHost} ${mode === "demo" && storyOpen ? styles.storyActive : ""}`} ref={canvasRef} onDrop={onCanvasDrop} onDragOver={onCanvasDragOver} data-testid="canvas-host" data-story-step={storyIdx} data-mode={mode}>
+          <div className={styles.canvasHost} ref={canvasRef} onDrop={onCanvasDrop} onDragOver={onCanvasDragOver} data-testid="canvas-host" data-mode={mode}>
       <ErrorBoundary fallback={<div role="alert">Unable to render diagram.</div>}>
 
 
@@ -730,15 +892,15 @@ function InnerGraph({ diagram, initialMode = "demo" }: { diagram: BowtieDiagram;
           {mode === "demo" && storyOpen && (
             <div className={styles.storyOverlay} role="dialog" aria-modal="false" aria-label="Demo narrative">
               <div className={styles.storyCard}>
-                <div className={styles.panelTitle}>{warehouseFireNarrative[storyIdx - 1]?.title}</div>
+                <div className={styles.panelTitle}>{highwayDrivingNarrative[storyIdx - 1]?.title}</div>
                 <p
                   className={styles.storyBody}
-                  dangerouslySetInnerHTML={{ __html: warehouseFireNarrative[storyIdx - 1]?.body || "" }}
+                  dangerouslySetInnerHTML={{ __html: highwayDrivingNarrative[storyIdx - 1]?.body || "" }}
                 />
                 <div className={styles.storyControls}>
                   <button className={styles.bowtieButton} onClick={() => setStoryOpen(false)} type="button">Hide</button>
                   <div style={{ marginLeft: "auto", display: "flex", gap: 8 }}>
-                    {storyIdx === warehouseFireNarrative.length ? (
+                    {storyIdx === highwayDrivingNarrative.length ? (
                       <button className={styles.bowtieButton} onClick={() => setStoryIdx(1)} type="button">START</button>
                     ) : (
                       <>
@@ -747,9 +909,9 @@ function InnerGraph({ diagram, initialMode = "demo" }: { diagram: BowtieDiagram;
                           className={`${styles.stepLabel} ${styles[`stepRole${getStepRole(storyIdx)}`] || ""}`}
                           aria-live="polite"
                         >
-                          Step {storyIdx} of {warehouseFireNarrative.length}
+                          Step {storyIdx} of {highwayDrivingNarrative.length}
                         </span>
-                        <button className={styles.bowtieButton} onClick={() => setStoryIdx((i) => (i < warehouseFireNarrative.length ? i + 1 : i))} disabled={storyIdx === warehouseFireNarrative.length} type="button">Next ▶</button>
+                        <button className={styles.bowtieButton} onClick={() => setStoryIdx((i) => (i < highwayDrivingNarrative.length ? i + 1 : i))} disabled={storyIdx === highwayDrivingNarrative.length} type="button">Next ▶</button>
                       </>
                     )}
                   </div>

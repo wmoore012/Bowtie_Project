@@ -1,13 +1,13 @@
 import { Handle, Position, type NodeProps } from "@xyflow/react";
 import { memo } from "react";
 
-import styles from "./ThreatNode.module.css";
+import styles from "./EscalationFactorNode.module.css";
 import type { BowtieNodeData } from "../../../domain/bowtie.types";
 
-function ThreatNode({ id, data }: NodeProps) {
+function EscalationFactorNode({ id, data }: NodeProps) {
   const d = data as BowtieNodeData;
-  const title = d?.metadata?.eli5 ?? d?.label;
   const descId = `${id}-desc`;
+  const title = d?.metadata?.eli5 ?? d?.label;
   const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
     if (e.key === "Enter" || e.key === " ") {
       e.preventDefault();
@@ -19,7 +19,7 @@ function ThreatNode({ id, data }: NodeProps) {
       <div
         role="button"
         tabIndex={0}
-        aria-label={`Threat: ${d?.label}`}
+        aria-label={`Escalation factor: ${d?.label}`}
         aria-describedby={descId}
         title={title}
         onKeyDown={handleKeyDown}
@@ -27,6 +27,7 @@ function ThreatNode({ id, data }: NodeProps) {
         data-highlight={d?.highlighted ? "true" : undefined}
         data-dimmed={d?.dimmed ? "true" : undefined}
       >
+        <div className={styles.badge}>Escalation</div>
         <div className={styles.content}>
           <div className={styles.title}>{d?.label}</div>
         </div>
@@ -38,7 +39,6 @@ function ThreatNode({ id, data }: NodeProps) {
       </p>
     </>
   );
-
-
 }
-export default memo(ThreatNode);
+
+export default memo(EscalationFactorNode);

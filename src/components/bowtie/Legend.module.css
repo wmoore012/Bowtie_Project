@@ -144,6 +144,21 @@
   font-size: 14px;
 }
 
+.iconEscalation {
+  background: repeating-linear-gradient(
+    135deg,
+    var(--hazard-stripe-yellow, #FCD34D) 0 8px,
+    var(--hazard-stripe-black, #1F2937) 8px 16px
+  );
+  border: 1px solid rgba(15,23,42,0.6);
+  color: #1F2937;
+}
+.iconEscalation::after {
+  content: "EF";
+  font-weight: 700;
+  font-size: 11px;
+}
+
 /* Top event: split circle / gradient */
 .iconTopEvent {
   background: linear-gradient(180deg, var(--knot-gradient-start, #f97316) 0%, var(--knot-gradient-end, #ef4444) 100%);

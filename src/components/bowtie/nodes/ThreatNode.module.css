@@ -19,15 +19,20 @@
 }
 
 /* Demo mode narrative emphasis */
-:global([data-mode="demo"]) .card {
-  background: var(--narrative-threat-bg, var(--threat-bg));
-}
-:global([data-mode="demo"]) .card[data-active="true"] {
-  box-shadow: 0 0 0 2px var(--narrative-amber, #F59E0B), 0 6px 18px rgba(245, 158, 11, 0.25);
-  filter: saturate(1.05);
-}
-
 .card:focus-visible {
   outline: 2px solid var(--ring);
   outline-offset: 3px;
+}
+.card[data-highlight="true"] {
+  box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.5), 0 18px 36px rgba(15, 23, 42, 0.3);
+  animation: threatGlow 1.5s ease-in-out infinite;
+}
+.card[data-dimmed="true"] {
+  opacity: 0.35;
+  filter: grayscale(0.35);
+}
+
+@keyframes threatGlow {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-4px); }
 }

@@ -24,6 +24,8 @@ function ConsequenceNode({ id, data }: NodeProps) {
         title={title}
         onKeyDown={handleKeyDown}
         className={styles.card}
+        data-highlight={d?.highlighted ? "true" : undefined}
+        data-dimmed={d?.dimmed ? "true" : undefined}
       >
         <div className={styles.content}>
           <div className={styles.title}>{d?.label}</div>
@@ -47,4 +49,3 @@ function ConsequenceNode({ id, data }: NodeProps) {
 
 }
 export default memo(ConsequenceNode);
-

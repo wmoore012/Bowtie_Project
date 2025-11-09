@@ -34,7 +34,7 @@
 }
 .headerBar.prevention { background: var(--prevent-accent, #10b981); }
 .headerBar.mitigation { background: var(--mitigate-accent, #3b82f6); }
-.headerBar.degraded { background: var(--consequence-border); }
+.headerBar.escalation { background: #facc15; }
 .content {
   padding: var(--pad-y) var(--pad-x);
 }
@@ -70,11 +70,33 @@
   --chip-bg: var(--mitigate-chip-bg);
   --chip-text: var(--mitigate-chip-text);
 }
+.escalation {
+  --chip-bg: rgba(250, 204, 21, 0.18);
+  --chip-text: #ca8a04;
+}
 
 
 .card:focus-visible {
   outline: 2px solid var(--ring);
   outline-offset: 3px;
+}
+
+.card[data-highlight="true"] {
+  animation: barrierPulse 1.6s ease-in-out infinite;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.35), 0 15px 35px rgba(15, 23, 42, 0.25);
+}
+
+.card[data-role="prevention"][data-highlight="true"] {
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.4), 0 15px 35px rgba(16, 185, 129, 0.35);
+}
+
+.card[data-role="escalation"][data-highlight="true"] {
+  box-shadow: 0 0 0 3px rgba(250, 204, 21, 0.6), 0 15px 35px rgba(146, 64, 14, 0.35);
+}
+
+.card[data-dimmed="true"] {
+  opacity: 0.35;
+  filter: grayscale(0.4);
 }
 
 

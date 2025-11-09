@@ -55,6 +55,14 @@ export const Legend = memo(function Legend() {
           </div>
 
           <div className={styles.item}>
+            <span className={`${styles.icon} ${styles.iconEscalation}`} aria-hidden="true" />
+            <div className={styles.textBlock}>
+              <div className={styles.label}>Escalation factors</div>
+              <div className={styles.help}>Degradation that accelerates failure</div>
+            </div>
+          </div>
+
+          <div className={styles.item}>
             <span className={`${styles.icon} ${styles.iconPrevention}`} aria-hidden="true" />
             <div className={styles.textBlock}>
               <div className={styles.label}>Prevention barriers</div>
@@ -101,7 +109,7 @@ export const Legend = memo(function Legend() {
       </div>
 
       <div className={styles.note}>
-        This simplified model intentionally excludes degradation factors.
+        Barriers stay collapsed until you select a card or run the story; escalation factors remain visible for context.
       </div>
       </div>
     </aside>

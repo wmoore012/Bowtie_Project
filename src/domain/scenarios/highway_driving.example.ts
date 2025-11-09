@@ -1,358 +1,651 @@
 import type { BowtieDiagram } from "../bowtie.types";
 
+const now = new Date().toISOString();
+
 export const highwayDrivingExample: BowtieDiagram = {
   id: "highway-driving-bowtie",
-  title: "Highway Driving Risk (Neutral Teaching Scenario)",
-  createdAt: new Date().toISOString(),
-  updatedAt: new Date().toISOString(),
+  title: "Highway Driving Bowtie (Interactive)",
+  createdAt: now,
+  updatedAt: now,
   nodes: [
-    // Threats (column 0)
-    {
-      id: "t-intoxicated",
-      type: "threat",
-      label: "Driving while impaired by alcohol or drugs",
-      collapsed: true,
-      metadata: {
-        eli5: "A driver is not fully in control because of alcohol or drugs.",
-        details: [
-          "BAC limits and impairment thresholds defined in policy",
-          "Random testing program covers all safety-sensitive roles",
-          "Supervisors trained to remove unfit drivers from service",
-        ],
-        chips: ["Human", "Supervisor", "Law enforcement"],
-        sopLink: "https://example.com/sop/dui-policy",
-      },
-    },
-    {
-      id: "t-distracted",
-      type: "threat",
-      label: "Taking eyes and mind off the road",
-      collapsed: true,
-      metadata: {
-        eli5: "Looking at a phone or screen means you miss things ahead.",
-        details: [
-          "Company policy bans handheld phone use while moving",
-          "In-cab lockouts disable video/entertainment in motion",
-          "Quarterly refresher talks reinforce scanning habits",
-        ],
-        chips: ["Human", "Policy", "Supervisor"],
-        sopLink: "https://example.com/sop/stay-focused",
-      },
-    },
-    {
-      id: "t-slippery",
-      type: "threat",
-      label: "Driving on a slippery road surface",
-      collapsed: true,
-      metadata: {
-        eli5: "Rain, ice, or oil make tires lose grip on the road.",
-        details: [
-          "Tread depth inspections recorded before dispatch",
-          "Winter kits issued and installed by maintenance",
-          "Drivers adjust speed and gaps in wet/icy weather",
-        ],
-        chips: ["Maintenance", "Human", "Supervisor"],
-        sopLink: "https://example.com/sop/wet-weather-driving",
-      },
-    },
-    {
-      id: "t-visibility",
-      type: "threat",
-      label: "Driving with poor visibility conditions",
-      collapsed: true,
-      metadata: {
-        eli5: "Fog, darkness, or glare make it hard to see hazards.",
-        details: [
-          "Automatic headlights tested at PM service",
-          "Windshield and wipers inspected weekly",
-          "Route guidance flags low-visibility segments",
-        ],
-        chips: ["Maintenance", "Active hardware", "Operations"],
-        sopLink: "https://example.com/sop/visibility-driving",
-      },
-    },
-
-    // Prevention Barriers (column 1) - two per threat (8 total)
-    {
-      id: "pb-dui-enforcement",
-      type: "preventionBarrier",
-      label: "Sobriety checkpoints and DUI enforcement",
-      collapsed: true,
-      metadata: {
-        eli5: "Police stops catch impaired drivers before they cause harm.",
-        details: ["Checkpoint coverage coordinated with state police", "Drivers deterred by visible enforcement"],
-        chips: ["Law enforcement"],
-        kpis: ["Checkpoint hours per corridor", "DUI arrests per 100k miles"],
-        failureModes: ["Limited coverage on rural routes", "Holiday surge overwhelms staffing"],
-        sopLink: "https://example.com/sop/dui-enforcement",
-      },
-    },
-    {
-      id: "pb-fit-duty",
-      type: "preventionBarrier",
-      label: "Fit-for-duty checks and random testing",
-      collapsed: true,
-      metadata: {
-        eli5: "We check drivers are sober and alert before they drive.",
-        details: ["Supervisors complete checklist before dispatch", "Random tests cover 25% of drivers annually"],
-        chips: ["Supervisor", "Policy"],
-        kpis: ["% drivers cleared fit-for-duty", "Random test completion rate"],
-        failureModes: ["Supervisor skips checklist", "Testing vendor delays"],
-        sopLink: "https://example.com/sop/fit-for-duty",
-      },
-    },
-    {
-      id: "pb-handsfree",
-      type: "preventionBarrier",
-      label: "Hands-free policy and in-cab lockouts",
-      collapsed: true,
-      metadata: {
-        eli5: "The cab disables distracting features while moving.",
-        details: ["Mobile device MDM blocks apps over 5 mph", "Infotainment lockout wired to speed signal"],
-        chips: ["Policy", "Active hardware"],
-        kpis: ["Distraction alerts per 1k miles", "Policy violations per month"],
-        failureModes: ["Driver bypasses lockout", "Device not enrolled in MDM"],
-        sopLink: "https://example.com/sop/hands-free",
-      },
-    },
-    {
-      id: "pb-coaching",
-      type: "preventionBarrier",
-      label: "Driver coaching with video telematics",
-      collapsed: true,
-      metadata: {
-        eli5: "Cameras flag risky moments so coaches can help drivers improve.",
-        details: ["Event-based video triggers coach review", "Scorecards discussed monthly with drivers"],
-        chips: ["Supervisor", "Telematics"],
-        kpis: ["Coaching sessions completed", "Distraction score trend"],
-        failureModes: ["False positives ignored", "No time scheduled for coaching"],
-        sopLink: "https://example.com/sop/driver-coaching",
-      },
-    },
-    {
-      id: "pb-tire-tread",
-      type: "preventionBarrier",
-      label: "Tire maintenance and tread depth checks",
-      collapsed: true,
-      metadata: {
-        eli5: "Good tires grip the road so the truck can stop.",
-        details: ["Tread depth logged in CMMS", "Out-of-spec tires pulled immediately"],
-        chips: ["Maintenance"],
-        kpis: ["% tires above 6/32\" tread", "Roadside tire failures per 100k miles"],
-        failureModes: ["Missed inspections", "Parts shortages delay replacement"],
-        sopLink: "https://example.com/sop/tire-care",
-      },
-    },
-    {
-      id: "pb-speed-gap",
-      type: "preventionBarrier",
-      label: "Speed management and following-distance policy",
-      collapsed: true,
-      metadata: {
-        eli5: "Slowing down and leaving space gives time to react.",
-        details: ["Adaptive cruise used when safe", "Company speed limiters set to 65 mph"],
-        chips: ["Policy", "Human"],
-        kpis: ["Hard braking events per 1k miles", "Average headway time"],
-        failureModes: ["Tailgating due to schedule pressure", "Speed limiter tampered"],
-        sopLink: "https://example.com/sop/following-distance",
-      },
-    },
-    {
-      id: "pb-lighting",
-      type: "preventionBarrier",
-      label: "Headlights, wipers, and automatic lighting",
-      collapsed: true,
-      metadata: {
-        eli5: "Good lights and wipers help the driver see the road.",
-        details: ["Auto-lights verified at PM", "Wiper blades replaced on schedule"],
-        chips: ["Active hardware", "Maintenance"],
-        kpis: ["% vehicles with auto-light faults", "Wiper replacement compliance"],
-        failureModes: ["Sensor blocked by dirt", "Blown fuse not replaced"],
-        sopLink: "https://example.com/sop/lighting",
-      },
-    },
-    {
-      id: "pb-signage-markings",
-      type: "preventionBarrier",
-      label: "Reflective markings and weather signage",
-      collapsed: true,
-      metadata: {
-        eli5: "Clear lines and warning signs guide drivers in bad weather.",
-        details: ["DOT maintains reflectivity standard", "Work zones include high-visibility signs"],
-        chips: ["Operations", "Agency"],
-        kpis: ["Retroreflectivity audits passed", "Sign replacement cycle time"],
-        failureModes: ["Faded paint not refreshed", "Damaged signs not reported"],
-        sopLink: "https://example.com/sop/signage",
-      },
-    },
-
-    // Hazard (column 2)
     {
       id: "hz-highway",
       type: "hazard",
-      label: "Driving a commercial vehicle on a highway",
+      label: "Driving a vehicle on a highway",
       metadata: {
-        eli5: "Fast traffic at highway speed leaves little room for mistakes.",
-        details: ["High kinetic energy at 60+ mph", "Limited stopping time and space"],
-        sopLink: "https://example.com/sop/highway-hazard",
+        eli5: "High-speed traffic leaves little margin for errors or failures.",
+        details: [
+          "Dense, fast traffic amplifies kinetic energy and reaction distance",
+          "Any loss of control can immediately involve other vehicles",
+        ],
       },
     },
-
-    // Top Event (column 3)
     {
       id: "te-loss-control",
       type: "topEvent",
       label: "Loss of control at highway speed",
       metadata: {
-        eli5: "The driver can no longer steer or stop safely.",
-        details: ["Run-off-road", "Rear-end", "Rollover start"],
-        sopLink: "https://example.com/sop/collision-response",
+        eli5: "The driver no longer keeps the vehicle centred, stable, or slowed.",
+        details: [
+          "Moments before a crash when traction, attention, or control is lost",
+          "Split-second transition between prevention and mitigation",
+        ],
       },
     },
-
-    // Mitigation Barriers (column 4)
+    // Threats
     {
-      id: "mb-guardrails",
-      type: "mitigationBarrier",
-      label: "Roadside barriers and crash cushions",
-      collapsed: true,
+      id: "th-intoxicated",
+      type: "threat",
+      label: "Intoxicated driving",
       metadata: {
-        eli5: "Guardrails and cushions absorb energy and redirect vehicles.",
-        details: ["MASH-rated systems at curves and bridges", "Maintenance fixes damaged sections"],
-        chips: ["Active hardware", "Agency"],
-        kpis: ["% critical segments protected", "Repair time for damaged rails"],
-        failureModes: ["Impact beyond protected zone", "Damaged section not repaired"],
-        sopLink: "https://example.com/sop/roadside-barriers",
+        eli5: "Alcohol or drugs slow reaction time and judgement.",
+        details: [
+          "Policy defines BAC thresholds and impairment indicators",
+          "Supervisors remove unfit drivers before dispatch",
+          "Law enforcement partners share DUI trends",
+        ],
+        chips: ["Human", "Supervisor", "Policy"],
       },
     },
     {
-      id: "mb-occupant-protection",
-      type: "mitigationBarrier",
-      label: "Seatbelts, airbags, and crumple zones",
-      collapsed: true,
+      id: "th-miscalibrated",
+      type: "threat",
+      label: "Miscalibrated assistance systems",
       metadata: {
-        eli5: "The cab protects people by spreading out crash forces.",
-        details: ["Seatbelt use over 98% in fleet", "Airbags maintained per OEM recalls"],
+        eli5: "Sensors or ADAS settings drift, giving the driver bad feedback.",
+        details: [
+          "Lane-keeping cameras require periodic calibration",
+          "Shops log adjustments after glass or bumper work",
+        ],
+        chips: ["Maintenance", "Vendors"],
+      },
+    },
+    {
+      id: "th-distracted",
+      type: "threat",
+      label: "Distracted driving (phone, GPS, infotainment)",
+      metadata: {
+        eli5: "Screen time steals the driver’s eyes and mind.",
+        details: [
+          "Hands-free policy enforced with spot checks",
+          "Coaching program reviews camera events",
+        ],
+        chips: ["Policy", "Supervisor"],
+      },
+    },
+    {
+      id: "th-slippery",
+      type: "threat",
+      label: "Slippery road surface",
+      metadata: {
+        eli5: "Rain, ice, or gravel erode tire grip and braking.",
+        details: [
+          "Dispatch receives route weather alerts",
+          "Drivers slow down and increase following distance",
+        ],
+        chips: ["Operations", "Human"],
+      },
+    },
+    {
+      id: "th-impaired-vehicle",
+      type: "threat",
+      label: "Impaired vehicle condition",
+      metadata: {
+        eli5: "Mechanical defects mean the truck cannot respond.",
+        details: [
+          "CMMS logs inspections and corrective work",
+          "Drivers escalate warning lights immediately",
+        ],
+        chips: ["Maintenance"],
+      },
+    },
+    {
+      id: "th-visibility",
+      type: "threat",
+      label: "Poor visibility (controllable)",
+      metadata: {
+        eli5: "Fog, glare, and darkness hide hazards until too late.",
+        details: [
+          "Teams monitor weather and light conditions",
+          "Fleet spec keeps running lights on",
+        ],
+        chips: ["Operations", "Active hardware"],
+      },
+    },
+    // Escalation factors (left wing)
+    {
+      id: "ef-miscalibration",
+      type: "escalationFactor",
+      label: "Escalation: Calibration overdue",
+      wing: "left",
+      metadata: {
+        eli5: "If ADAS calibration slips, threats escalate faster.",
+        details: [
+          "Glass replacements and collisions trigger recalibration",
+          "Verification steps logged before return to service",
+        ],
+        chips: ["Maintenance"],
+      },
+    },
+    {
+      id: "ef-maint-backlog",
+      type: "escalationFactor",
+      label: "Escalation: Maintenance backlog",
+      wing: "left",
+      metadata: {
+        eli5: "Known issues ignored make any threat harder to control.",
+        details: [
+          "Deferred defects tracked with risk ranking",
+          "Critical items grounded until repaired",
+        ],
+        chips: ["Maintenance", "Policy"],
+      },
+    },
+    // Escalation factors (right wing)
+    {
+      id: "ef-seatbelt",
+      type: "escalationFactor",
+      label: "Escalation: Seatbelt non-compliance",
+      wing: "right",
+      metadata: {
+        eli5: "If belts are unused, mitigation barriers fail.",
+        details: [
+          "Safety culture, incentives, and alarms reinforce use",
+          "Audits tie PPE use to supervisor scorecards",
+        ],
+        chips: ["Human", "Supervisor"],
+      },
+    },
+    {
+      id: "ef-rollover",
+      type: "escalationFactor",
+      label: "Escalation: Rollover response gaps",
+      wing: "right",
+      metadata: {
+        eli5: "If crews aren’t ready for a rollover, impacts worsen.",
+        details: [
+          "Driver refreshers cover roll-stability events",
+          "Emergency plans identify recovery partners",
+        ],
+        chips: ["Training", "Emergency"],
+      },
+    },
+    // Prevention barriers
+    {
+      id: "pb-screening",
+      type: "preventionBarrier",
+      label: "Periodical alcohol and drug screening",
+      metadata: {
+        eli5: "Regular testing keeps impaired drivers off the highway.",
+        details: [
+          "Random tests and pre-hire panels documented",
+          "Third-party lab shares completion metrics",
+        ],
+        chips: ["Policy", "HR"],
+      },
+    },
+    {
+      id: "pb-designated-driver",
+      type: "preventionBarrier",
+      label: "Appointing a designated driver",
+      metadata: {
+        eli5: "Peer checks ensure a sober driver takes the wheel.",
+        details: [
+          "Dispatch pairs relief drivers for events",
+          "Night shift captains sign off fitness",
+        ],
+        chips: ["Human", "Supervisor"],
+      },
+    },
+    {
+      id: "pb-ignition-lock",
+      type: "preventionBarrier",
+      label: "Breath alcohol ignition interlock",
+      metadata: {
+        eli5: "Truck will not start until a sober test is complete.",
+        details: [
+          "Units calibrated quarterly",
+          "Bypass attempts create automatic alerts",
+        ],
+        chips: ["Active hardware"],
+      },
+    },
+    {
+      id: "pb-lane-warning",
+      type: "preventionBarrier",
+      label: "Lane departure warning system",
+      metadata: {
+        eli5: "Alerts nudge drivers back between the lines.",
+        details: [
+          "Camera alignment verified after windshield work",
+          "Drivers coached on response to alerts",
+        ],
         chips: ["Active hardware", "Human"],
-        kpis: ["Seatbelt usage rate", "Airbag recall completion"],
-        failureModes: ["Driver not belted", "Aftermarket modification blocks airbag"],
-        sopLink: "https://example.com/sop/occupant-protection",
       },
     },
     {
-      id: "mb-stability-rollover",
-      type: "mitigationBarrier",
-      label: "Stability control and rollover protection",
-      collapsed: true,
+      id: "pb-calibration",
+      type: "preventionBarrier",
+      label: "Periodic calibration as per specification",
       metadata: {
-        eli5: "Electronics help prevent skids and reduce rollover chance.",
-        details: ["ESC calibrations verified at PM", "Load securement training completed"],
-        chips: ["Active hardware", "Maintenance"],
-        kpis: ["Loss-of-control events per 1k miles", "Roll stability interventions"],
-        failureModes: ["ESC fault not repaired", "Overloaded or poorly secured cargo"],
-        sopLink: "https://example.com/sop/esc-rollover",
+        eli5: "Workshops reset ADAS sensors to OEM tolerances.",
+        details: [
+          "Calibration fixtures kept current",
+          "Certificates stored in CMMS",
+        ],
+        chips: ["Maintenance"],
       },
     },
     {
-      id: "mb-ems",
-      type: "mitigationBarrier",
-      label: "Emergency response and post-crash care",
-      collapsed: true,
+      id: "pb-weather-report",
+      type: "preventionBarrier",
+      label: "Listen to weather report",
       metadata: {
-        eli5: "Trained responders arrive fast to treat injuries and stabilize.",
-        details: ["911 call protocols followed", "First-aid kits and AEDs in fleet depots"],
-        chips: ["EMS", "Supervisor"],
-        kpis: ["Average response time", "On-scene to transport time"],
-        failureModes: ["Rural delays", "Miscommunication on location"],
-        sopLink: "https://example.com/sop/ems-response",
+        eli5: "Drivers brief on storms before each route.",
+        details: [
+          "Dispatch issues hourly alerts",
+          "Apps push radar snapshots to cabs",
+        ],
+        chips: ["Operations"],
       },
     },
     {
-      id: "mb-scene-protection",
-      type: "mitigationBarrier",
-      label: "Scene protection and traffic control",
-      collapsed: true,
+      id: "pb-adjust-schedule",
+      type: "preventionBarrier",
+      label: "Adjust driving schedule",
       metadata: {
-        eli5: "Cones, flares, and warnings prevent more cars from crashing.",
-        details: ["Reflective vests and triangles carried", "DOT assists with closures and detours"],
-        chips: ["Operations", "Agency"],
-        kpis: ["Secondary crashes per incident", "Time to establish control"],
-        failureModes: ["Insufficient equipment on scene", "Poor visibility of responders"],
-        sopLink: "https://example.com/sop/scene-protection",
+        eli5: "Loads shift to daylight or safer routes when needed.",
+        details: [
+          "Supervisors reschedule when thresholds exceeded",
+          "Shippers notified about ETA impacts",
+        ],
+        chips: ["Operations", "Customer"],
       },
     },
-
-    // Consequences (column 5)
+    {
+      id: "pb-no-high-risk",
+      type: "preventionBarrier",
+      label: "No driving in high-risk surface conditions",
+      metadata: {
+        eli5: "If traction is gone, we shut the lane down.",
+        details: [
+          "Route profile rules baked into dispatch system",
+          "Drivers empowered to park without penalty",
+        ],
+        chips: ["Policy", "Operations"],
+      },
+    },
+    {
+      id: "pb-defensive-driving",
+      type: "preventionBarrier",
+      label: "Defensive driving coaching",
+      metadata: {
+        eli5: "Practice keeps slick-surface reactions automatic.",
+        details: [
+          "Quarterly clinics review skid recovery",
+          "Simulators replay close calls",
+        ],
+        chips: ["Training", "Human"],
+      },
+    },
+    {
+      id: "pb-abs",
+      type: "preventionBarrier",
+      label: "ABS braking system",
+      metadata: {
+        eli5: "Electronics pulse brakes to keep steering control.",
+        details: [
+          "ABS self-tests logged pre-trip",
+          "Fault codes escalate to maintenance",
+        ],
+        chips: ["Active hardware"],
+      },
+    },
+    {
+      id: "pb-inspection-maint",
+      type: "preventionBarrier",
+      label: "Inspection and maintenance",
+      metadata: {
+        eli5: "Scheduled PM finds defects before they matter.",
+        details: [
+          "Mechanics sign off repairs in CMMS",
+          "DVIR close-out required before dispatch",
+        ],
+        chips: ["Maintenance"],
+      },
+    },
+    {
+      id: "pb-lights-always",
+      type: "preventionBarrier",
+      label: "Company vehicle lights always on",
+      metadata: {
+        eli5: "Running lights increase conspicuity in rain and fog.",
+        details: [
+          "Spec keeps DRL harness energized",
+          "Photo sensors inspected weekly",
+        ],
+        chips: ["Active hardware"],
+      },
+    },
+    {
+      id: "pb-light-spec",
+      type: "preventionBarrier",
+      label: "Hire vehicles with specific light specs",
+      metadata: {
+        eli5: "Rental fleet must match our lighting policy.",
+        details: [
+          "Frame agreement lists lighting requirements",
+          "Vendors supply compliance certificates",
+        ],
+        chips: ["Vendors", "Operations"],
+      },
+    },
+    {
+      id: "pb-preferred-hire",
+      type: "preventionBarrier",
+      label: "Preferred car hire companies",
+      metadata: {
+        eli5: "Only vetted partners provide replacement vehicles.",
+        details: [
+          "Vendor scorecards track reliability",
+          "Audit includes emergency lighting checks",
+        ],
+        chips: ["Vendors"],
+      },
+    },
+    // Escalation barriers
+    {
+      id: "eb-calibration-discipline",
+      type: "escalationBarrier",
+      label: "EF barrier: Calibration discipline",
+      wing: "left",
+      metadata: {
+        eli5: "We track due dates and lock out overdue trucks.",
+        details: [
+          "Dashboard shows ADAS calibration expiry",
+          "Supervisors approve variance only with mitigation",
+        ],
+        chips: ["Maintenance", "Policy"],
+      },
+    },
+    {
+      id: "eb-maintenance-discipline",
+      type: "escalationBarrier",
+      label: "EF barrier: Maintenance escalation",
+      wing: "left",
+      metadata: {
+        eli5: "Critical defects trigger hold-and-fix workflows.",
+        details: [
+          "Shop foreman assigns rapid-response crew",
+          "Roadside vendor list pre-approved",
+        ],
+        chips: ["Maintenance"],
+      },
+    },
+    {
+      id: "eb-seatbelt-discipline",
+      type: "escalationBarrier",
+      label: "EF barrier: Seatbelt discipline",
+      wing: "right",
+      metadata: {
+        eli5: "Leadership reinforces belt use every shift.",
+        details: [
+          "Coaching metrics tie to incentive plan",
+          "Cab alerts escalate to fleet control",
+        ],
+        chips: ["Supervisor", "Human"],
+      },
+    },
+    {
+      id: "eb-rollover-readiness",
+      type: "escalationBarrier",
+      label: "EF barrier: Rollover readiness",
+      wing: "right",
+      metadata: {
+        eli5: "Playbooks cover stabilization and occupant rescue.",
+        details: [
+          "Mutual-aid partners pre-contracted",
+          "Drivers drilled on egress and radios",
+        ],
+        chips: ["Emergency", "Training"],
+      },
+    },
+    // Mitigation barriers
+    {
+      id: "mb-forward-warning",
+      type: "mitigationBarrier",
+      label: "Forward collision warning system",
+      metadata: {
+        eli5: "Radar/vision alerts give seconds to brake or steer.",
+        details: [
+          "OEM software kept current",
+          "Alerts audited via telematics",
+        ],
+        chips: ["Active hardware"],
+      },
+    },
+    {
+      id: "mb-defensive-competence",
+      type: "mitigationBarrier",
+      label: "Defensive driving - slip recovery",
+      metadata: {
+        eli5: "Training helps recover after the first slide.",
+        details: [
+          "Road-tests simulate evasive maneuvers",
+          "Coaches ride-along quarterly",
+        ],
+        chips: ["Training", "Human"],
+      },
+    },
+    {
+      id: "mb-crumple-zone",
+      type: "mitigationBarrier",
+      label: "Crumple zone / vehicle structure",
+      metadata: {
+        eli5: "Structure absorbs energy before it hits people.",
+        details: [
+          "Spec includes reinforced bumpers",
+          "Post-crash inspections verify alignment",
+        ],
+        chips: ["Engineering"],
+      },
+    },
+    {
+      id: "mb-airbag",
+      type: "mitigationBarrier",
+      label: "Airbag deployment",
+      metadata: {
+        eli5: "Inflatable cushions slow the body.",
+        details: [
+          "Sensors tested via diagnostic port",
+          "Recall campaigns tracked to closure",
+        ],
+        chips: ["Maintenance", "Active hardware"],
+      },
+    },
+    {
+      id: "mb-headrest",
+      type: "mitigationBarrier",
+      label: "Adjust headrest to mitigate whiplash",
+      metadata: {
+        eli5: "Proper headrest height keeps the neck aligned.",
+        details: [
+          "Pre-trip checklist includes seating",
+          "Posture coaching in simulator labs",
+        ],
+        chips: ["Human", "Supervisor"],
+      },
+    },
+    {
+      id: "mb-seatbelt-campaign",
+      type: "mitigationBarrier",
+      label: "Seatbelt awareness campaign",
+      metadata: {
+        eli5: "Stories, incentives, and metrics reinforce belt use.",
+        details: [
+          "Leadership highlights success cases",
+          "Spot bonuses for perfect compliance",
+        ],
+        chips: ["Human", "Communications"],
+      },
+    },
+    {
+      id: "mb-seatbelt-alarm",
+      type: "mitigationBarrier",
+      label: "Seatbelt warning alarm",
+      metadata: {
+        eli5: "Audible alarms nag until the belt clicks.",
+        details: [
+          "Telematics alerts when belts unlatched",
+          "Supervisors follow up on repeat offenders",
+        ],
+        chips: ["Active hardware"],
+      },
+    },
+    {
+      id: "mb-rollover-protection",
+      type: "mitigationBarrier",
+      label: "Roll-over protection",
+      metadata: {
+        eli5: "Reinforced roofs and cages keep space for people.",
+        details: [
+          "Spec includes rollover-strength cab",
+          "Periodic inspections of welds and mounts",
+        ],
+        chips: ["Engineering", "Maintenance"],
+      },
+    },
+    // Consequences
     {
       id: "c-fixed-object",
       type: "consequence",
-      label: "Crash into a fixed roadside object",
-      collapsed: true,
+      label: "Crash into other vehicle or object",
       metadata: {
-        eli5: "The vehicle hits a barrier, pole, or wall.",
-        details: ["Property damage and potential injury", "May block lanes or cause fires"],
+        eli5: "Impact with another car, barrier, or roadside asset.",
+        details: [
+          "Can trigger multi-vehicle pile ups",
+          "Major property damage and injury risk",
+        ],
+        chips: ["Operations"],
       },
     },
     {
       id: "c-driver-impacts",
       type: "consequence",
-      label: "Driver impacts vehicle interior surfaces",
-      collapsed: true,
+      label: "Driver impacts vehicle interior",
       metadata: {
-        eli5: "People inside are thrown against belts, airbags, or the cab.",
-        details: ["Whiplash, bruising, fractures possible", "Severity reduced by restraints"],
+        eli5: "Occupants hit wheel, dash, or cabin surfaces.",
+        details: [
+          "Whiplash, blunt trauma, fractures",
+          "Long-term lost time injuries",
+        ],
+        chips: ["Health"],
+      },
+    },
+    {
+      id: "c-seatbelt-missed",
+      type: "consequence",
+      label: "Forgetting or refusing to wear seatbelt",
+      metadata: {
+        eli5: "At crash moment the belt is unlatched.",
+        details: [
+          "People thrown around the cabin",
+          "Higher fatality likelihood",
+        ],
+        chips: ["Human"],
       },
     },
     {
       id: "c-rollover",
       type: "consequence",
-      label: "Vehicle roll-over with potential ejection",
-      collapsed: true,
+      label: "Vehicle roll-over",
       metadata: {
-        eli5: "The vehicle tips onto its side or roof, sometimes throwing people out.",
-        details: ["High risk of severe injury", "Cargo may spill and block road"],
+        eli5: "Vehicle tips onto side or roof, possibly ejecting people.",
+        details: [
+          "Cargo can spill and ignite",
+          "Recovery takes hours and lanes",
+        ],
+        chips: ["Emergency"],
       },
     },
   ],
   edges: [
-    // Threats -> Prevention (2 per threat)
-    { id: "e1", source: "t-intoxicated", target: "pb-dui-enforcement" },
-    { id: "e2", source: "t-intoxicated", target: "pb-fit-duty" },
+    { id: "edge-hazard-top", source: "hz-highway", target: "te-loss-control" },
 
-    { id: "e3", source: "t-distracted", target: "pb-handsfree" },
-    { id: "e4", source: "t-distracted", target: "pb-coaching" },
+    // Threat -> Prevention barrier
+    { id: "edge-th1-pb-screen", source: "th-intoxicated", target: "pb-screening" },
+    { id: "edge-th1-pb-designated", source: "th-intoxicated", target: "pb-designated-driver" },
+    { id: "edge-th1-pb-ignition", source: "th-intoxicated", target: "pb-ignition-lock" },
+    { id: "edge-th1-pb-lane", source: "th-intoxicated", target: "pb-lane-warning" },
 
-    { id: "e5", source: "t-slippery", target: "pb-tire-tread" },
-    { id: "e6", source: "t-slippery", target: "pb-speed-gap" },
+    { id: "edge-th2-pb-calibration", source: "th-miscalibrated", target: "pb-calibration" },
 
-    { id: "e7", source: "t-visibility", target: "pb-lighting" },
-    { id: "e8", source: "t-visibility", target: "pb-signage-markings" },
+    { id: "edge-th3-pb-lane", source: "th-distracted", target: "pb-lane-warning" },
 
-    // Prevention -> Hazard
-    { id: "e9", source: "pb-dui-enforcement", target: "hz-highway" },
-    { id: "e10", source: "pb-fit-duty", target: "hz-highway" },
-    { id: "e11", source: "pb-handsfree", target: "hz-highway" },
-    { id: "e12", source: "pb-coaching", target: "hz-highway" },
-    { id: "e13", source: "pb-tire-tread", target: "hz-highway" },
-    { id: "e14", source: "pb-speed-gap", target: "hz-highway" },
-    { id: "e15", source: "pb-lighting", target: "hz-highway" },
-    { id: "e16", source: "pb-signage-markings", target: "hz-highway" },
+    { id: "edge-th4-pb-weather", source: "th-slippery", target: "pb-weather-report" },
+    { id: "edge-th4-pb-adjust", source: "th-slippery", target: "pb-adjust-schedule" },
+    { id: "edge-th4-pb-no-risk", source: "th-slippery", target: "pb-no-high-risk" },
+    { id: "edge-th4-pb-defensive", source: "th-slippery", target: "pb-defensive-driving" },
+    { id: "edge-th4-pb-abs", source: "th-slippery", target: "pb-abs" },
 
-    // Hazard -> Top Event
-    { id: "e17", source: "hz-highway", target: "te-loss-control" },
+    { id: "edge-th5-pb-inspection", source: "th-impaired-vehicle", target: "pb-inspection-maint" },
 
-    // Top Event -> Mitigation
-    { id: "e18", source: "te-loss-control", target: "mb-guardrails" },
-    { id: "e19", source: "te-loss-control", target: "mb-occupant-protection" },
-    { id: "e20", source: "te-loss-control", target: "mb-stability-rollover" },
-    { id: "e21", source: "te-loss-control", target: "mb-ems" },
-    { id: "e22", source: "te-loss-control", target: "mb-scene-protection" },
+    { id: "edge-th6-pb-weather", source: "th-visibility", target: "pb-weather-report" },
+    { id: "edge-th6-pb-adjust", source: "th-visibility", target: "pb-adjust-schedule" },
+    { id: "edge-th6-pb-lights", source: "th-visibility", target: "pb-lights-always" },
+    { id: "edge-th6-pb-light-spec", source: "th-visibility", target: "pb-light-spec" },
+    { id: "edge-th6-pb-preferred", source: "th-visibility", target: "pb-preferred-hire" },
 
-    // Mitigation -> Consequences
-    { id: "e23", source: "mb-guardrails", target: "c-fixed-object" },
-    { id: "e24", source: "mb-occupant-protection", target: "c-driver-impacts" },
-    { id: "e25", source: "mb-stability-rollover", target: "c-rollover" },
-    { id: "e26", source: "mb-ems", target: "c-driver-impacts" },
-    { id: "e27", source: "mb-scene-protection", target: "c-fixed-object" },
+    // Prevention barrier -> Top event
+    { id: "edge-pb-screen-top", source: "pb-screening", target: "te-loss-control" },
+    { id: "edge-pb-designated-top", source: "pb-designated-driver", target: "te-loss-control" },
+    { id: "edge-pb-ignition-top", source: "pb-ignition-lock", target: "te-loss-control" },
+    { id: "edge-pb-lane-top", source: "pb-lane-warning", target: "te-loss-control" },
+    { id: "edge-pb-calibration-top", source: "pb-calibration", target: "te-loss-control" },
+    { id: "edge-pb-weather-top", source: "pb-weather-report", target: "te-loss-control" },
+    { id: "edge-pb-adjust-top", source: "pb-adjust-schedule", target: "te-loss-control" },
+    { id: "edge-pb-no-risk-top", source: "pb-no-high-risk", target: "te-loss-control" },
+    { id: "edge-pb-defensive-top", source: "pb-defensive-driving", target: "te-loss-control" },
+    { id: "edge-pb-abs-top", source: "pb-abs", target: "te-loss-control" },
+    { id: "edge-pb-inspection-top", source: "pb-inspection-maint", target: "te-loss-control" },
+    { id: "edge-pb-lights-top", source: "pb-lights-always", target: "te-loss-control" },
+    { id: "edge-pb-light-spec-top", source: "pb-light-spec", target: "te-loss-control" },
+    { id: "edge-pb-preferred-top", source: "pb-preferred-hire", target: "te-loss-control" },
+
+    // Escalation factor chains
+    { id: "edge-ef-miscal", source: "ef-miscalibration", target: "eb-calibration-discipline" },
+    { id: "edge-eb-calibration-top", source: "eb-calibration-discipline", target: "te-loss-control" },
+
+    { id: "edge-ef-maint", source: "ef-maint-backlog", target: "eb-maintenance-discipline" },
+    { id: "edge-eb-maint-top", source: "eb-maintenance-discipline", target: "te-loss-control" },
+
+    { id: "edge-ef-seatbelt", source: "ef-seatbelt", target: "eb-seatbelt-discipline" },
+    { id: "edge-eb-seatbelt-top", source: "eb-seatbelt-discipline", target: "te-loss-control" },
+
+    { id: "edge-ef-rollover", source: "ef-rollover", target: "eb-rollover-readiness" },
+    { id: "edge-eb-rollover-top", source: "eb-rollover-readiness", target: "te-loss-control" },
+
+    // Top event -> Mitigation
+    { id: "edge-top-mb-forward", source: "te-loss-control", target: "mb-forward-warning" },
+    { id: "edge-top-mb-defensive", source: "te-loss-control", target: "mb-defensive-competence" },
+    { id: "edge-top-mb-crumple", source: "te-loss-control", target: "mb-crumple-zone" },
+    { id: "edge-top-mb-airbag", source: "te-loss-control", target: "mb-airbag" },
+    { id: "edge-top-mb-headrest", source: "te-loss-control", target: "mb-headrest" },
+    { id: "edge-top-mb-seatbelt-campaign", source: "te-loss-control", target: "mb-seatbelt-campaign" },
+    { id: "edge-top-mb-seatbelt-alarm", source: "te-loss-control", target: "mb-seatbelt-alarm" },
+    { id: "edge-top-mb-rollover", source: "te-loss-control", target: "mb-rollover-protection" },
+
+    // Mitigation -> Consequence chains
+    { id: "edge-mb-forward-consequence", source: "mb-forward-warning", target: "c-fixed-object" },
+    { id: "edge-mb-defensive-consequence", source: "mb-defensive-competence", target: "c-fixed-object" },
+    { id: "edge-mb-crumple-consequence", source: "mb-crumple-zone", target: "c-fixed-object" },
+
+    { id: "edge-mb-airbag-consequence", source: "mb-airbag", target: "c-driver-impacts" },
+    { id: "edge-mb-headrest-consequence", source: "mb-headrest", target: "c-driver-impacts" },
+
+    { id: "edge-mb-seatbelt-campaign-consequence", source: "mb-seatbelt-campaign", target: "c-seatbelt-missed" },
+    { id: "edge-mb-seatbelt-alarm-consequence", source: "mb-seatbelt-alarm", target: "c-seatbelt-missed" },
+
+    { id: "edge-mb-rollover-consequence", source: "mb-rollover-protection", target: "c-rollover" },
   ],
 };

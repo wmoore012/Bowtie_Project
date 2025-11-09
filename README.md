@@ -11,19 +11,17 @@ Professional, accessible Bowtie risk diagram tool built with React + TypeScript 
 - `npm run test:run` – run unit tests once (no watch mode)
 
 ## Highlights
-- Automated layout with ELK.js (left→right, 6-column bowtie)
-- Progressive expand/collapse per wing and 11-step teaching mode
-- Role-based multi-select filtering (chips) with accessible live region
-- Legend and toolbar stacked via HUD (no overlap)
-- Export current viewport to PNG
-- CSS Modules + design tokens; focus-visible + reduced-motion support
+- Deterministic ELK-backed layout keeps the hazard above the top event with true left/right symmetry.
+- Default “collapsed” bowtie only shows threats, escalation factors, top event, hazard, and consequences; clicking any card or running the story reveals the matching prevention/mitigation barriers.
+- Story / presentation mode pulses nodes, auto-reveals the correct branches, and supports arrow-key narration plus restart collapse.
+- Escalation factors stay visible as yellow striped pills; new legend entry explains their role.
+- Role-based multi-select filtering (chips) with accessible live region feedback.
+- Export any state of the diagram to PNG; CSS Modules + design tokens + reduced motion/focus-visible baked in.
 
 ## Roadmap (next)
-- Pop-out Actions menu (Expand All, Collapse All, Fit All, Export)
-- Collapsible Filters panel
-- Collapsible left sidebar navigation
-- Enhanced NodeDetailPanel (modern UX: preload on hover, failed-path highlight)
-- Modern node visuals, badges/icons per role, improved center knot visuals
+- Smooth GSAP-level zoom/pan choreography for story transitions.
+- Inline editing of escalation factors + barriers inside Builder mode.
+- Time-travel scrubber that records which barriers were revealed during a workshop.
 
 ## Scenario
-This repo ships a neutral “Highway Driving Risk” teaching example (no degradation factors by design). Swap in your own scenario by editing `src/domain/scenarios/*`.
+This repo ships a neutral “Highway Driving Risk” teaching example (with explicit escalation factors). Swap in your own scenario by editing `src/domain/scenarios/*`.

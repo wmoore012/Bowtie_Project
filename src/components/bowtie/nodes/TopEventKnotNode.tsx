@@ -16,6 +16,8 @@ function TopEventKnotNode({ id, data }: NodeProps) {
         aria-label={`Top Event: ${d?.label}`}
         aria-describedby={descId}
         title={title}
+        data-highlight={d?.highlighted ? "true" : undefined}
+        data-dimmed={d?.dimmed ? "true" : undefined}
       >
         <div className={styles.knot}>
           <span className={styles.icon} aria-hidden="true"></span>
@@ -31,5 +33,4 @@ function TopEventKnotNode({ id, data }: NodeProps) {
   );
 }
 export default memo(TopEventKnotNode);
-
 

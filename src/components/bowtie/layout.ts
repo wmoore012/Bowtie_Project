@@ -19,6 +19,8 @@ export function computeSimpleLayout(diagram: BowtieDiagram): {
   const nodesByType = (type: BowtieNodeType) => diagram.nodes.filter((n) => n.type === type);
   const threats = nodesByType("threat");
   const prevention = nodesByType("preventionBarrier");
+  const escalationFactors = nodesByType("escalationFactor");
+  const escalationBarriers = nodesByType("escalationBarrier");
   const hazard = nodesByType("hazard")[0];
   const topEvent = nodesByType("topEvent")[0];
   const mitigation = nodesByType("mitigationBarrier");
@@ -35,11 +37,20 @@ export function computeSimpleLayout(diagram: BowtieDiagram): {
   const xMitigation = centerX + 1 * colGap;
   const xConsequence = centerX + 2 * colGap;
 
-  // Compute symmetric Y positions around Top Event center
-  const yThreats = spreadY(threats.length, centerY, yGap);
-  const yPreventions = spreadY(prevention.length, centerY, yGap);
-  const yMitigations = spreadY(mitigation.length, centerY, yGap);
-  const yConsequences = spreadY(consequences.length, centerY, yGap);
+  const leftEscalationFactors = escalationFactors.filter((n) => n.wing !== "right");
+  const rightEscalationFactors = escalationFactors.filter((n) => n.wing === "right");
+  const leftEscalationBarriers = escalationBarriers.filter((n) => n.wing !== "right");
+  const rightEscalationBarriers = escalationBarriers.filter((n) => n.wing === "right");
+
+  const leftColumnNodes = [...threats, ...leftEscalationFactors];
+  const rightColumnNodes = [...consequences, ...rightEscalationFactors];
+  const preventionColumnNodes = [...prevention, ...leftEscalationBarriers];
+  const mitigationColumnNodes = [...mitigation, ...rightEscalationBarriers];
+
+  const yThreats = spreadY(leftColumnNodes.length, centerY, yGap);
+  const yPreventions = spreadY(preventionColumnNodes.length, centerY, yGap);
+  const yMitigations = spreadY(mitigationColumnNodes.length, centerY, yGap);
+  const yConsequences = spreadY(rightColumnNodes.length, centerY, yGap);
 
   const pos = new Map<string, { x: number; y: number }>();
 
@@ -47,18 +58,25 @@ export function computeSimpleLayout(diagram: BowtieDiagram): {
   if (topEvent) pos.set(topEvent.id, { x: xTopEvent, y: centerY });
   if (hazard) pos.set(hazard.id, { x: xHazard, y: centerY - verticalHazardGap });
 
-  // Place wings
-  threats.forEach((n, i) => pos.set(n.id, { x: xThreat, y: yThreats[i] ?? centerY }));
-  prevention.forEach((n, i) => pos.set(n.id, { x: xPrevention, y: yPreventions[i] ?? centerY }));
-  mitigation.forEach((n, i) => pos.set(n.id, { x: xMitigation, y: yMitigations[i] ?? centerY }));
-  consequences.forEach((n, i) => pos.set(n.id, { x: xConsequence, y: yConsequences[i] ?? centerY }));
+  leftColumnNodes.forEach((n, i) => pos.set(n.id, { x: xThreat, y: yThreats[i] ?? centerY }));
+  preventionColumnNodes.forEach((n, i) => pos.set(n.id, { x: xPrevention, y: yPreventions[i] ?? centerY }));
+  mitigationColumnNodes.forEach((n, i) => pos.set(n.id, { x: xMitigation, y: yMitigations[i] ?? centerY }));
+  rightColumnNodes.forEach((n, i) => pos.set(n.id, { x: xConsequence, y: yConsequences[i] ?? centerY }));
 
-  const asRole = (t: BowtieNodeType | undefined) =>
-    t === "preventionBarrier" ? "prevention" : t === "mitigationBarrier" ? "mitigation" : undefined;
+  const asRole = (n: { type: BowtieNodeType; wing?: "left" | "right" }) => {
+    if (n.type === "preventionBarrier") return "prevention";
+    if (n.type === "mitigationBarrier") return "mitigation";
+    if (n.type === "escalationBarrier") {
+      if (n.wing === "right") return "escalation-right";
+      if (n.wing === "left") return "escalation-left";
+      return "escalation";
+    }
+    return undefined;
+  };
 
   const nodes: Node<BowtieNodeData>[] = diagram.nodes.map((n) => {
     const p = pos.get(n.id) ?? { x: 0, y: 0 };
-    const role = asRole(n.type);
+    const role = asRole(n);
     return {
       id: n.id,
       type: n.type,

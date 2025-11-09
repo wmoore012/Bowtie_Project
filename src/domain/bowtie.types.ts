@@ -1,6 +1,8 @@
 export type BowtieNodeType =
   | "threat"
+  | "escalationFactor"
   | "preventionBarrier"
+  | "escalationBarrier"
   | "hazard"
   | "topEvent"
   | "mitigationBarrier"
@@ -32,6 +34,7 @@ export interface BowtieNode {
   label: string;
   collapsed?: boolean;
   metadata?: NodeMetadata;
+  wing?: "left" | "right";
 }
 
 export interface BowtieEdge {
@@ -56,7 +59,9 @@ export interface BowtieNodeData extends Record<string, unknown> {
   bowtieType: BowtieNodeType;
   metadata?: BowtieNodeMetadata;
   // UI-only extras for styling
-  role?: "prevention" | "mitigation";
+  role?: "prevention" | "mitigation" | "escalation-left" | "escalation-right" | "escalation";
+  highlighted?: boolean;
+  dimmed?: boolean;
 }
 
 export function isBowtieNodeData(v: unknown): v is BowtieNodeData {

@@ -6,7 +6,13 @@ import type { BowtieNodeData } from "../../../domain/bowtie.types";
 
 function BarrierNode({ id, data }: NodeProps) {
   const d = data as BowtieNodeData;
-  const role = d?.role === "prevention" ? "prevention" : "mitigation";
+  const rawRole = d?.role;
+  const role: "prevention" | "mitigation" | "escalation" =
+    rawRole && rawRole.toString().startsWith("mitigation")
+      ? "mitigation"
+      : rawRole && rawRole.toString().startsWith("escalation")
+        ? "escalation"
+        : "prevention";
   const title = d?.metadata?.eli5 ?? d?.label;
   const descId = `${id}-desc`;
   const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
@@ -24,10 +30,12 @@ function BarrierNode({ id, data }: NodeProps) {
         aria-describedby={descId}
         title={title}
         onKeyDown={handleKeyDown}
-        className={`${styles.card} ${role === "prevention" ? styles.prevention : styles.mitigation}`}
+        className={`${styles.card} ${styles[role] ?? ""}`}
         data-testid="bowtie-barrier-node"
         data-label={d?.label}
         data-role={role}
+        data-highlight={d?.highlighted ? "true" : undefined}
+        data-dimmed={d?.dimmed ? "true" : undefined}
       >
         <div className={`${styles.headerBar} ${styles[role]}`} />
         <div className={styles.content}>
@@ -55,4 +63,3 @@ function BarrierNode({ id, data }: NodeProps) {
 
 }
 export default memo(BarrierNode);
-
