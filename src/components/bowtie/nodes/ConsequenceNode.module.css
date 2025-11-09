@@ -1,9 +1,9 @@
 .card {
-  background: var(--consequence-bg);
-  border: 1.5px solid var(--consequence-border);
+  background: var(--consequence-bg, #DC2626);
+  border: 2px solid var(--consequence-border, #991B1B);
   border-radius: var(--radius-card, 12px);
   box-shadow: var(--shadow);
-  color: var(--text);
+  color: var(--consequence-text, #111827);
   min-width: 220px;
   max-width: 300px;
   cursor: pointer;
@@ -15,10 +15,25 @@
   font-weight: 600;
   font-size: 14px;
   line-height: 1.25;
+  color: var(--consequence-text, #111827);
 }
 
 
 .card:focus-visible {
   outline: 2px solid var(--ring);
   outline-offset: 3px;
+}
+
+.chips {
+  display: flex;
+  gap: 6px;
+  margin-top: 8px;
+  flex-wrap: wrap;
+}
+.chip {
+  font-size: 11px;
+  padding: 2px 8px;
+  background: var(--consequence-chip-bg);
+  color: var(--consequence-chip-text);
+  border-radius: 999px;
 }

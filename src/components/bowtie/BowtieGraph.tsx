@@ -32,6 +32,10 @@ import "../../styles/theme.css";
 import { computeRoleFilteredDiagram, collectAvailableRoles } from "../../domain/filters";
 import { ErrorBoundary } from "../common/ErrorBoundary";
 
+import { warehouseFireNarrative } from "../../domain/scenarios/warehouse_fire_narrative";
+
+import { HazardBanner } from "./narrative/HazardBanner";
+
 
 const nodeTypes = {
   threat: ThreatNode,
@@ -63,15 +67,16 @@ const nodeTypes = {
 
 
 
-function InnerGraph({ diagram }: { diagram: BowtieDiagram }) {
+function InnerGraph({ diagram, initialMode = "demo" }: { diagram: BowtieDiagram; initialMode?: "demo" | "builder" }) {
   const wrapperRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLDivElement>(null);
   const cardRef = useRef<HTMLDivElement | null>(null);
   // Cache for hover preloading (optional micro-optimization)
   const preloadRef = useRef<Map<string, BowtieNodeData>>(new Map());
 
-  const actionsBtnRef = useRef<HTMLButtonElement | null>(null);
   const filtersBtnRef = useRef<HTMLButtonElement | null>(null);
+
+  const paletteBtnRef = useRef<HTMLButtonElement | null>(null);
 
 
   // Default to expanded, full-step view
@@ -80,15 +85,28 @@ function InnerGraph({ diagram }: { diagram: BowtieDiagram }) {
   const [step, setStep] = useState<StepIndex>(10 as StepIndex);
   const [selectedRoles, setSelectedRoles] = useState<Set<string>>(new Set());
   const allRoles = useMemo(() => collectAvailableRoles(diagram), [diagram]);
-  const [actionsOpen, setActionsOpen] = useState(false);
   const [filtersOpen, setFiltersOpen] = useState(false);
+  const [actionsOpen, setActionsOpen] = useState(false);
+  const [exportOpen, setExportOpen] = useState(false);
   const [failedMode, setFailedMode] = useState(false);
-  const [showFailedHint, setShowFailedHint] = useState(false);
-  const [mode, setMode] = useState<"guided" | "builder">("guided");
-  // Collapsible UI panels (maximize canvas like Miro/Excalidraw)
-  const [sidebarOpen, setSidebarOpen] = useState<boolean>(false);
+  const [mode, setMode] = useState<"demo" | "builder">(initialMode);
+  // Collapsible UI panels
+  const [paletteOpen, setPaletteOpen] = useState(false);
+  useEffect(() => { setMode(initialMode); }, [initialMode]);
+  useEffect(() => { setPaletteOpen(mode === "builder"); }, [mode]);
+
+  // Optional render override (e.g., Clear Diagram in Builder)
+  const [renderOverride, setRenderOverride] = useState<BowtieDiagram | null>(null);
+
+  // Demo story overlay
+  const [storyOpen, setStoryOpen] = useState(false);
+  // Narrative step index is 1-based; initialize to last step so UI shows "Step N of N" before starting
+  const [storyIdx, setStoryIdx] = useState<number>(warehouseFireNarrative.length);
+
+
   const [inspectorOpen, setInspectorOpen] = useState<boolean>(false);
-  // Pop-out card state and handlers (global overlay, no side panel)
+  // Persist sidebar open/close across sessions
+
 
   const [cardNode, setCardNode] = useState<RFNode<BowtieNodeData> | null>(null);
   const [lastFocusedNodeId, setLastFocusedNodeId] = useState<string | null>(null);
@@ -118,30 +136,21 @@ function InnerGraph({ diagram }: { diagram: BowtieDiagram }) {
     return () => window.removeEventListener("keydown", listener);
   }, [cardNode]);
   // Escape to close toolbar menus
+  // Escape to close popup panels
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") {
-        if (actionsOpen) setActionsOpen(false);
-        if (filtersOpen) setFiltersOpen(false);
-      }
+      if (e.key !== "Escape") return;
+      if (filtersOpen) setFiltersOpen(false);
+      if (actionsOpen) setActionsOpen(false);
+      if (exportOpen) setExportOpen(false);
+      if (paletteOpen) setPaletteOpen(false);
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [actionsOpen, filtersOpen]);
+  }, [filtersOpen, actionsOpen, exportOpen, paletteOpen]);
 
-  // Focus management for Actions menu
-  useEffect(() => {
-    if (actionsOpen) {
-      setTimeout(() => {
-        const first = wrapperRef.current?.querySelector('#actions-menu [role="menuitem"]') as HTMLButtonElement | null;
-        first?.focus();
-      }, 0);
-    } else {
-      actionsBtnRef.current?.focus();
-    }
-  }, [actionsOpen]);
 
-  // Focus management for Filters panel
+  // Focus management for popup panels
   useEffect(() => {
     if (filtersOpen) {
       setTimeout(() => {
@@ -149,39 +158,60 @@ function InnerGraph({ diagram }: { diagram: BowtieDiagram }) {
         first?.focus();
       }, 0);
     } else {
+      // restore focus to Filters button if present in this component
       filtersBtnRef.current?.focus();
     }
   }, [filtersOpen]);
 
-  // Close menus on outside click and restore focus to trigger
   useEffect(() => {
-    if (!actionsOpen && !filtersOpen) return;
+    if (paletteOpen) {
+      setTimeout(() => {
+        const first = wrapperRef.current?.querySelector('#builder-palette-panel button') as HTMLButtonElement | null;
+        first?.focus();
+      }, 0);
+    } else {
+      // restore focus to Palette button if present in this component
+      paletteBtnRef.current?.focus();
+    }
+  }, [paletteOpen]);
+  useEffect(() => {
+    if (!actionsOpen) return;
+    const t = setTimeout(() => {
+      const first = wrapperRef.current?.querySelector('#actions-panel button') as HTMLButtonElement | null;
+      first?.focus();
+    }, 0);
+    return () => clearTimeout(t);
+  }, [actionsOpen]);
+  useEffect(() => {
+    if (!exportOpen) return;
+    const t = setTimeout(() => {
+      const first = wrapperRef.current?.querySelector('#export-panel button') as HTMLButtonElement | null;
+      first?.focus();
+    }, 0);
+    return () => clearTimeout(t);
+  }, [exportOpen]);
+
+  // Close panels on outside click
+  useEffect(() => {
+    if (!filtersOpen && !actionsOpen && !exportOpen && !paletteOpen) return;
     const onDocMouseDown = (e: MouseEvent) => {
       const target = e.target as Node;
-      // Actions
-      if (actionsOpen) {
-        const panel = wrapperRef.current?.querySelector('#actions-menu') as HTMLElement | null;
-        const inPanel = !!(panel && panel.contains(target));
-        const inBtn = !!(actionsBtnRef.current && actionsBtnRef.current.contains(target as Node));
-        if (!inPanel && !inBtn) {
-          setActionsOpen(false);
-          setTimeout(() => actionsBtnRef.current?.focus(), 0);
-        }
-      }
-      // Filters
-      if (filtersOpen) {
-        const panel = wrapperRef.current?.querySelector('#filters-panel') as HTMLElement | null;
-        const inPanel = !!(panel && panel.contains(target));
-        const inBtn = !!(filtersBtnRef.current && filtersBtnRef.current.contains(target as Node));
-        if (!inPanel && !inBtn) {
-          setFiltersOpen(false);
-          setTimeout(() => filtersBtnRef.current?.focus(), 0);
-        }
+      const inFilters = !!(wrapperRef.current?.querySelector('#filters-panel') as HTMLElement | null)?.contains(target);
+      const inActions = !!(wrapperRef.current?.querySelector('#actions-panel') as HTMLElement | null)?.contains(target);
+      const inExport = !!(wrapperRef.current?.querySelector('#export-panel') as HTMLElement | null)?.contains(target);
+      const inPalette = !!(wrapperRef.current?.querySelector('#builder-palette-panel') as HTMLElement | null)?.contains(target);
+      const inFiltersBtn = !!(filtersBtnRef.current && filtersBtnRef.current.contains(target as Node));
+      const inPaletteBtn = !!(paletteBtnRef.current && paletteBtnRef.current.contains(target as Node));
+      if (!inFilters && !inActions && !inExport && !inPalette && !inFiltersBtn && !inPaletteBtn) {
+        if (filtersOpen) setFiltersOpen(false);
+        if (actionsOpen) setActionsOpen(false);
+        if (exportOpen) setExportOpen(false);
+        if (paletteOpen) setPaletteOpen(false);
       }
     };
     window.addEventListener('mousedown', onDocMouseDown);
     return () => window.removeEventListener('mousedown', onDocMouseDown);
-  }, [actionsOpen, filtersOpen]);
+  }, [filtersOpen, actionsOpen, exportOpen, paletteOpen]);
 
 
   // Click outside card to close (non-blocking overlay) with drag threshold
@@ -263,7 +293,7 @@ function InnerGraph({ diagram }: { diagram: BowtieDiagram }) {
   // Keyboard step navigation: ArrowLeft/ArrowRight/Home/End (only when no menus or card are open)
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (actionsOpen || filtersOpen || cardNode) return;
+      if (filtersOpen || cardNode) return;
       if (e.defaultPrevented) return;
       const target = e.target as HTMLElement | null;
       const tag = target?.tagName;
@@ -285,7 +315,7 @@ function InnerGraph({ diagram }: { diagram: BowtieDiagram }) {
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [actionsOpen, filtersOpen, cardNode]);
+  }, [filtersOpen, cardNode]);
 
 
 
@@ -312,7 +342,8 @@ function InnerGraph({ diagram }: { diagram: BowtieDiagram }) {
     btn?.focus();
   }, [cardNode]);
 
-  const base = useMemo(() => computeSimpleLayout(filteredDiagram), [filteredDiagram]);
+  const renderDiagram = renderOverride ?? filteredDiagram;
+  const base = useMemo(() => computeSimpleLayout(renderDiagram), [renderDiagram]);
   const [nodes, setNodes, onNodesChange] = useNodesState(base.nodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(base.edges);
   const rf = useReactFlow();
@@ -325,6 +356,36 @@ function InnerGraph({ diagram }: { diagram: BowtieDiagram }) {
       e.dataTransfer.setData("application/bowtie-node-type", t);
       e.dataTransfer.setData("text/plain", t);
       e.dataTransfer.effectAllowed = "copy";
+
+      // Visual drag preview so users immediately recognize what they're dragging
+      if (typeof document !== "undefined") {
+        const preview = document.createElement("div");
+        preview.className = (styles as any).dragPreview || ""; // fallback if CSS module changes
+        let bg = "#fff";
+        let fg = "#111827";
+        let label = "";
+        switch (t) {
+          case "hazard": bg = "#fff7ed"; label = "Hazard"; break;
+          case "topEvent": bg = "#e0f2fe"; label = "Top Event"; break;
+          case "threat": bg = "#eef2ff"; label = "Threat"; break;
+          case "preventionBarrier": bg = "#f8fafc"; label = "Barrier"; break;
+          case "mitigationBarrier": bg = "#f8fafc"; label = "Barrier"; break;
+          case "consequence": bg = "#fee2e2"; label = "Consequence"; break;
+          default: label = t;
+        }
+        preview.textContent = label;
+        preview.style.background = bg;
+        preview.style.color = fg;
+        preview.style.position = "fixed";
+        preview.style.top = "-9999px";
+        preview.style.left = "-9999px";
+        document.body.appendChild(preview);
+        try {
+          e.dataTransfer.setDragImage(preview, Math.ceil(preview.offsetWidth / 2), Math.ceil(preview.offsetHeight / 2));
+        } catch {}
+        const cleanup = () => { try { preview.remove(); } catch {} };
+        (e.currentTarget as HTMLElement).addEventListener("dragend", cleanup, { once: true } as any);
+      }
     } catch {}
   };
 
@@ -384,22 +445,6 @@ function InnerGraph({ diagram }: { diagram: BowtieDiagram }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Onboarding hint for failed scenario toggle
-  useEffect(() => {
-    const key = "bowtie.hintFailedSeen";
-    const ls = typeof window !== "undefined" ? (window as any).localStorage : undefined;
-    if (!ls || typeof ls.getItem !== "function" || typeof ls.setItem !== "function") return;
-    if (!ls.getItem(key)) {
-      setShowFailedHint(true);
-      const t = setTimeout(() => {
-        setShowFailedHint(false);
-        try { ls.setItem(key, "1"); } catch {}
-      }, 5000);
-      return () => clearTimeout(t);
-    }
-  }, []);
-
-
 
   // Compute ELK auto-layout after initial render and when wing visibility changes
   useEffect(() => {
@@ -420,15 +465,75 @@ function InnerGraph({ diagram }: { diagram: BowtieDiagram }) {
     };
   }, [filteredDiagram, mode]);
 
-  // Focus dimming + failed-path highlight
+  // Global events from the left Sidebar (export, toggle builder, clear diagram)
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const onExport = () => { void exportPng(); };
+    const onToggle = () => setMode((m) => (m === "builder" ? "demo" : "builder"));
+    const onClear = () => {
+      if (mode !== "builder") return;
+      try {
+        const hazard = diagram.nodes.find((n) => n.type === "hazard");
+        const topEvent = diagram.nodes.find((n) => n.type === "topEvent");
+        const hazardLabel = hazard?.label || "Hazard";
+        const topLabel = topEvent?.label || "Thermal runaway";
+        const cleared: BowtieDiagram = {
+          id: "cleared",
+          title: diagram.title,
+          createdAt: diagram.createdAt,
+          updatedAt: new Date().toISOString(),
+          nodes: [
+            { id: "hazard", type: "hazard", label: hazardLabel },
+            { id: "topEvent", type: "topEvent", label: topLabel },
+          ],
+          edges: [
+            { id: "h_to_top", source: "hazard", target: "topEvent" },
+          ],
+        };
+        setRenderOverride(cleared);
+        setInspectorOpen(false);
+        setCardNode(null);
+      } catch {}
+    };
+    window.addEventListener("bowtie:exportPng", onExport as any);
+    window.addEventListener("bowtie:toggleBuilder", onToggle as any);
+    window.addEventListener("bowtie:clearDiagram", onClear as any);
+    return () => {
+      window.removeEventListener("bowtie:exportPng", onExport as any);
+      window.removeEventListener("bowtie:toggleBuilder", onToggle as any);
+      window.removeEventListener("bowtie:clearDiagram", onClear as any);
+    };
+  }, [setMode, mode, diagram]);
+
+
+  // Broadcast mode changes so Sidebar can reflect state
+  useEffect(() => {
+    try {
+      if (typeof window !== "undefined") {
+        window.dispatchEvent(new CustomEvent("bowtie:modeChanged", { detail: { mode } }));
+      }
+    } catch {}
+  }, [mode]);
+
+
+
+
+  // Focus dimming + failed-path highlight + barrier group expansion on card open
   useEffect(() => {
     const baseStrokeFor = (e: any) => {
       const failureEdge = failedMode && isFailureEdge(e);
       return failureEdge ? "var(--edge-fail)" : "var(--edge)";
     };
+    // Determine if we should enlarge a barrier group based on the opened card
+    const cardData = cardNode?.data as BowtieNodeData | undefined;
+    const enlargeRole =
+      cardNode && (cardNode.type === "preventionBarrier" || cardNode.type === "mitigationBarrier")
+        ? (cardData?.role as "prevention" | "mitigation" | undefined)
+        : undefined;
+
     if (!cardNode) {
       setEdges((eds) => eds.map((e) => ({ ...e, style: { ...(e.style || {}), stroke: baseStrokeFor(e), opacity: 1 } })));
-      setNodes((nds) => nds.map((n) => ({ ...n, style: { ...(n.style || {}), opacity: 1 } })));
+      setNodes((nds) => nds.map((n) => ({ ...n, style: { ...(n.style || {}), opacity: 1, transform: undefined } })));
       return;
     }
     const selId = cardNode.id;
@@ -453,10 +558,15 @@ function InnerGraph({ diagram }: { diagram: BowtieDiagram }) {
       }))
     );
     setNodes((nds) =>
-      nds.map((n) => ({
-        ...n,
-        style: { ...(n.style || {}), opacity: neighborNodeIds.has(n.id) ? 1 : 0.3 },
-      }))
+      nds.map((n) => {
+        const isBarrier = n.type === "preventionBarrier" || n.type === "mitigationBarrier";
+        const nRole = (n.data as BowtieNodeData | undefined)?.role as "prevention" | "mitigation" | undefined;
+        const expand = !!enlargeRole && isBarrier && nRole === enlargeRole;
+        return {
+          ...n,
+          style: { ...(n.style || {}), opacity: neighborNodeIds.has(n.id) ? 1 : 0.3, transform: expand ? "scale(1.08)" : undefined },
+        };
+      })
     );
   }, [cardNode, failedMode]);
 
@@ -476,7 +586,54 @@ function InnerGraph({ diagram }: { diagram: BowtieDiagram }) {
     a.click();
   }
 
+  // Clear any render overrides when leaving Builder mode
+  useEffect(() => {
+    if (mode !== "builder") setRenderOverride(null);
+  }, [mode]);
+
+  // Auto-show/hide story based on mode
+  useEffect(() => {
+    setStoryOpen(mode === "demo");
+  }, [mode]);
+
   function isFailureEdge(e: { source: string; target: string }) {
+
+  // Global events: toggle Filters / Actions / Export panels from Sidebar
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const onToggleFilters = () => setFiltersOpen((o) => !o);
+    const onToggleActions = () => setActionsOpen((o) => !o);
+    const onToggleExport = () => setExportOpen((o) => !o);
+    window.addEventListener("bowtie:toggleFilters", onToggleFilters as any);
+    window.addEventListener("bowtie:toggleActions", onToggleActions as any);
+    window.addEventListener("bowtie:toggleExport", onToggleExport as any);
+    return () => {
+      window.removeEventListener("bowtie:toggleFilters", onToggleFilters as any);
+      window.removeEventListener("bowtie:toggleActions", onToggleActions as any);
+      window.removeEventListener("bowtie:toggleExport", onToggleExport as any);
+    };
+  }, []);
+
+  // Keyboard navigation for narrative steps (1..N)
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const onKey = (e: KeyboardEvent) => {
+      if (!(mode === "demo" && storyOpen)) return;
+      const target = e.target as HTMLElement | null;
+      if (target && target.closest('input, textarea, [contenteditable="true"], [role="dialog"], [aria-expanded="true"]')) return;
+      const total = warehouseFireNarrative.length;
+      if (e.key === "ArrowRight") {
+        e.preventDefault();
+        setStoryIdx((i) => (i < total ? i + 1 : i));
+      } else if (e.key === "ArrowLeft") {
+        e.preventDefault();
+        setStoryIdx((i) => (i > 1 ? i - 1 : i));
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [mode, storyOpen]);
+
     const st = typeById.get(e.source);
     const tt = typeById.get(e.target);
     return st === "topEvent" || st === "mitigationBarrier" || tt === "topEvent" || tt === "consequence";
@@ -485,220 +642,40 @@ function InnerGraph({ diagram }: { diagram: BowtieDiagram }) {
 
   const typeById = useMemo(() => {
     const m = new Map<string, BowtieNodeType>();
-    for (const n of diagram.nodes) m.set(n.id, n.type);
+    for (const n of renderDiagram.nodes) m.set(n.id, n.type);
     return m;
-  }, [diagram]);
+  }, [renderDiagram]);
 
-  // Fit helpers
-  function fit(types: BowtieNodeType[] | "all") {
-    let nodesToFit = rf.getNodes();
-    if (types !== "all") {
-      const set = new Set(types);
-      nodesToFit = nodesToFit.filter((n) => {
-        const t = typeById.get(n.id);
-        return t ? set.has(t) : false;
-      });
-    }
-    if (nodesToFit.length) rf.fitView({ nodes: nodesToFit, padding: 0.2 });
-  }
+  // Keep nodes/edges in sync with render diagram while in Builder mode
+  useEffect(() => {
+    if (mode !== "builder") return;
+    const laid = computeSimpleLayout(renderDiagram);
+    setNodes(laid.nodes);
+    setEdges(laid.edges);
+  }, [renderDiagram, mode]);
+
+
 
 
   return (
-    <div ref={wrapperRef} className={styles.appShell}>
-      <div className={styles.topBar}>
-        <div className={styles.topBarLeft}>Bowtie</div>
-        <div className={styles.topBarRight}>
-          <span className={styles.modeLabel}>Mode:</span>
-          <div className={styles.modeToggle} role="group" aria-label="Mode toggle">
-            <button className={styles.bowtieButton} type="button" aria-pressed={mode === "guided"} onClick={() => setMode("guided")}>Guided</button>
-            <button className={styles.bowtieButton} type="button" aria-pressed={mode === "builder"} onClick={() => setMode("builder")}>Builder</button>
-          </div>
-          <button
-            className={styles.bowtieButton}
-            type="button"
-            aria-pressed={sidebarOpen}
-            aria-controls="bowtie-sidebar"
-            onClick={() => setSidebarOpen((v) => !v)}
-          >
-            {mode === "builder" ? "Palette" : "Outline"}
-          </button>
-          <button
-            className={styles.bowtieButton}
-            type="button"
-            aria-pressed={inspectorOpen}
-            aria-controls="bowtie-inspector"
-            onClick={() => setInspectorOpen((v) => !v)}
-          >
-            Details
-          </button>
-        </div>
-      </div>
-      <div className={styles.body}>
-        <aside id="bowtie-sidebar" className={`${styles.sidebar} ${!sidebarOpen ? styles.collapsed : ""}`} aria-label={mode === "builder" ? "Builder palette" : "Outline"} aria-hidden={!sidebarOpen}>
-          {mode === "builder" ? (
-            <div className={styles.sidebarSection} data-testid="builder-palette">
-              <div className={styles.sidebarHeader}>Palette</div>
-              <div className={styles.paletteGroup} role="group" aria-label="Add nodes">
-                <button className={styles.bowtieButton} draggable onDragStart={(e) => onPaletteDragStart(e, "threat")}>Threat</button>
-                <button className={styles.bowtieButton} draggable onDragStart={(e) => onPaletteDragStart(e, "preventionBarrier")}>Prevention Barrier</button>
-                <button className={styles.bowtieButton} draggable onDragStart={(e) => onPaletteDragStart(e, "hazard")}>Hazard</button>
-                <button className={styles.bowtieButton} draggable onDragStart={(e) => onPaletteDragStart(e, "topEvent")}>Top Event</button>
-                <button className={styles.bowtieButton} draggable onDragStart={(e) => onPaletteDragStart(e, "mitigationBarrier")}>Mitigation Barrier</button>
-                <button className={styles.bowtieButton} draggable onDragStart={(e) => onPaletteDragStart(e, "consequence")}>Consequence</button>
-              </div>
-              <div className={styles.sidebarHint} aria-hidden="true">Drag a type into the canvas</div>
-            </div>
-          ) : (
-            <>
-              <div className={styles.sidebarHeader}>Outline</div>
-              <div className={styles.sidebarSection}>Coming soon</div>
-            </>
-          )}
-        </aside>
+    <div ref={wrapperRef} className={styles.graphRoot}>
+
         <main className={styles.canvasRegion} aria-label="Canvas region">
-          <div className={styles.canvasToolbarContainer}>
-            <div className={styles.toolbar}>
-          <div
-            className={`${styles.stepControls} ${mode === "builder" ? styles.stepControlsHidden : ""}`}
-            aria-hidden={mode === "builder"}
-          >
-            <button
-              className={styles.bowtieButton}
-              disabled={step === 0}
-              onClick={() => setStep((s) => (s > 0 ? ((s - 1) as StepIndex) : s))}
-              aria-label="Previous step"
-              type="button"
-            >
-              ◀
-            </button>
-            <span className={styles.stepLabel}>Step {step}/10</span>
-            <span className={styles.srOnly} aria-live="polite">Step changed to {step} of 10</span>
+            <div className={styles.canvasToolbarContainer}>
 
-            <button
-              className={styles.bowtieButton}
-              disabled={step === 10}
-              onClick={() => setStep((s) => (s < 10 ? ((s + 1) as StepIndex) : s))}
-              aria-label="Next step"
-              type="button"
-            >
-              ▶
-            </button>
-          </div>
-          <div className={styles.toolbarRight}>
-            <button
-              className={styles.bowtieButton}
-              aria-haspopup="menu"
-              aria-controls="actions-menu"
-              aria-expanded={actionsOpen}
-              onClick={() => setActionsOpen((o) => !o)}
-              type="button"
-              ref={actionsBtnRef}
-            >
-              Actions ▾
-            </button>
-            <button
-              className={styles.bowtieButton}
-              aria-controls="filters-panel"
-              aria-expanded={filtersOpen}
-              onClick={() => setFiltersOpen((o) => !o)}
-              type="button"
-              ref={filtersBtnRef}
-            >
-              Filters ▾
-            </button>
-          </div>
+
+
         </div>
 
-        {actionsOpen && (
-          <>
-            <div id="actions-menu" className={styles.menuPanel} role="menu" aria-label="Actions menu">
-            <button
-              className={styles.menuItem}
-              role="menuitem"
-              onClick={() => { setLeftExpanded(true); setRightExpanded(true); setStep(10 as StepIndex); }}
-              type="button"
-            >
-              Expand All
-            </button>
-            <button
-              className={styles.menuItem}
-              role="menuitem"
-              onClick={() => { setLeftExpanded(false); setRightExpanded(false); setStep(0 as StepIndex); }}
-              type="button"
-            >
-              Collapse All
-            </button>
-            <button
-              className={styles.menuItem}
-              role="menuitem"
-              aria-pressed={failedMode}
-              onClick={() => setFailedMode((v) => !v)}
-              type="button"
-            >
-              {failedMode ? "Simulate failure: On" : "Simulate failure: Off"}
-            </button>
-
-            <button className={styles.menuItem} role="menuitem" onClick={() => fit("all")} type="button">
-              Fit All
-            </button>
-            <button className={styles.menuItem} role="menuitem" onClick={exportPng} type="button">
-              Export PNG
-            </button>
-          </div>
-
-          </>
-        )}
 
 
-        {showFailedHint && (
-          <div className={styles.hint} role="status" aria-live="polite">
-            Tip: open Actions ▾ and toggle “Simulate failure” to preview a disaster scenario.
-          </div>
 
-        )}
-
-        {filtersOpen && (
-          <div id="filters-panel" className={styles.filtersPanel} aria-label="Filter by role">
-            <span className={styles.filterLabel}>Filter:</span>
-            {allRoles.map((role) => {
-              const pressed = selectedRoles.has(role);
-              return (
-                <button
-                  key={role}
-                  className={styles.bowtieChip}
-                  aria-label={`Toggle role filter ${role}`}
-                  aria-pressed={pressed}
-                  data-pressed={pressed ? "true" : "false"}
-                  onClick={() => {
-                    setSelectedRoles((prev) => {
-                      const next = new Set(prev);
-                      if (next.has(role)) next.delete(role); else next.add(role);
-                      return next;
-                    });
-                  }}
-                  type="button"
-                >
-                  {role}
-                </button>
-              );
-            })}
-            <button
-              className={styles.bowtieChip}
-              onClick={() => setSelectedRoles(new Set())}
-              disabled={selectedRoles.size === 0}
-              aria-label="Clear all role filters"
-              type="button"
-            >
-              Clear
-            </button>
-          </div>
-        )}
         <div className={styles.srOnly} aria-live="polite">
           Showing {filteredDiagram.nodes.length} nodes
         </div>
+
         <Legend />
-          </div>
-          <div className={styles.canvasHost} ref={canvasRef} onDrop={onCanvasDrop} onDragOver={onCanvasDragOver} data-testid="canvas-host">
+          <div className={`${styles.canvasHost} ${mode === "demo" && storyOpen ? styles.storyActive : ""}`} ref={canvasRef} onDrop={onCanvasDrop} onDragOver={onCanvasDragOver} data-testid="canvas-host" data-story-step={storyIdx} data-mode={mode}>
       <ErrorBoundary fallback={<div role="alert">Unable to render diagram.</div>}>
 
 
@@ -708,6 +685,8 @@ function InnerGraph({ diagram }: { diagram: BowtieDiagram }) {
         edges={edges}
         onNodesChange={onNodesChange}
         onEdgesChange={onEdgesChange}
+        onPaneClick={() => { if (cardNode) handleCloseCard(); }}
+
         onNodeClick={(_, n) => {
           const dn = diagram.nodes.find((x) => x.id === n.id) || null;
           const bt = dn?.type;
@@ -735,12 +714,154 @@ function InnerGraph({ diagram }: { diagram: BowtieDiagram }) {
       </ReactFlow>
 
       </ErrorBoundary>
+        <>
+          {mode === "demo" && <HazardBanner />}
+
+          {mode === "demo" && storyOpen && (
+            <div className={styles.storyOverlay} role="dialog" aria-modal="false" aria-label="Demo narrative">
+              <div className={styles.storyCard}>
+                <div className={styles.panelTitle}>{warehouseFireNarrative[storyIdx - 1]?.title}</div>
+                <p>{warehouseFireNarrative[storyIdx - 1]?.body}</p>
+                <div className={styles.storyControls}>
+                  <button className={styles.bowtieButton} onClick={() => setStoryOpen(false)} type="button">Hide</button>
+                  <div style={{ marginLeft: "auto", display: "flex", gap: 8 }}>
+                    {storyIdx === warehouseFireNarrative.length ? (
+                      <button className={styles.bowtieButton} onClick={() => setStoryIdx(1)} type="button">START</button>
+                    ) : (
+                      <>
+                        <button className={styles.bowtieButton} onClick={() => setStoryIdx((i) => (i > 1 ? i - 1 : i))} disabled={storyIdx === 1} type="button">◀ Prev</button>
+                        <span className={styles.stepLabel} aria-live="polite">Step {storyIdx} of {warehouseFireNarrative.length}</span>
+                        <button className={styles.bowtieButton} onClick={() => setStoryIdx((i) => (i < warehouseFireNarrative.length ? i + 1 : i))} disabled={storyIdx === warehouseFireNarrative.length} type="button">Next ▶</button>
+                      </>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          <div className={styles.floatingTopRight} style={{ top: storyOpen ? 80 : 12 }}>
+            <button
+              className={styles.bowtieButton}
+              aria-controls="filters-panel"
+              aria-expanded={filtersOpen}
+              onClick={() => { setFiltersOpen((o) => !o); }}
+              type="button"
+              ref={filtersBtnRef}
+            >
+              Filters ▾
+            </button>
+            {filtersOpen && (
+              <div id="filters-panel" className={styles.filtersFloatingPanel} aria-label="Filter by role">
+                <span className={styles.filterLabel}>Filter:</span>
+                {allRoles.map((role) => {
+                  const pressed = selectedRoles.has(role);
+                  return (
+                    <button
+                      key={role}
+                      className={styles.bowtieChip}
+                      aria-label={`Toggle role filter ${role}`}
+                      aria-pressed={pressed}
+                      data-pressed={pressed}
+                      onClick={() => {
+                        setSelectedRoles((prev) => {
+                          const next = new Set(prev);
+                          if (pressed) next.delete(role);
+                          else next.add(role);
+                          return next;
+                        });
+                      }}
+                      type="button"
+                    >
+                      {role}
+                    </button>
+                  );
+                })}
+                <button
+                  className={styles.bowtieButton}
+                  onClick={() => setSelectedRoles(new Set())}
+                  disabled={selectedRoles.size === 0}
+                  type="button"
+                >
+                  Clear
+                </button>
+              </div>
+            )}
+
+            {actionsOpen && (
+              <div id="actions-panel" className={styles.filtersFloatingPanel} role="dialog" aria-label="Actions">
+                <div className={styles.panelTitle} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span>Actions</span>
+                  <button className={styles.bowtieButton} aria-label="Close actions" type="button" onClick={() => setActionsOpen(false)}>×</button>
+                </div>
+                <div style={{ display: 'grid', gap: 8 }}>
+                  <button className={styles.bowtieButton} type="button" onClick={() => { setLeftExpanded(true); setRightExpanded(true); }}>Expand All</button>
+                  <button className={styles.bowtieButton} type="button" onClick={() => { setLeftExpanded(false); setRightExpanded(false); }}>Collapse All</button>
+                  <button className={styles.bowtieButton} type="button" aria-pressed={failedMode} onClick={() => setFailedMode((v) => !v)}>
+                    {failedMode ? 'Disable failure highlight' : 'Simulate failure'}
+                  </button>
+                  <button className={styles.bowtieButton} type="button" onClick={() => { try { rf.fitView({ padding: 0.2 }); } catch {} }}>Fit All</button>
+                  <button className={styles.bowtieButton} type="button" onClick={() => { void exportPng(); }}>Export PNG</button>
+                </div>
+              </div>
+            )}
+
+            {exportOpen && (
+              <div id="export-panel" className={styles.filtersFloatingPanel} role="dialog" aria-label="Export">
+                <div className={styles.panelTitle} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span>Share / Export</span>
+                  <button className={styles.bowtieButton} aria-label="Close export" type="button" onClick={() => setExportOpen(false)}>×</button>
+                </div>
+                <div style={{ display: 'grid', gap: 8 }}>
+                  <button className={styles.bowtieButton} type="button" onClick={() => { void exportPng(); }}>Export PNG</button>
+                </div>
+              </div>
+            )}
+            {mode === "builder" && (
+              <>
+                <button
+                  className={styles.bowtieButton}
+                  aria-controls="builder-palette-panel"
+                  aria-expanded={paletteOpen}
+                  onClick={() => setPaletteOpen((o) => !o)}
+                  type="button"
+                  data-testid="builder-palette-toggle"
+                  ref={paletteBtnRef}
+                >
+                  Palette ▾
+                </button>
+                {paletteOpen && (
+                  <div id="builder-palette-panel" className={styles.filtersFloatingPanel} role="dialog" aria-label="Builder palette" data-testid="builder-palette">
+                    <div className={styles.panelTitle} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <span>Add nodes</span>
+                      <button className={styles.bowtieButton} aria-label="Close palette" type="button" onClick={() => setPaletteOpen(false)}>×</button>
+                    </div>
+                    <div className={styles.paletteGroup} role="group" aria-label="Add nodes">
+                      <button className={styles.bowtieButton} draggable onDragStart={(e) => onPaletteDragStart(e, "threat")}>Threat</button>
+                      <button className={styles.bowtieButton} draggable onDragStart={(e) => onPaletteDragStart(e, "preventionBarrier")}>Prevention Barrier</button>
+                      <button className={styles.bowtieButton} draggable onDragStart={(e) => onPaletteDragStart(e, "topEvent")}>Top Event</button>
+                      <button className={styles.bowtieButton} draggable onDragStart={(e) => onPaletteDragStart(e, "mitigationBarrier")}>Mitigation Barrier</button>
+                      <button className={styles.bowtieButton} draggable onDragStart={(e) => onPaletteDragStart(e, "consequence")}>Consequence</button>
+                    </div>
+                    <div className={styles.hint} aria-hidden="true">Drag a type into the canvas</div>
+                  </div>
+                )}
+              </>
+            )}
+
+          </div>
+        </>
+
           </div>
         </main>
         <aside id="bowtie-inspector" className={`${styles.inspector} ${!inspectorOpen ? styles.collapsed : ""}`} aria-label="Inspector" aria-hidden={!inspectorOpen}>
+          <div className={styles.panelHeader}>
+            <div className={styles.panelTitle}>Details</div>
+            <button className={styles.panelClose} type="button" aria-label="Close details" onClick={() => setInspectorOpen(false)}>x</button>
+          </div>
+
           <div className={styles.inspectorEmpty}>Details appear here in Builder mode.</div>
         </aside>
-      </div>
 
       {cardNode && (
       <ErrorBoundary fallback={<div role="alert">Unable to render details.</div>}>
@@ -847,10 +968,10 @@ function InnerGraph({ diagram }: { diagram: BowtieDiagram }) {
 }
 
 
-export function BowtieGraph({ diagram }: { diagram: BowtieDiagram }) {
+export function BowtieGraph({ diagram, initialMode = "demo" }: { diagram: BowtieDiagram; initialMode?: "demo" | "builder" }) {
   return (
     <ReactFlowProvider>
-      <InnerGraph diagram={diagram} />
+      <InnerGraph diagram={diagram} initialMode={initialMode} />
     </ReactFlowProvider>
   );
 }

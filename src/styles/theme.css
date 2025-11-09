@@ -1,7 +1,7 @@
 :root{
   /* Semantic colors mapped to tokens */
-  --threat-bg: #F59E0B1F;
-  --threat-border: #F59E0B;
+  --threat-bg: #EA580C1F; /* orange-600 at 12% alpha */
+  --threat-border: #EA580C; /* orange-600 */
   --prevent-bg: #06B6D41F;
   --prevent-border: #06B6D4;
   --hazard-bg: #6B72801F;
@@ -10,8 +10,15 @@
   --top-border: #EF4444;
   --mitigate-bg: #3B82F61F;
   --mitigate-border: #3B82F6;
-  --consequence-bg: #9333EA1F;
-  --consequence-border: #9333EA;
+  --consequence-bg: #B91C1C1F; /* red-700 at 12% alpha */
+  --consequence-border: #B91C1C; /* red-700 */
+
+  /* Narrative tokens */
+  --narrative-amber: #F59E0B;
+  --narrative-amber-weak: #F59E0B1F;
+  --narrative-red: #DC2626;
+  --narrative-sand: #FEF3C7;
+  --narrative-threat-bg: var(--narrative-amber-weak);
 
   --chip-bg: #0F172A0F;
   --chip-text: #475569;

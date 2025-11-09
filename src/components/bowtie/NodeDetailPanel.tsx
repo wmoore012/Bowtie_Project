@@ -5,7 +5,7 @@ export function NodeDetailPanel({ node, onClose }: { node: BowtieNode | null; on
   if (!node) return null;
   const md = (node.metadata || {}) as NodeMetadata;
   return (
-    <div role="dialog" aria-modal="true" aria-label="Node details" className={styles.panel}>
+    <div role="dialog" aria-modal="true" aria-label="Node details" className={`${styles.panel} ${node.type === 'preventionBarrier' ? styles.prevention : node.type === 'mitigationBarrier' ? styles.mitigation : node.type === 'consequence' ? styles.consequence : node.type === 'hazard' ? styles.hazard : ''}`}>
       <div className={styles.header}>
         <h3 className={styles.title}>{node.label}</h3>
         <button type="button" onClick={onClose} aria-label="Close node details">✕</button>
@@ -22,7 +22,7 @@ export function NodeDetailPanel({ node, onClose }: { node: BowtieNode | null; on
           <div className={styles.chipsTitle}>Ownership / Roles</div>
           <div className={styles.chipRow}>
             {md.chips.map((c, i) => (
-              <span key={i} className={styles.chip}>{c}</span>
+              <span key={i} className={`${styles.chip} ${node.type === 'preventionBarrier' ? styles.prevention : node.type === 'mitigationBarrier' ? styles.mitigation : node.type === 'consequence' ? styles.consequence : ''}`}>{c}</span>
             ))}
           </div>
         </div>

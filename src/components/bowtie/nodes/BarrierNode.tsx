@@ -29,7 +29,7 @@ function BarrierNode({ id, data }: NodeProps) {
         data-label={d?.label}
         data-role={role}
       >
-        <div className={styles.headerBar} />
+        <div className={`${styles.headerBar} ${styles[role]}`} />
         <div className={styles.content}>
           <div className={styles.title}>{d?.label}<span className={styles.infoIcon} aria-hidden="true">ⓘ</span></div>
           {d?.metadata?.chips?.length ? (

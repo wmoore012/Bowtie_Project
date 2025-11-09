@@ -1,6 +1,5 @@
 import { describe, it, expect } from "vitest";
 import { render, screen, fireEvent } from "@testing-library/react";
-import userEvent from "@testing-library/user-event";
 import { BowtieGraph } from "../BowtieGraph";
 import { highwayDrivingExample } from "../../../domain/scenarios/highway_driving.example";
 
@@ -24,12 +23,9 @@ function makeDataTransfer() {
 
 describe("Builder Palette drag-and-drop", () => {
   it("shows Palette in Builder mode and allows dropping a prevention barrier", async () => {
-    const user = userEvent.setup();
-    render(<BowtieGraph diagram={highwayDrivingExample} />);
+    render(<BowtieGraph diagram={highwayDrivingExample} initialMode="builder" />);
 
-    // Switch to Builder mode and open Palette drawer
-    await user.click(screen.getByRole("button", { name: /Builder/i }));
-    await user.click(screen.getByRole("button", { name: /Palette/i }));
+    // Palette should be open automatically in Builder mode
     expect(screen.getByTestId("builder-palette")).toBeInTheDocument();
 
     const btn = screen.getByRole("button", { name: /Prevention Barrier/i });

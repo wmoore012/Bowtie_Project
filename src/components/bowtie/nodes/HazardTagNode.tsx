@@ -8,30 +8,23 @@ function HazardTagNode({ id, data }: NodeProps) {
   const d = data as BowtieNodeData;
   const title = d?.metadata?.eli5 ?? d?.label;
   const descId = `${id}-desc`;
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
-    if (e.key === "Enter" || e.key === " ") {
-      e.preventDefault();
-      (e.currentTarget as HTMLDivElement).click();
-    }
-  };
   return (
     <>
-      <div
-        role="button"
-        tabIndex={0}
+      <button
+        type="button"
+        className={styles.tag}
         aria-label={`Hazard: ${d?.label}`}
         aria-describedby={descId}
         title={title}
-        onKeyDown={handleKeyDown}
-        className={styles.tag}
         data-testid="bowtie-hazard-node"
         data-label={d?.label}
       >
-        <span className={styles.icon} aria-hidden="true"></span>
+        <span className={styles.icon} aria-hidden="true">⚠</span>
+        <span className="sr-only">Hazard</span>
         <span className={styles.label}>{d?.label}</span>
         <Handle type="target" position={Position.Left} />
         <Handle type="source" position={Position.Right} />
-      </div>
+      </button>
       <p id={descId} hidden>
         {d?.metadata?.eli5 ?? d?.label}
       </p>

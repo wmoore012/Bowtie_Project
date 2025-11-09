@@ -1,14 +1,13 @@
 .card {
-  background: var(--node-bg, var(--prevent-bg));
-  border: 1.5px solid var(--node-border, var(--prevent-border));
+  background: var(--barrier-bg-gradient, linear-gradient(135deg, #E5E7EB 0%, #9CA3AF 50%, #E5E7EB 100%));
+  border: 2px solid var(--barrier-border, #6B7280);
   border-radius: var(--radius-card, 12px);
   box-shadow: var(--shadow);
-  color: var(--text);
+  color: var(--barrier-text, #111827);
   min-width: 240px;
   max-width: 320px;
   cursor: pointer;
   transition: transform 160ms ease, box-shadow 160ms ease;
-  animation: barrierPulse 2000ms ease-in-out 3;
 }
 .card:hover {
   transform: scale(1.02);
@@ -31,8 +30,11 @@
   height: 4px;
   border-top-left-radius: var(--radius-card, 12px);
   border-top-right-radius: var(--radius-card, 12px);
-  background: var(--node-border, var(--prevent-border));
+  background: var(--barrier-border, #6B7280);
 }
+.headerBar.prevention { background: var(--prevent-accent, #10b981); }
+.headerBar.mitigation { background: var(--mitigate-accent, #3b82f6); }
+.headerBar.degraded { background: var(--consequence-border); }
 .content {
   padding: var(--pad-y) var(--pad-x);
 }
@@ -59,14 +61,14 @@
   border-radius: 999px;
 }
 
-/* Role variants set CSS variables */
+/* Role variants for chips only */
 .prevention {
-  --node-bg: var(--prevent-bg);
-  --node-border: var(--prevent-border);
+  --chip-bg: var(--prevent-chip-bg);
+  --chip-text: var(--prevent-chip-text);
 }
 .mitigation {
-  --node-bg: var(--mitigate-bg);
-  --node-border: var(--mitigate-border);
+  --chip-bg: var(--mitigate-chip-bg);
+  --chip-text: var(--mitigate-chip-text);
 }
 
 

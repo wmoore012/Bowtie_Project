@@ -1,44 +1,5 @@
 
-/* Consolidated toolbar styles */
-.toolbar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  padding: 10px;
-  background: var(--panel-bg, rgba(255,255,255,0.85));
-  color: var(--text, #0F172A);
-  border: 1px solid var(--border, #e5e7eb);
-  border-radius: 10px;
-  box-shadow: var(--shadow, 0 6px 18px rgba(0,0,0,0.08));
-  backdrop-filter: blur(8px);
-}
-.toolbarRight { display: flex; align-items: center; gap: 8px; }
-
-/* Pop-out menu below toolbar */
-.menuPanel {
-  align-self: flex-end;
-  background: var(--panel-bg, rgba(255,255,255,0.9));
-  color: var(--text, #0F172A);
-  border: 1px solid var(--border, #e5e7eb);
-  border-radius: 10px;
-  box-shadow: var(--shadow, 0 6px 18px rgba(0,0,0,0.08));
-  backdrop-filter: blur(8px);
-  padding: 8px;
-  display: grid;
-  gap: 6px;
-  min-width: 180px;
-}
-.menuItem {
-  text-align: left;
-  padding: 8px 10px;
-  border-radius: 8px;
-  border: 1px solid var(--border, #e5e7eb);
-  background: var(--btn-bg, rgba(255,255,255,0.95));
-  cursor: pointer;
-}
-.menuItem:hover { background: var(--btn-bg-hover, #fff); }
-.menuItem:focus-visible { outline: 2px solid var(--ring); outline-offset: 2px; }
+/* (Removed old canvas toolbar + menu styles) */
 
 .hint {
   align-self: flex-end;
@@ -64,13 +25,7 @@
 }
 
 
-.stepControls {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-/* Keep toolbar height stable when mode toggles by hiding content instead of removing */
-.stepControlsHidden { visibility: hidden; pointer-events: none; }
+/* (Removed legacy stepControls styles tied to old toolbar) */
 
 .stepLabel {
   font-size: 12px;
@@ -247,40 +202,17 @@
 }
 
 
-/* App shell layout */
-.appShell {
+/* Graph root container: fills parent (no nested 100vh) */
+.graphRoot {
   display: flex;
-  flex-direction: column;
-  height: 100vh;
+  height: 100%;
   width: 100%;
-}
-.topBar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 8px 12px;
-  border-bottom: 1px solid var(--border, #e5e7eb);
-  background: var(--panel-bg, #fff);
-}
-.topBarLeft { font-weight: 700; }
-.topBarRight { display: flex; align-items: center; gap: 8px; }
-.modeLabel { font-size: 12px; opacity: 0.8; }
-.modeToggle { display: inline-flex; gap: 4px; align-items: center; }
-
-.body {
-  display: flex;
-  flex: 1;
   min-height: 0; /* allow children to shrink */
   overflow: hidden;
 }
-.sidebar {
-  width: 280px;
-  border-right: 1px solid var(--border, #e5e7eb);
-  overflow: auto;
-  background: var(--panel-bg, #fff);
-}
-.sidebarHeader { font-size: 12px; text-transform: uppercase; letter-spacing: .06em; padding: 10px; color: #475569; }
-.sidebarSection { padding: 10px; }
+
+/* Reusable section for builder palette (replaces old sidebarSection) */
+.paletteSection { padding: 10px; }
 
 .canvasRegion {
   flex: 1;
@@ -299,6 +231,8 @@
   position: relative;
   flex: 1;
   min-height: 0;
+  width: 100%;
+  height: 100%;
 }
 .canvasHost :global(.react-flow) { width: 100%; height: 100%; }
 
@@ -328,8 +262,128 @@
 .paletteGroup button[draggable="true"] {
   cursor: grab;
 }
-.sidebarHint {
-  margin-top: 8px;
-  color: #64748b;
+
+
+/* Drag preview chip shown when dragging from the palette */
+.dragPreview {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   font-size: 12px;
+  padding: 6px 10px;
+  border-radius: 8px;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.25);
+  border: 1px solid #e5e7eb;
+  pointer-events: none;
+  user-select: none;
+}
+
+
+/* (Removed legacy segmented mode toggle styles moved to Sidebar.css) */
+
+/* Panel headers with close buttons for Sidebar and Inspector */
+.panelHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px;
+  border-bottom: 1px solid var(--border, #e5e7eb);
+  background: var(--panel-bg, #fff);
+}
+.panelTitle {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #475569;
+}
+.panelClose {
+  appearance: none;
+  background: transparent;
+  border: none;
+  color: #64748b;
+  font-size: 16px;
+  line-height: 1;
+  padding: 2px 6px;
+  cursor: pointer;
+}
+.panelClose:hover { color: #0f172a; }
+.panelClose:focus-visible { outline: 2px solid var(--ring, #2563EB); outline-offset: 2px; border-radius: 4px; }
+
+
+/* Floating controls at top-right of canvas */
+.floatingTopRight {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
+  z-index: 50;
+}
+
+/* Simple story overlay centered at top */
+.storyOverlay {
+  position: absolute;
+  top: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 60;
+}
+.storyCard {
+  background: var(--panel-bg, rgba(255,255,255,0.95));
+  color: var(--text, #0F172A);
+  border: 1px solid var(--border, #e5e7eb);
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+  padding: 12px 14px;
+  max-width: 720px;
+}
+.storyControls {
+  display: flex;
+  gap: 8px;
+  justify-content: space-between;
+  margin-top: 8px;
+}
+
+
+/* Story mode dimming + highlighting using aria-labels and data-role */
+.storyActive :global(.react-flow__node) { opacity: 0.25; transition: opacity 200ms ease; }
+.storyActive :global(.react-flow__edge-path) { opacity: 0.2; }
+
+/* Step 1-2: highlight Hazard + Top Event */
+.storyActive[data-story-step="1"] :global([aria-label^="Hazard"]) { opacity: 1; }
+.storyActive[data-story-step="1"] :global([aria-label^="Top Event"]) { opacity: 1; }
+.storyActive[data-story-step="2"] :global([aria-label^="Hazard"]) { opacity: 1; }
+.storyActive[data-story-step="2"] :global([aria-label^="Top Event"]) { opacity: 1; }
+
+/* Step 3: highlight Threats */
+.storyActive[data-story-step="3"] :global([aria-label^="Threat"]) { opacity: 1; }
+
+/* Step 4-5: highlight Barriers by role */
+.storyActive[data-story-step="4"] :global([data-role="prevention"]) { opacity: 1; }
+.storyActive[data-story-step="5"] :global([data-role="mitigation"]) { opacity: 1; }
+
+/* Step 6: highlight Consequences */
+.storyActive[data-story-step="6"] :global([aria-label^="Consequence"]) { opacity: 1; }
+
+.filtersFloatingPanel {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 50;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(12px);
+  border: 1px solid var(--border, #e5e7eb);
+  border-radius: 12px;
+  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.12);
+  padding: 16px;
+  min-width: 240px;
+  max-width: 320px;
+  animation: slideInFromRight 200ms ease;
+}
+
+@keyframes slideInFromRight {
+  from { opacity: 0; transform: translateX(8px); }
+  to { opacity: 1; transform: translateX(0); }
 }

@@ -24,6 +24,7 @@ function ThreatNode({ id, data }: NodeProps) {
         title={title}
         onKeyDown={handleKeyDown}
         className={styles.card}
+        data-active={d?.metadata && (d as any).metadata.narrativeActive ? "true" : undefined}
       >
         <div className={styles.content}>
           <div className={styles.title}>{d?.label}</div>

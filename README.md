@@ -1,8 +1,8 @@
-# Bowtie Visualization (Track 2: Professional Implementation)
+# 🎯 Bowtie Builder Pro
 
-Modern, accessible Bowtie risk diagram built with React + TypeScript + Vite + React Flow + ELK.js.
+Professional, accessible Bowtie risk diagram tool built with React + TypeScript + Vite + React Flow + ELK.js.
 
-![Current UI](src/assets/bowtie-1762565817424.png)
+![Hero Screenshot](src/assets/v.5.png)
 
 ## Scripts
 - `npm run dev` – start dev server

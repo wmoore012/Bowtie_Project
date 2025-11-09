@@ -27,6 +27,13 @@ function ConsequenceNode({ id, data }: NodeProps) {
       >
         <div className={styles.content}>
           <div className={styles.title}>{d?.label}</div>
+          {d?.metadata?.chips?.length ? (
+            <div className={styles.chips}>
+              {d.metadata!.chips!.map((c) => (
+                <span key={c} className={styles.chip}>{c}</span>
+              ))}
+            </div>
+          ) : null}
         </div>
         <Handle type="target" position={Position.Left} />
         <Handle type="source" position={Position.Right} />

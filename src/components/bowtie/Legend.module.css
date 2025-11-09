@@ -113,29 +113,34 @@
   border-bottom: 5px solid transparent;
 }
 
-/* Prevention barrier: shield */
+/* Prevention barrier: metallic block with green header bar */
 .iconPrevention {
-  background: var(--prevent-bg, #06B6D41F);
-  border: 1px solid var(--prevent-border, #06B6D4);
+  background: var(--barrier-bg-gradient, linear-gradient(135deg, #E5E7EB 0%, #9CA3AF 50%, #E5E7EB 100%));
+  border: 1px solid var(--barrier-border, #6B7280);
 }
 .iconPrevention::after {
   content: "";
-  width: 12px; height: 14px;
-  background: var(--prevent-border, #06B6D4);
-  -webkit-clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
-          clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
-  border-radius: 2px;
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 4px;
+  background: var(--prevent-accent, #10b981);
+  border-top-left-radius: 6px; border-top-right-radius: 6px;
 }
 
-/* Hazard pill */
+/* Hazard: yellow-black diagonal stripes on border only */
 .iconHazard {
-  background: var(--hazard-pill-bg, #1e293b);
-  color: var(--hazard-pill-text, #ffffff);
-  box-shadow: var(--hazard-pill-shadow, 0 2px 8px rgba(0,0,0,0.15));
+  background: #ffffff;
+  border: 4px solid transparent;
+  border-image: repeating-linear-gradient(
+    45deg,
+    var(--hazard-stripe-yellow, #FCD34D) 0 8px,
+    var(--hazard-stripe-black, #1F2937) 8px 16px
+  ) 8;
+  color: var(--hazard-text, #1F2937);
 }
 .iconHazard::after {
   content: "!";
-  font-weight: 800;
+  font-weight: 900;
   font-size: 14px;
 }
 
@@ -149,29 +154,30 @@
   font-size: 14px;
 }
 
-/* Mitigation barrier: shield (blue) */
+/* Mitigation barrier: metallic block with blue header bar */
 .iconMitigation {
-  background: var(--mitigate-bg, #3B82F61F);
-  border: 1px solid var(--mitigate-border, #3B82F6);
+  background: var(--barrier-bg-gradient, linear-gradient(135deg, #E5E7EB 0%, #9CA3AF 50%, #E5E7EB 100%));
+  border: 1px solid var(--barrier-border, #6B7280);
 }
 .iconMitigation::after {
   content: "";
-  width: 12px; height: 14px;
-  background: var(--mitigate-border, #3B82F6);
-  -webkit-clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
-          clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
-  border-radius: 2px;
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 4px;
+  background: var(--mitigate-accent, #3b82f6);
+  border-top-left-radius: 6px; border-top-right-radius: 6px;
 }
 
-/* Consequence: right arrow (purple) */
+/* Consequence: bright red */
 .iconConsequence {
-  background: #9333EA1F;
-  border: 1px solid #9333EA;
+  background: var(--consequence-bg, #DC2626);
+  border: 2px solid var(--consequence-border, #991B1B);
+  color: #FFFFFF;
 }
 .iconConsequence::after {
   content: "";
   width: 0; height: 0;
-  border-left: 8px solid #9333EA;
+  border-left: 8px solid var(--consequence-text, #FFFFFF);
   border-top: 5px solid transparent;
   border-bottom: 5px solid transparent;
 }

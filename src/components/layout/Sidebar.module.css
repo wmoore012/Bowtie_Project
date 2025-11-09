@@ -1,38 +1,135 @@
-/* Collapsible left sidebar */
+/* Modern dark, fixed left sidebar (collapsible) */
 .sidebar {
   position: fixed;
-  left: 0;
-  top: 0;
-  height: 100vh;
-  background: var(--sidebar-bg, #ffffff);
-  border-right: 1px solid var(--sidebar-border, #e5e7eb);
-  transition: width 0.25s ease;
-  z-index: 100;
+  inset: 0 auto 0 0; /* top 0, right auto, bottom 0, left 0 */
+  width: 72px;
+  background: var(--sidebar-bg, #111827);
+  color: var(--sidebar-fg, #f9fafb);
+  border-right: 1px solid var(--sidebar-border, #1f2937);
+  box-shadow: 2px 0 12px rgba(0, 0, 0, 0.15);
+  z-index: 40;
   display: flex;
   flex-direction: column;
+  min-width: 0;
+  transition: width 0.25s ease;
 }
 .collapsed { width: 72px; }
 .expanded { width: 280px; }
-.header {
+
+.top {
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 10px;
 }
+.brand { font-weight: 700; letter-spacing: 0.02em; }
 .toggle {
-  padding: 8px;
+  appearance: none;
+  padding: 6px 8px;
   background: transparent;
-  border: 1px solid var(--border, #e5e7eb);
+  border: 1px solid var(--sidebar-border, #1f2937);
   border-radius: 8px;
+  color: #9ca3af;
   cursor: pointer;
 }
-.nav { display: grid; gap: 6px; padding: 8px; }
-.item {
-  display: flex; align-items: center; gap: 10px;
-  padding: 8px 10px; border-radius: 8px; color: var(--text, #0F172A);
-}
-.item[aria-current="page"] { background: var(--chip-bg, #f1f5f9); }
-.icon { width: 24px; height: 24px; display: inline-grid; place-items: center; }
-.label { white-space: nowrap; }
-.footer { margin-top: auto; padding: 8px; font-size: 12px; opacity: .6; }
+.toggle:hover { color: #d1d5db; border-color: #374151; }
 
+.nav { display: flex; flex-direction: column; gap: 4px; padding: 8px; }
+.navGroup { margin-top: 4px; }
+
+.navItem {
+  display: flex; align-items: center; gap: 12px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  color: #9ca3af;
+  text-decoration: none;
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+  font: inherit;
+  text-align: left;
+}
+.icon { width: 24px; height: 24px; display: inline-grid; place-items: center; }
+.label { white-space: nowrap; color: #e5e7eb; }
+
+.navItem:hover,
+.navItem:focus-visible { background: #1f2937; color: #f3f4f6; outline: none; }
+.navItem[aria-current="page"] { background: #0b1220; color: #f3f4f6; }
+
+.footer { margin-top: auto; padding: 8px; display: grid; gap: 4px; }
+.profileBtn,
+.themeBtn,
+.settingsBtn,
+.exportBtn {
+  display: flex; align-items: center; gap: 12px;
+  padding: 8px 12px;
+  border: 0;
+  background: transparent;
+  color: #9ca3af;
+  border-radius: 10px;
+  cursor: pointer;
+  text-align: left;
+}
+.profileBtn:hover,
+.themeBtn:hover,
+.settingsBtn:hover,
+.exportBtn:hover { background: #1f2937; color: #f3f4f6; }
+
+@media (prefers-reduced-motion: reduce) {
+  .sidebar { transition: none; }
+}
+
+.modeSwitch {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  padding: 12px 16px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  transition: background-color 200ms ease;
+}
+.modeSwitch:hover { background: rgba(255,255,255,0.05); }
+
+.modeLabel { font-size: 14px; color: #e5e7eb; }
+
+.switchTrack {
+  position: relative;
+  width: 52px;
+  height: 26px;
+  border-radius: 999px;
+  transition: background 300ms cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);
+}
+.switchTrack[data-mode="demo"] { background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%); }
+.switchTrack[data-mode="builder"] { background: linear-gradient(135deg, #10b981 0%, #34d399 100%); }
+
+.switchThumb {
+  position: absolute;
+  top: 3px;
+  width: 20px;
+  height: 20px;
+  left: 0;
+  background: white;
+  border-radius: 50%;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.15), 0 1px 2px rgba(0,0,0,0.1);
+  transition: transform 280ms cubic-bezier(0.34, 1.56, 0.64, 1);
+  transform: translateX(3px);
+}
+.switchThumb[data-mode="builder"] { transform: translateX(29px); }
+
+.modeSwitch:active .switchThumb {
+  transform: translateX(var(--thumb-x)) scale(0.95);
+  transition-duration: 100ms;
+}
+
+.modeSwitch:focus-visible {
+  outline: 2px solid var(--ring, #2563EB);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .switchThumb { transition: transform 150ms ease; }
+  .modeSwitch:active .switchThumb { transform: translateX(var(--thumb-x)) scale(1); }
+}

@@ -11,6 +11,11 @@
   z-index: 30;
   overflow-y: auto;
 }
+.panel.prevention { border-left: 4px solid var(--prevent-accent); }
+.panel.mitigation { border-left: 4px solid var(--mitigate-accent); }
+.panel.consequence { border-left: 4px solid var(--consequence-border); }
+.panel.hazard { border-left: 4px solid var(--hazard-border); }
+
 .header {
   display: flex;
   justify-content: space-between;
@@ -21,6 +26,19 @@
 .chipsTitle { font-weight: 600; margin-bottom: 6px; }
 .chipRow { display: flex; gap: 6px; flex-wrap: wrap; }
 .chip { font-size: 12px; padding: 2px 8px; background: #f1f5f9; color: #334155; border-radius: 999px; }
+.chip.prevention {
+  background: var(--prevent-chip-bg);
+  color: var(--prevent-chip-text);
+}
+.chip.mitigation {
+  background: var(--mitigate-chip-bg);
+  color: var(--mitigate-chip-text);
+}
+.chip.consequence {
+  background: var(--consequence-chip-bg);
+  color: var(--consequence-chip-text);
+}
+
 .sectionTitle { font-weight: 600; margin-top: 12px; }
 .note { margin-top: 8px; }
 

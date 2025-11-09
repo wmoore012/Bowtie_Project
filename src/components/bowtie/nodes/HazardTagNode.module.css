@@ -1,18 +1,53 @@
 .tag {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-  background: var(--hazard-pill-bg, #1e293b);
-  border: 2px solid var(--hazard-border);
-  border-radius: 9999px;
-  box-shadow: var(--hazard-pill-shadow, 0 2px 8px rgba(0, 0, 0, 0.15));
-  color: var(--hazard-pill-text, #ffffff);
-  padding: calc(var(--pad-y) + 2px) calc(var(--pad-x) + 6px);
+  gap: 6px;
+  padding: 8px 14px;
+  border-radius: 20px;
+  background: transparent; /* inner fill is drawn via ::after so export works */
+  position: relative; /* enable pseudo-element layering */
+  color: var(--hazard-text, #1F2937);
+  font-weight: 600;
   cursor: pointer;
+  transition: all 160ms ease;
 }
+.tag:hover {
+  box-shadow: 0 3px 12px rgba(15, 23, 42, 0.3);
+  transform: translateY(-1px);
+  transition: all 160ms ease;
+}
+
+/* Striped border ring using pseudo-elements for PNG export compatibility */
+.tag::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 20px;
+  background: repeating-linear-gradient(
+    45deg,
+    var(--hazard-stripe-yellow, #FCD34D) 0 8px,
+    var(--hazard-stripe-black, #1F2937) 8px 16px
+  );
+  z-index: -2; /* behind content */
+}
+
+/* Inner white fill to reveal only the striped border band */
+.tag::after {
+  content: "";
+  position: absolute;
+  inset: 4px; /* match the desired border thickness */
+  border-radius: 16px; /* 20px - 4px */
+  background: #ffffff;
+  z-index: -1; /* above stripes, below content */
+}
+
+
+@media (prefers-reduced-motion: reduce) {
+  .tag:hover { transform: none; }
+}
+
 .label { font-weight: 700; font-size: 14px; text-transform: uppercase; letter-spacing: 0.05em; }
-.icon { font-size: 0; }
-.icon::before { content: "\26A0\FE0F"; font-size: 16px; }
+.icon { font-size: 16px; }
 
 
 .tag:focus-visible {

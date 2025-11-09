@@ -7,6 +7,7 @@
   min-width: 220px;
   max-width: 300px;
   cursor: pointer;
+  position: relative;
 }
 .content {
   padding: var(--pad-y) var(--pad-x);
@@ -17,6 +18,14 @@
   line-height: 1.25;
 }
 
+/* Demo mode narrative emphasis */
+:global([data-mode="demo"]) .card {
+  background: var(--narrative-threat-bg, var(--threat-bg));
+}
+:global([data-mode="demo"]) .card[data-active="true"] {
+  box-shadow: 0 0 0 2px var(--narrative-amber, #F59E0B), 0 6px 18px rgba(245, 158, 11, 0.25);
+  filter: saturate(1.05);
+}
 
 .card:focus-visible {
   outline: 2px solid var(--ring);
