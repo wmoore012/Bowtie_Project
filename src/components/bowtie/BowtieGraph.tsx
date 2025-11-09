@@ -10,6 +10,8 @@ import {
   useReactFlow,
   MarkerType,
   Position,
+  addEdge,
+  type Connection,
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 import type { Node as RFNode } from "@xyflow/react";
@@ -61,6 +63,17 @@ const nodeTypes = {
   topEvent: TopEventKnotNode,
   consequence: ConsequenceNode,
 } as const;
+
+const TYPE_CONNECTION_RULES: Record<BowtieNodeType, BowtieNodeType[]> = {
+  threat: ["preventionBarrier"],
+  escalationFactor: ["escalationBarrier"],
+  preventionBarrier: ["topEvent"],
+  escalationBarrier: ["topEvent"],
+  hazard: ["topEvent"],
+  topEvent: ["mitigationBarrier"],
+  mitigationBarrier: ["consequence"],
+  consequence: [],
+};
 
 
 
@@ -462,10 +475,61 @@ function InnerGraph({ diagram, initialMode = "demo" }: { diagram: BowtieDiagram;
     return ids;
   }, [manualFocusIds, storyFocusIds]);
   const shouldDim = storyOpen && activeFocusIds.size > 0;
+  const strictConnections = useMemo(() => {
+    const map = new Map<string, Set<string>>();
+    for (const edge of diagram.edges) {
+      if (!map.has(edge.source)) map.set(edge.source, new Set());
+      map.get(edge.source)!.add(edge.target);
+    }
+    return map;
+  }, [diagram]);
   const base = useMemo(() => computeSimpleLayout(renderDiagram), [renderDiagram]);
   const [nodes, setNodes, onNodesChange] = useNodesState(base.nodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(base.edges);
   const rf = useReactFlow();
+
+  const handleConnect = useCallback(
+    (connection: Connection) => {
+      if (!connection.source || !connection.target) return;
+      const nodeIndex = new Map(rf.getNodes().map((n) => [n.id, n]));
+      const sourceNode = nodeIndex.get(connection.source);
+      const targetNode = nodeIndex.get(connection.target);
+      if (!sourceNode || !targetNode) return;
+      const sourceType = (sourceNode.data as BowtieNodeData)?.bowtieType;
+      const targetType = (targetNode.data as BowtieNodeData)?.bowtieType;
+      if (!sourceType || !targetType) return;
+      const allowedTypes = TYPE_CONNECTION_RULES[sourceType];
+      if (allowedTypes && !allowedTypes.includes(targetType)) {
+        return;
+      }
+      const strictTargets = strictConnections.get(connection.source);
+      if (strictTargets && !strictTargets.has(connection.target)) {
+        return;
+      }
+      setEdges((eds) =>
+        addEdge(
+          {
+            ...connection,
+            style: { stroke: "var(--edge)" },
+            markerEnd: { type: MarkerType.ArrowClosed },
+          },
+          eds
+        )
+      );
+    },
+    [rf, setEdges, strictConnections]
+  );
+
+  const applyBuilderLayout = useCallback(() => {
+    const baseDiagram = renderOverride ?? diagram;
+    const laid = computeSimpleLayout(baseDiagram);
+    const hydrated = laid.nodes.map((n) => ({
+      ...n,
+      data: { ...(n.data as BowtieNodeData), highlighted: false, dimmed: false },
+    }));
+    setNodes(hydrated);
+    setEdges(laid.edges);
+  }, [diagram, renderOverride, setEdges, setNodes]);
 
 
   // Fit view on initial mount
@@ -600,6 +664,12 @@ function InnerGraph({ diagram, initialMode = "demo" }: { diagram: BowtieDiagram;
       alive = false;
     };
   }, [renderDiagram, mode, activeFocusIds, shouldDim]);
+
+  useEffect(() => {
+    if (mode === "builder") {
+      applyBuilderLayout();
+    }
+  }, [mode, applyBuilderLayout]);
 
   // Global events from the left Sidebar (export, toggle builder, clear diagram)
   useEffect(() => {
@@ -816,17 +886,6 @@ function InnerGraph({ diagram, initialMode = "demo" }: { diagram: BowtieDiagram;
     return m;
   }, [renderDiagram]);
 
-  // Keep nodes/edges in sync with render diagram while in Builder mode
-  useEffect(() => {
-    if (mode !== "builder") return;
-    const laid = computeSimpleLayout(renderDiagram);
-    const hydrated = laid.nodes.map((n) => ({
-      ...n,
-      data: { ...(n.data as BowtieNodeData), highlighted: false, dimmed: false },
-    }));
-    setNodes(hydrated);
-    setEdges(laid.edges);
-  }, [renderDiagram, mode]);
 
 
 
@@ -859,6 +918,7 @@ function InnerGraph({ diagram, initialMode = "demo" }: { diagram: BowtieDiagram;
         edges={edges}
         onNodesChange={onNodesChange}
         onEdgesChange={onEdgesChange}
+        onConnect={handleConnect}
         onPaneClick={() => { if (cardNode) handleCloseCard(); }}
 
         onNodeClick={(_, n) => {

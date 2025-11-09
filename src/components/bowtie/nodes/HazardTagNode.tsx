@@ -24,8 +24,18 @@ function HazardTagNode({ id, data }: NodeProps) {
         <span className={styles.icon} aria-hidden="true">⚠</span>
         <span className="sr-only">Hazard</span>
         <span className={styles.label}>{d?.label}</span>
-        <Handle type="target" position={Position.Left} />
-        <Handle type="source" position={Position.Right} />
+        <Handle
+          type="target"
+          position={Position.Top}
+          id="hazard-target"
+          style={{ left: "50%", transform: "translate(-50%, -50%)" }}
+        />
+        <Handle
+          type="source"
+          position={Position.Bottom}
+          id="hazard-source"
+          style={{ left: "50%", transform: "translate(-50%, 50%)" }}
+        />
       </button>
       <p id={descId} hidden>
         {d?.metadata?.eli5 ?? d?.label}
@@ -34,4 +44,3 @@ function HazardTagNode({ id, data }: NodeProps) {
   );
 }
 export default memo(HazardTagNode);
-

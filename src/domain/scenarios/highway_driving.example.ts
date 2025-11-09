@@ -11,7 +11,7 @@ export const highwayDrivingExample: BowtieDiagram = {
     {
       id: "hz-highway",
       type: "hazard",
-      label: "Driving a vehicle on a highway",
+      label: "H-1 ⚠️ Driving a vehicle on a highway",
       metadata: {
         eli5: "High-speed traffic leaves little margin for errors or failures.",
         details: [
@@ -23,7 +23,7 @@ export const highwayDrivingExample: BowtieDiagram = {
     {
       id: "te-loss-control",
       type: "topEvent",
-      label: "Loss of control at highway speed",
+      label: "TE-1 🎯 Loss of control at highway speed",
       metadata: {
         eli5: "The driver no longer keeps the vehicle centred, stable, or slowed.",
         details: [
@@ -36,7 +36,7 @@ export const highwayDrivingExample: BowtieDiagram = {
     {
       id: "th-intoxicated",
       type: "threat",
-      label: "Intoxicated driving",
+      label: "T-1 🍸 Intoxicated driving",
       metadata: {
         eli5: "Alcohol or drugs slow reaction time and judgement.",
         details: [
@@ -50,7 +50,7 @@ export const highwayDrivingExample: BowtieDiagram = {
     {
       id: "th-miscalibrated",
       type: "threat",
-      label: "Miscalibrated assistance systems",
+      label: "T-2 🛰️ Miscalibrated assistance systems",
       metadata: {
         eli5: "Sensors or ADAS settings drift, giving the driver bad feedback.",
         details: [
@@ -63,7 +63,7 @@ export const highwayDrivingExample: BowtieDiagram = {
     {
       id: "th-distracted",
       type: "threat",
-      label: "Distracted driving (phone, GPS, infotainment)",
+      label: "T-3 📱 Distracted driving (phone, GPS, infotainment)",
       metadata: {
         eli5: "Screen time steals the driver’s eyes and mind.",
         details: [
@@ -76,7 +76,7 @@ export const highwayDrivingExample: BowtieDiagram = {
     {
       id: "th-slippery",
       type: "threat",
-      label: "Slippery road surface",
+      label: "T-4 🌧️ Slippery road surface",
       metadata: {
         eli5: "Rain, ice, or gravel erode tire grip and braking.",
         details: [
@@ -89,7 +89,7 @@ export const highwayDrivingExample: BowtieDiagram = {
     {
       id: "th-impaired-vehicle",
       type: "threat",
-      label: "Impaired vehicle condition",
+      label: "T-5 🔧 Impaired vehicle condition",
       metadata: {
         eli5: "Mechanical defects mean the truck cannot respond.",
         details: [
@@ -102,7 +102,7 @@ export const highwayDrivingExample: BowtieDiagram = {
     {
       id: "th-visibility",
       type: "threat",
-      label: "Poor visibility (controllable)",
+      label: "T-6 🌫️ Poor visibility (controllable)",
       metadata: {
         eli5: "Fog, glare, and darkness hide hazards until too late.",
         details: [
@@ -116,7 +116,7 @@ export const highwayDrivingExample: BowtieDiagram = {
     {
       id: "ef-miscalibration",
       type: "escalationFactor",
-      label: "Escalation: Calibration overdue",
+      label: "EF-1 🛠️ Escalation: Calibration overdue",
       wing: "left",
       metadata: {
         eli5: "If ADAS calibration slips, threats escalate faster.",
@@ -130,7 +130,7 @@ export const highwayDrivingExample: BowtieDiagram = {
     {
       id: "ef-maint-backlog",
       type: "escalationFactor",
-      label: "Escalation: Maintenance backlog",
+      label: "EF-2 📉 Escalation: Maintenance backlog",
       wing: "left",
       metadata: {
         eli5: "Known issues ignored make any threat harder to control.",
@@ -145,7 +145,7 @@ export const highwayDrivingExample: BowtieDiagram = {
     {
       id: "ef-seatbelt",
       type: "escalationFactor",
-      label: "Escalation: Seatbelt non-compliance",
+      label: "EF-3 ❌ Escalation: Seatbelt non-compliance",
       wing: "right",
       metadata: {
         eli5: "If belts are unused, mitigation barriers fail.",
@@ -159,7 +159,7 @@ export const highwayDrivingExample: BowtieDiagram = {
     {
       id: "ef-rollover",
       type: "escalationFactor",
-      label: "Escalation: Rollover response gaps",
+      label: "EF-4 🌀 Escalation: Rollover response gaps",
       wing: "right",
       metadata: {
         eli5: "If crews aren’t ready for a rollover, impacts worsen.",
@@ -174,7 +174,7 @@ export const highwayDrivingExample: BowtieDiagram = {
     {
       id: "pb-screening",
       type: "preventionBarrier",
-      label: "Periodical alcohol and drug screening",
+      label: "PB-1.1 🧪 Periodical alcohol and drug screening",
       metadata: {
         eli5: "Regular testing keeps impaired drivers off the highway.",
         details: [
@@ -187,7 +187,7 @@ export const highwayDrivingExample: BowtieDiagram = {
     {
       id: "pb-designated-driver",
       type: "preventionBarrier",
-      label: "Appointing a designated driver",
+      label: "PB-1.2 🧍‍♂️ Appointing a designated driver",
       metadata: {
         eli5: "Peer checks ensure a sober driver takes the wheel.",
         details: [
@@ -200,7 +200,7 @@ export const highwayDrivingExample: BowtieDiagram = {
     {
       id: "pb-ignition-lock",
       type: "preventionBarrier",
-      label: "Breath alcohol ignition interlock",
+      label: "PB-1.3 🔐 Breath alcohol ignition interlock",
       metadata: {
         eli5: "Truck will not start until a sober test is complete.",
         details: [
@@ -213,7 +213,7 @@ export const highwayDrivingExample: BowtieDiagram = {
     {
       id: "pb-lane-warning",
       type: "preventionBarrier",
-      label: "Lane departure warning system",
+      label: "PB-1.4 / PB-3.1 🚨 Lane departure warning system",
       metadata: {
         eli5: "Alerts nudge drivers back between the lines.",
         details: [
@@ -226,7 +226,7 @@ export const highwayDrivingExample: BowtieDiagram = {
     {
       id: "pb-calibration",
       type: "preventionBarrier",
-      label: "Periodic calibration as per specification",
+      label: "PB-2.1 📏 Periodic calibration as per specification",
       metadata: {
         eli5: "Workshops reset ADAS sensors to OEM tolerances.",
         details: [
@@ -239,7 +239,7 @@ export const highwayDrivingExample: BowtieDiagram = {
     {
       id: "pb-weather-report",
       type: "preventionBarrier",
-      label: "Listen to weather report",
+      label: "PB-4.1 / PB-6.1 🌧️ Listen to weather report",
       metadata: {
         eli5: "Drivers brief on storms before each route.",
         details: [
@@ -252,7 +252,7 @@ export const highwayDrivingExample: BowtieDiagram = {
     {
       id: "pb-adjust-schedule",
       type: "preventionBarrier",
-      label: "Adjust driving schedule",
+      label: "PB-4.2 / PB-6.2 🗓️ Adjust driving schedule",
       metadata: {
         eli5: "Loads shift to daylight or safer routes when needed.",
         details: [
@@ -265,7 +265,7 @@ export const highwayDrivingExample: BowtieDiagram = {
     {
       id: "pb-no-high-risk",
       type: "preventionBarrier",
-      label: "No driving in high-risk surface conditions",
+      label: "PB-4.3 🚧 No driving in high-risk surface conditions",
       metadata: {
         eli5: "If traction is gone, we shut the lane down.",
         details: [
@@ -278,7 +278,7 @@ export const highwayDrivingExample: BowtieDiagram = {
     {
       id: "pb-defensive-driving",
       type: "preventionBarrier",
-      label: "Defensive driving coaching",
+      label: "PB-4.4 🛡️ Defensive driving coaching",
       metadata: {
         eli5: "Practice keeps slick-surface reactions automatic.",
         details: [
@@ -291,7 +291,7 @@ export const highwayDrivingExample: BowtieDiagram = {
     {
       id: "pb-abs",
       type: "preventionBarrier",
-      label: "ABS braking system",
+      label: "PB-4.5 🛞 ABS braking system",
       metadata: {
         eli5: "Electronics pulse brakes to keep steering control.",
         details: [
@@ -304,7 +304,7 @@ export const highwayDrivingExample: BowtieDiagram = {
     {
       id: "pb-inspection-maint",
       type: "preventionBarrier",
-      label: "Inspection and maintenance",
+      label: "PB-5.1 🧰 Inspection and maintenance",
       metadata: {
         eli5: "Scheduled PM finds defects before they matter.",
         details: [
@@ -317,7 +317,7 @@ export const highwayDrivingExample: BowtieDiagram = {
     {
       id: "pb-lights-always",
       type: "preventionBarrier",
-      label: "Company vehicle lights always on",
+      label: "PB-6.3 💡 Company vehicle lights always on",
       metadata: {
         eli5: "Running lights increase conspicuity in rain and fog.",
         details: [
@@ -330,7 +330,7 @@ export const highwayDrivingExample: BowtieDiagram = {
     {
       id: "pb-light-spec",
       type: "preventionBarrier",
-      label: "Hire vehicles with specific light specs",
+      label: "PB-6.4 📝 Hire vehicles with specific light specs",
       metadata: {
         eli5: "Rental fleet must match our lighting policy.",
         details: [
@@ -343,7 +343,7 @@ export const highwayDrivingExample: BowtieDiagram = {
     {
       id: "pb-preferred-hire",
       type: "preventionBarrier",
-      label: "Preferred car hire companies",
+      label: "PB-6.5 🤝 Preferred car hire companies",
       metadata: {
         eli5: "Only vetted partners provide replacement vehicles.",
         details: [
@@ -357,7 +357,7 @@ export const highwayDrivingExample: BowtieDiagram = {
     {
       id: "eb-calibration-discipline",
       type: "escalationBarrier",
-      label: "EF barrier: Calibration discipline",
+      label: "EFB-1 📋 EF barrier: Calibration discipline",
       wing: "left",
       metadata: {
         eli5: "We track due dates and lock out overdue trucks.",
@@ -371,7 +371,7 @@ export const highwayDrivingExample: BowtieDiagram = {
     {
       id: "eb-maintenance-discipline",
       type: "escalationBarrier",
-      label: "EF barrier: Maintenance escalation",
+      label: "EFB-2 🛠️ EF barrier: Maintenance escalation",
       wing: "left",
       metadata: {
         eli5: "Critical defects trigger hold-and-fix workflows.",
@@ -385,7 +385,7 @@ export const highwayDrivingExample: BowtieDiagram = {
     {
       id: "eb-seatbelt-discipline",
       type: "escalationBarrier",
-      label: "EF barrier: Seatbelt discipline",
+      label: "EFB-3 ✅ EF barrier: Seatbelt discipline",
       wing: "right",
       metadata: {
         eli5: "Leadership reinforces belt use every shift.",
@@ -399,7 +399,7 @@ export const highwayDrivingExample: BowtieDiagram = {
     {
       id: "eb-rollover-readiness",
       type: "escalationBarrier",
-      label: "EF barrier: Rollover readiness",
+      label: "EFB-4 🚒 EF barrier: Rollover readiness",
       wing: "right",
       metadata: {
         eli5: "Playbooks cover stabilization and occupant rescue.",
@@ -414,7 +414,7 @@ export const highwayDrivingExample: BowtieDiagram = {
     {
       id: "mb-forward-warning",
       type: "mitigationBarrier",
-      label: "Forward collision warning system",
+      label: "MB-1.1 🚨 Forward collision warning system",
       metadata: {
         eli5: "Radar/vision alerts give seconds to brake or steer.",
         details: [
@@ -427,7 +427,7 @@ export const highwayDrivingExample: BowtieDiagram = {
     {
       id: "mb-defensive-competence",
       type: "mitigationBarrier",
-      label: "Defensive driving - slip recovery",
+      label: "MB-1.2 🛡️ Defensive driving - slip recovery",
       metadata: {
         eli5: "Training helps recover after the first slide.",
         details: [
@@ -440,7 +440,7 @@ export const highwayDrivingExample: BowtieDiagram = {
     {
       id: "mb-crumple-zone",
       type: "mitigationBarrier",
-      label: "Crumple zone / vehicle structure",
+      label: "MB-1.3 🧱 Crumple zone / vehicle structure",
       metadata: {
         eli5: "Structure absorbs energy before it hits people.",
         details: [
@@ -453,7 +453,7 @@ export const highwayDrivingExample: BowtieDiagram = {
     {
       id: "mb-airbag",
       type: "mitigationBarrier",
-      label: "Airbag deployment",
+      label: "MB-1.4 🎈 Airbag deployment",
       metadata: {
         eli5: "Inflatable cushions slow the body.",
         details: [
@@ -466,7 +466,7 @@ export const highwayDrivingExample: BowtieDiagram = {
     {
       id: "mb-headrest",
       type: "mitigationBarrier",
-      label: "Adjust headrest to mitigate whiplash",
+      label: "MB-1.5 🪑 Adjust headrest to mitigate whiplash",
       metadata: {
         eli5: "Proper headrest height keeps the neck aligned.",
         details: [
@@ -479,7 +479,7 @@ export const highwayDrivingExample: BowtieDiagram = {
     {
       id: "mb-seatbelt-campaign",
       type: "mitigationBarrier",
-      label: "Seatbelt awareness campaign",
+      label: "MB-1.6 📣 Seatbelt awareness campaign",
       metadata: {
         eli5: "Stories, incentives, and metrics reinforce belt use.",
         details: [
@@ -492,7 +492,7 @@ export const highwayDrivingExample: BowtieDiagram = {
     {
       id: "mb-seatbelt-alarm",
       type: "mitigationBarrier",
-      label: "Seatbelt warning alarm",
+      label: "MB-1.7 🔔 Seatbelt warning alarm",
       metadata: {
         eli5: "Audible alarms nag until the belt clicks.",
         details: [
@@ -505,7 +505,7 @@ export const highwayDrivingExample: BowtieDiagram = {
     {
       id: "mb-rollover-protection",
       type: "mitigationBarrier",
-      label: "Roll-over protection",
+      label: "MB-1.8 🛞 Roll-over protection",
       metadata: {
         eli5: "Reinforced roofs and cages keep space for people.",
         details: [
@@ -519,7 +519,7 @@ export const highwayDrivingExample: BowtieDiagram = {
     {
       id: "c-fixed-object",
       type: "consequence",
-      label: "Crash into other vehicle or object",
+      label: "C-1 💥 Crash into other vehicle or object",
       metadata: {
         eli5: "Impact with another car, barrier, or roadside asset.",
         details: [
@@ -532,7 +532,7 @@ export const highwayDrivingExample: BowtieDiagram = {
     {
       id: "c-driver-impacts",
       type: "consequence",
-      label: "Driver impacts vehicle interior",
+      label: "C-2 🤕 Driver impacts vehicle interior",
       metadata: {
         eli5: "Occupants hit wheel, dash, or cabin surfaces.",
         details: [
@@ -545,7 +545,7 @@ export const highwayDrivingExample: BowtieDiagram = {
     {
       id: "c-seatbelt-missed",
       type: "consequence",
-      label: "Forgetting or refusing to wear seatbelt",
+      label: "C-3 ⚠️ Forgetting or refusing to wear seatbelt",
       metadata: {
         eli5: "At crash moment the belt is unlatched.",
         details: [
@@ -558,7 +558,7 @@ export const highwayDrivingExample: BowtieDiagram = {
     {
       id: "c-rollover",
       type: "consequence",
-      label: "Vehicle roll-over",
+      label: "C-4 🚗💫 Vehicle roll-over",
       metadata: {
         eli5: "Vehicle tips onto side or roof, possibly ejecting people.",
         details: [

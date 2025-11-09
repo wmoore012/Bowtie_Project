@@ -8,12 +8,12 @@ export type StoryStep = {
 export const highwayDrivingNarrative: StoryStep[] = [
   {
     title: "⚠️ Framing the hazard",
-    body: "We start with the <strong>hazard</strong> — driving a vehicle on a highway — feeding the <strong>top event</strong> when control is lost. Every branch we explore pivots around this pair.",
+    body: "<span style=\"color:#ea580c;font-weight:700;\">⚠️ Hazard</span> → <span style=\"color:#ef4444;font-weight:700;\">🎯 Top event</span>. The yellow striped card feeds the glowing knot so everyone immediately sees where energy flows.",
     focusIds: ["hz-highway", "te-loss-control"],
   },
   {
     title: "🎯 Threat landscape",
-    body: "Six threat families feed the top event: intoxication, system miscalibration, distraction, slippery roads, impaired vehicle condition, and controllable visibility. Each is shown in blue on the left wing.",
+    body: "Threat wing roll call: 🍸 intoxication, 🛰️ miscalibration, 📱 distraction, 🌧️ slippery roads, 🔧 impaired vehicles, and 🌫️ visibility. Each blue card is a single click from exposing its defenses.",
     focusIds: [
       "th-intoxicated",
       "th-miscalibrated",
@@ -25,18 +25,18 @@ export const highwayDrivingNarrative: StoryStep[] = [
   },
   {
     title: "⚡️ Escalation factors",
-    body: "Escalation (yellow) accelerates failure when calibration or maintenance backlogs exist. We surface them even in the collapsed view so facilitators can talk about degradation early.",
-    focusIds: ["ef-miscalibration", "ef-maint-backlog"],
+    body: "Yellow ⚡️ escalation tiles (🛠️ calibration, 📉 backlog, ❌ seatbelts, 🌀 rollover) stay pinned so degradation is never out of sight, even when barriers remain collapsed.",
+    focusIds: ["ef-miscalibration", "ef-maint-backlog", "ef-seatbelt", "ef-rollover"],
   },
   {
     title: "🛡 Preventing intoxicated driving",
-    body: "Clicking any threat reveals its prevention barriers. Here we show four controls for intoxication: screening, designated drivers, ignition interlocks, and lane departure warnings.",
+    body: "Select 🍸 Intoxicated driving to reveal 🧪 screening, 🧍‍♂️ designated drivers, 🔐 ignition locks, and 🚨 lane warnings. Each chip glows cyan so facilitators can see ownership instantly.",
     focusIds: ["th-intoxicated", "pb-screening", "pb-designated-driver", "pb-ignition-lock", "pb-lane-warning"],
     revealIds: ["pb-screening", "pb-designated-driver", "pb-ignition-lock", "pb-lane-warning"],
   },
   {
     title: "🌧 Managing slippery or low-visibility routes",
-    body: "Weather intel, scheduling, defensive driving, ABS, and lighting policies fight the slippery + visibility threats. They pop into view only when the related cards are active.",
+    body: "🌧️ <span style=\"color:#0369a1;font-weight:600;\">Weather intel</span>, 🗓️ <span style=\"color:#7c3aed;font-weight:600;\">scheduling</span>, 🛡️ defensive driving, 🛞 ABS, and 💡 lighting policy each get its own emoji + color so the slippery + visibility story is scannable. These controls only appear when their threat cards are open.",
     focusIds: [
       "th-slippery",
       "th-visibility",
@@ -62,31 +62,31 @@ export const highwayDrivingNarrative: StoryStep[] = [
   },
   {
     title: "🚧 Crash mitigation barriers",
-    body: "When the top event fires, mitigation barriers glow on the right. Forward collision warnings, defensive competence, and crumple structures steer energy away from other vehicles.",
+    body: "If 🎯 fires, the right wing pulses: 🚨 forward warning, 🛡️ slip recovery, and 🧱 crumple structure form the crash-to-object chain feeding 💥 consequences.",
     focusIds: ["mb-forward-warning", "mb-defensive-competence", "mb-crumple-zone", "c-fixed-object"],
     revealIds: ["mb-forward-warning", "mb-defensive-competence", "mb-crumple-zone"],
   },
   {
     title: "🧍 Occupant protection",
-    body: "Airbags and correct headrest positioning cut down internal occupant injuries. These nodes pulse together with the “Driver impacts interior” consequence.",
+    body: "Occupant storyline glows purple: 🎈 airbags plus 🪑 headrests defend against 🤕 interior impacts, so everyone in the room sees which levers soften injuries.",
     focusIds: ["mb-airbag", "mb-headrest", "c-driver-impacts"],
     revealIds: ["mb-airbag", "mb-headrest"],
   },
   {
     title: "🔔 Seatbelt compliance loop",
-    body: "Seatbelt campaigns and alarms defend against the ‘forgetting/refusing’ consequence. Right-side escalation factors show how culture can erode these controls.",
+    body: "Seatbelt culture loop: 📣 campaigns + 🔔 alarms fight ⚠️ belt refusal while ✅ EF barriers remind us that leadership discipline keeps the loop tight.",
     focusIds: ["mb-seatbelt-campaign", "mb-seatbelt-alarm", "c-seatbelt-missed", "ef-seatbelt", "eb-seatbelt-discipline"],
     revealIds: ["mb-seatbelt-campaign", "mb-seatbelt-alarm", "eb-seatbelt-discipline"],
   },
   {
     title: "🔄 Rollover readiness",
-    body: "Rollover protection, response training, and mutual-aid agreements keep space for occupants and speed recovery. Highlighting ties the EF chain directly back to the top event.",
+    body: "🛞 Rollover cages + 🚒 readiness barriers illuminate together with the 🌀 escalation factor so teams track how response plans control 🚗💫 outcomes.",
     focusIds: ["mb-rollover-protection", "c-rollover", "ef-rollover", "eb-rollover-readiness"],
     revealIds: ["mb-rollover-protection", "eb-rollover-readiness"],
   },
   {
     title: "📤 Export & present",
-    body: "Use Share/Export for clean PNGs or stay in this guided mode. Arrow keys advance slides when menus are closed. Restarting the story collapses the diagram back to the base view.",
+    body: "📤 Share/Export hides chrome for screenshots, while ⌨️ arrow keys advance the glowing story. Restart snaps the bowtie back to its minimal threat/hazard spine for the next audience.",
     focusIds: ["hz-highway", "te-loss-control"],
   },
 ];

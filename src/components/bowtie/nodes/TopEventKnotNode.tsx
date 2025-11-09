@@ -23,6 +23,12 @@ function TopEventKnotNode({ id, data }: NodeProps) {
           <span className={styles.icon} aria-hidden="true"></span>
           <span className={styles.label}>{d?.label}</span>
         </div>
+        <Handle
+          type="target"
+          position={Position.Top}
+          id="top-event-hazard"
+          style={{ left: "50%", transform: "translate(-50%, -50%)" }}
+        />
         <Handle type="target" position={Position.Left} />
         <Handle type="source" position={Position.Right} />
       </button>
@@ -33,4 +39,3 @@ function TopEventKnotNode({ id, data }: NodeProps) {
   );
 }
 export default memo(TopEventKnotNode);
-
