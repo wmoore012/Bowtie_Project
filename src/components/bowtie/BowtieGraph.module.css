@@ -101,6 +101,23 @@
 .bowtieButton:disabled { opacity: 0.5; cursor: not-allowed; }
 .bowtieButton:focus-visible { outline: 2px solid var(--ring); outline-offset: 2px; }
 
+/* Reset Layout button - prominent light red/salmon background for visibility */
+.resetLayoutButton {
+  background: #ff6b6b;
+  border-color: #ff5252;
+  color: #ffffff;
+  font-weight: 600;
+  box-shadow: 0 2px 4px rgba(255, 107, 107, 0.2);
+}
+.resetLayoutButton:hover {
+  background: #ff5252;
+  border-color: #ff3838;
+  box-shadow: 0 4px 8px rgba(255, 107, 107, 0.3);
+}
+.resetLayoutButton:focus-visible {
+  outline: 2px solid #ff6b6b;
+  outline-offset: 2px;
+}
 
 .filterLabel { font-size: 12px; opacity: 0.8; margin-right: 4px; }
 .bowtieChip {

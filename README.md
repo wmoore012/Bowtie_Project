@@ -2,7 +2,12 @@
 
 Professional, accessible Bowtie risk diagram tool built with React + TypeScript + Vite + React Flow + ELK.js.
 
-![Hero Screenshot](src/assets/v.5.png)
+![Bowtie Builder Pro - Demo Mode](src/assets/v.9.png)
+
+<div style="display: flex; gap: 16px; margin: 16px 0;">
+  <img src="src/assets/v9 - 2.png" alt="Bowtie Builder Pro - Inspector Panel" style="width: 48%;" />
+  <img src="src/assets/v.9 - 3 builder.png" alt="Bowtie Builder Pro - Builder Mode" style="width: 48%;" />
+</div>
 
 ## Scripts
 - `npm run dev` – start dev server
@@ -17,6 +22,8 @@ Professional, accessible Bowtie risk diagram tool built with React + TypeScript 
 - Escalation factors stay visible as yellow striped pills; new legend entry explains their role.
 - Role-based multi-select filtering (chips) with accessible live region feedback.
 - Export any state of the diagram to PNG; CSS Modules + design tokens + reduced motion/focus-visible baked in.
+- 🎬 **Smooth GSAP-powered zoom/pan choreography** with preattentive visual system for narrative story mode transitions.
+- ✏️ **Inline node editing in Builder mode** with inspector panel for labels, tags, likelihood, severity, and metadata.
 
 ## Preattentive Visual System
 - **GSAP-powered preattentive visual system** with incident timeline framework integration.
@@ -105,18 +112,15 @@ The design system includes comprehensive token sets for both **bowtie roles** an
 See the [Design Tokens Reference](docs/design-tokens-reference.html) for the complete visual system specification.
 
 ## Roadmap (next)
-- Smooth GSAP-level zoom/pan choreography for story transitions.
-- Inline editing of escalation factors + barriers inside Builder mode.
 - Time-travel scrubber that records which barriers were revealed during a workshop.
+- Multi-diagram workspace with version comparison.
+- Collaborative editing with real-time sync.
 
 ## Scenarios
 
-This repo ships two professional teaching examples:
+This repo ships a professional teaching example:
 
-1. **Warehouse Fire Risk** (lithium-ion battery storage) - 16-step narrative
-2. **Highway Driving Risk** (fleet operations) - 20-step narrative
-
-Both scenarios demonstrate the full incident timeline framework with concrete examples of latent conditions, barrier failures, and human factors analysis.
+**Highway Driving Risk** (fleet operations) - 20-step narrative demonstrating the full incident timeline framework with concrete examples of latent conditions, barrier failures, and human factors analysis.
 
 Swap in your own scenario by editing `src/domain/scenarios/*`.
 

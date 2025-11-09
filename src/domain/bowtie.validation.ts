@@ -2,6 +2,97 @@ import type { BowtieDiagram, BowtieNodeType } from "./bowtie.types";
 
 export type ValidationResult = { ok: true } | { ok: false; errors: string[] };
 
+export interface ConnectionValidationResult {
+  valid: boolean;
+  errorMessage?: string;
+}
+
+/**
+ * Validate a connection attempt between two nodes in Builder mode.
+ * Returns validation result with specific error message if invalid.
+ */
+export function validateConnection(
+  sourceType: BowtieNodeType,
+  targetType: BowtieNodeType,
+  sourceId: string,
+  targetId: string
+): ConnectionValidationResult {
+  // Self-connection check
+  if (sourceId === targetId) {
+    return {
+      valid: false,
+      errorMessage: "A node cannot connect to itself.",
+    };
+  }
+
+  // Define allowed connections for each node type
+  const connectionRules: Record<BowtieNodeType, BowtieNodeType[]> = {
+    threat: ["preventionBarrier"],
+    escalationFactor: ["escalationBarrier"],
+    preventionBarrier: ["topEvent"],
+    escalationBarrier: ["topEvent"],
+    hazard: ["topEvent"],
+    topEvent: ["mitigationBarrier"],
+    mitigationBarrier: ["consequence"],
+    consequence: [], // Terminal node - no outgoing connections
+  };
+
+  const allowedTargets = connectionRules[sourceType];
+
+  // Check if target type is allowed
+  if (!allowedTargets || !allowedTargets.includes(targetType)) {
+    // Generate specific error message based on source type
+    const errorMessages: Record<BowtieNodeType, string> = {
+      threat: "Threats can only connect to Prevention Barriers.",
+      escalationFactor: "Escalation Factors can only connect to Escalation Barriers.",
+      preventionBarrier: "Prevention Barriers can only connect to the Top Event.",
+      escalationBarrier: "Escalation Barriers can only connect to the Top Event.",
+      hazard: "The Hazard can only connect to the Top Event.",
+      topEvent: "The Top Event can only connect to Mitigation Barriers.",
+      mitigationBarrier: "Mitigation Barriers can only connect to Consequences.",
+      consequence: "Consequences are terminal nodes and cannot have outgoing connections.",
+    };
+
+    return {
+      valid: false,
+      errorMessage: errorMessages[sourceType] || "Invalid connection.",
+    };
+  }
+
+  // Check for backward flow (right-to-left)
+  const typeOrder = (type: BowtieNodeType): number => {
+    switch (type) {
+      case "threat":
+        return 1;
+      case "preventionBarrier":
+        return 2;
+      case "escalationFactor":
+        return 1;
+      case "escalationBarrier":
+        return 2;
+      case "hazard":
+        return 3;
+      case "topEvent":
+        return 4;
+      case "mitigationBarrier":
+        return 5;
+      case "consequence":
+        return 6;
+      default:
+        return 999;
+    }
+  };
+
+  if (typeOrder(sourceType) > typeOrder(targetType)) {
+    return {
+      valid: false,
+      errorMessage: "Connections must flow left-to-right in the Bowtie structure. Backward connections are not allowed.",
+    };
+  }
+
+  return { valid: true };
+}
+
 export function validateDiagram(diagram: BowtieDiagram): ValidationResult {
   const errors: string[] = [];
 

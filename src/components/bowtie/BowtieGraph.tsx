@@ -39,6 +39,8 @@ import "../../styles/theme.css";
 import "../../styles/preattentive-tokens.css";
 import { computeRoleFilteredDiagram, collectAvailableRoles } from "../../domain/filters";
 import { ErrorBoundary } from "../common/ErrorBoundary";
+import { Toast } from "../common/Toast";
+import { validateConnection } from "../../domain/bowtie.validation";
 
 import { highwayDrivingNarrative } from "../../domain/scenarios/highway_driving_narrative";
 import gsap from "gsap";
@@ -77,17 +79,6 @@ const nodeTypes = {
   topEvent: TopEventKnotNode,
   consequence: ConsequenceNode,
 } as const;
-
-const TYPE_CONNECTION_RULES: Record<BowtieNodeType, BowtieNodeType[]> = {
-  threat: ["preventionBarrier"],
-  escalationFactor: ["escalationBarrier"],
-  preventionBarrier: ["topEvent"],
-  escalationBarrier: ["topEvent"],
-  hazard: ["topEvent"],
-  topEvent: ["mitigationBarrier"],
-  mitigationBarrier: ["consequence"],
-  consequence: [],
-};
 
 
 
@@ -138,6 +129,8 @@ function InnerGraph({ diagram, initialMode = "demo" }: { diagram: BowtieDiagram;
   // First-time builder mode confirmation
   const [showBuilderConfirm, setShowBuilderConfirm] = useState(false);
   const hasSeenBuilderConfirmRef = useRef(false);
+  // Toast notification for connection validation errors
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
   useEffect(() => { setMode(initialMode); }, [initialMode]);
   useEffect(() => { setPaletteOpen(mode === "builder"); }, [mode]);
   useEffect(() => {
@@ -572,14 +565,31 @@ function InnerGraph({ diagram, initialMode = "demo" }: { diagram: BowtieDiagram;
       const sourceType = (sourceNode.data as BowtieNodeData)?.bowtieType;
       const targetType = (targetNode.data as BowtieNodeData)?.bowtieType;
       if (!sourceType || !targetType) return;
-      const allowedTypes = TYPE_CONNECTION_RULES[sourceType];
-      if (allowedTypes && !allowedTypes.includes(targetType)) {
+
+      // Validate connection using new validation logic
+      const validation = validateConnection(
+        sourceType,
+        targetType,
+        connection.source,
+        connection.target
+      );
+
+      if (!validation.valid) {
+        // Show error toast with specific message
+        setToastMessage(validation.errorMessage || "Invalid connection.");
         return;
       }
+
+      // Additional strict connection check (for existing diagram structure)
       const strictTargets = strictConnections.get(connection.source);
       if (strictTargets && !strictTargets.has(connection.target)) {
+        setToastMessage(
+          "This connection is not allowed in the current diagram structure."
+        );
         return;
       }
+
+      // Connection is valid - add the edge
       setEdges((eds) =>
         addEdge(
           {
@@ -837,7 +847,13 @@ function InnerGraph({ diagram, initialMode = "demo" }: { diagram: BowtieDiagram;
 
     // Switch to builder mode
     setMode("builder");
-  }, [diagram]);
+
+    // Auto-trigger layout reset after confirmation dialog closes
+    // This ensures nodes are properly positioned regardless of which button was clicked
+    setTimeout(() => {
+      applyBuilderLayout();
+    }, 50); // Small delay to ensure mode switch completes first
+  }, [diagram, applyBuilderLayout]);
 
 
   // Broadcast mode changes so Sidebar can reflect state
@@ -1414,7 +1430,7 @@ function InnerGraph({ diagram, initialMode = "demo" }: { diagram: BowtieDiagram;
                   Palette ▾
                 </button>
                 <button
-                  className={styles.bowtieButton}
+                  className={`${styles.bowtieButton} ${styles.resetLayoutButton}`}
                   onClick={applyBuilderLayout}
                   type="button"
                   title="Reset node positions to default layout"
@@ -1570,6 +1586,16 @@ function InnerGraph({ diagram, initialMode = "demo" }: { diagram: BowtieDiagram;
         open={showBuilderConfirm}
         onConfirm={handleBuilderConfirm}
       />
+
+      {toastMessage && (
+        <Toast
+          message={toastMessage}
+          type="error"
+          duration={5000}
+          onClose={() => setToastMessage(null)}
+          ariaLive="assertive"
+        />
+      )}
 
     </div>
   );
