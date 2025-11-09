@@ -54,6 +54,14 @@ function getStepRole(stepIdx: number): string {
   return "Meta";
 }
 
+const LEFT_WING_TYPES = new Set<BowtieNodeType>([
+  "threat",
+  "preventionBarrier",
+  "escalationFactor",
+  "escalationBarrier",
+]);
+const RIGHT_WING_TYPES = new Set<BowtieNodeType>(["mitigationBarrier", "consequence"]);
+
 const nodeTypes = {
   threat: ThreatNode,
   escalationFactor: EscalationFactorNode,
@@ -858,6 +866,23 @@ function InnerGraph({ diagram, initialMode = "demo" }: { diagram: BowtieDiagram;
     window.addEventListener("bowtie:filterChanged", onFilterChanged as any);
     return () => window.removeEventListener("bowtie:filterChanged", onFilterChanged as any);
   }, []);
+
+  useEffect(() => {
+    if (!selectedRoles || selectedRoles.size === 0) return;
+    let hasLeft = false;
+    let hasRight = false;
+    for (const node of diagram.nodes) {
+      const chips = node.metadata?.chips;
+      if (!chips) continue;
+      const matchesRole = chips.some((chip) => selectedRoles.has(chip));
+      if (!matchesRole) continue;
+      if (LEFT_WING_TYPES.has(node.type)) hasLeft = true;
+      if (RIGHT_WING_TYPES.has(node.type)) hasRight = true;
+      if (hasLeft && hasRight) break;
+    }
+    if (hasLeft) setLeftExpanded(true);
+    if (hasRight) setRightExpanded(true);
+  }, [selectedRoles, diagram.nodes]);
 
   // Keyboard navigation for narrative steps (1..N)
   useEffect(() => {
