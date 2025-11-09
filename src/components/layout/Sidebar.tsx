@@ -334,6 +334,15 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
       </nav>
 
       <div className={styles.footer}>
+        <button
+          type="button"
+          className={styles.helpBtn}
+          aria-label="Show visual help"
+          onClick={() => dispatch("bowtie:toggleHelp")}
+        >
+          <span className={styles.icon}>❓</span>
+          {!collapsed && <span className={styles.label}>Help</span>}
+        </button>
         <button className={styles.themeBtn} type="button" title="Theme toggle - coming soon in future release" aria-label="Theme toggle">
           <span className={styles.icon}>🌙</span>
           {!collapsed && <span className={styles.label}>Theme</span>}
