@@ -1,0 +1,38 @@
+# Code Owners for Bowtie Builder Pro
+# These owners will be automatically requested for review when someone opens a PR
+
+# Default owner for everything
+* @wmoore012
+
+# Core application code
+/src/ @wmoore012
+
+# Configuration files (require careful review)
+/package.json @wmoore012
+/tsconfig*.json @wmoore012
+/vite.config.ts @wmoore012
+/vitest.config.ts @wmoore012
+/eslint.config.js @wmoore012
+/vercel.json @wmoore012
+
+# GitHub workflows and CI/CD (when added)
+/.github/ @wmoore012
+
+# Documentation
+/README.md @wmoore012
+/CONTRIBUTING.md @wmoore012
+/CODE_OF_CONDUCT.md @wmoore012
+/SECURITY.md @wmoore012
+
+# Design tokens and global styles
+/src/styles/ @wmoore012
+/src/index.css @wmoore012
+
+# Domain logic and scenarios
+/src/domain/ @wmoore012
+
+# Tests
+/src/test/ @wmoore012
+**/*.test.ts @wmoore012
+**/*.test.tsx @wmoore012
+

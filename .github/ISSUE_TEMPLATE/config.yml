@@ -1,0 +1,12 @@
+blank_issues_enabled: true
+contact_links:
+  - name: 💬 GitHub Discussions
+    url: https://github.com/wmoore012/bowtie-lithium-warehouse/discussions
+    about: Ask questions, share ideas, or discuss the project
+  - name: 🔒 Security Vulnerability
+    url: https://github.com/wmoore012/bowtie-lithium-warehouse/security/advisories/new
+    about: Report security vulnerabilities privately (DO NOT open public issues)
+  - name: 📚 Documentation
+    url: https://github.com/wmoore012/bowtie-lithium-warehouse/blob/main/README.md
+    about: Read the project documentation and guides
+

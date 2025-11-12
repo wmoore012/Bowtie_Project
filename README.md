@@ -124,3 +124,34 @@ This repo ships a professional teaching example:
 
 Swap in your own scenario by editing `src/domain/scenarios/*`.
 
+## Contributing
+
+We welcome contributions! This project serves dual purposes:
+
+1. **Academic project** – M.S. Data Science course deliverable
+2. **Professional MVP** – Potential real-world risk analysis tool
+
+**Quick start:**
+- Read [CONTRIBUTING.md](CONTRIBUTING.md) for detailed guidelines
+- Check [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md) for community standards
+- Review [SECURITY.md](SECURITY.md) for security reporting
+- See [CONTRIBUTORS.md](CONTRIBUTORS.md) for recognition
+
+**Before contributing:**
+- Open an issue to discuss major changes
+- Follow the PR template and checklist
+- Ensure tests pass and code is linted
+- Maintain accessibility and design system consistency
+
+## License
+
+MIT License - see [LICENSE](LICENSE) for details.
+
+Copyright (c) 2025 Wilton Moore
+
+## Acknowledgments
+
+- Built with [React Flow](https://reactflow.dev/) and [ELK.js](https://eclipse.dev/elk/)
+- Inspired by bowtie methodology from risk management literature
+- Developed as part of M.S. Data Science coursework
+
