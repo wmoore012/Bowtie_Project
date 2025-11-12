@@ -2,6 +2,9 @@
 
 Professional, accessible Bowtie risk diagram tool built with React + TypeScript + Vite + React Flow + ELK.js.
 https://bowtie-project.vercel.app
+
+> **🔒 IMPORTANT:** The `main` branch is protected. **Do not push directly to `main`.** All changes must go through Pull Requests with CI checks and code review. Only @wmoore012 can push to `main`. See [Contributing Guide](CONTRIBUTING.md) and [Branch Protection Setup](docs/BRANCH_PROTECTION_SETUP.md).
+
 ![Bowtie Builder Pro - Demo Mode](src/assets/v.9.png)
 
 <div style="display: flex; gap: 16px; margin: 16px 0;">
