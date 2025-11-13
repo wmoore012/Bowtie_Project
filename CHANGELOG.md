@@ -65,7 +65,7 @@ When releasing a new version, move unreleased changes to a new version section w
 
 <!-- Versions will be added here as releases are made -->
 
-## [0.0.0] - 2025-01-12
+## [0.0.0] - 2025-11-12
 
 ### Added
 - Initial MVP release
