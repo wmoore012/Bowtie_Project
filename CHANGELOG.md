@@ -25,7 +25,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - None
 
 ### Fixed
-- None
+- Corrected handle ID targeting so that paths between nodes originate from the correct Top Event node
+- Separated escalation factors and barriers into two groups so they no longer default to left side nodes
 
 ### Security
 - None
@@ -65,7 +66,7 @@ When releasing a new version, move unreleased changes to a new version section w
 
 <!-- Versions will be added here as releases are made -->
 
-## [0.0.0] - 2025-11-12
+## [0.0.0] - 2025-01-12
 
 ### Added
 - Initial MVP release

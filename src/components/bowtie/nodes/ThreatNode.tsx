@@ -46,8 +46,7 @@ function ThreatNode({ id, data }: NodeProps) {
             </div>
           </div>
         </div>
-        <Handle type="target" position={Position.Left} />
-        <Handle type="source" position={Position.Right} />
+        <Handle id="right" type="source" position={Position.Right} />
       </div>
       <p id={descId} hidden>
         {d?.metadata?.eli5 ?? d?.label}
