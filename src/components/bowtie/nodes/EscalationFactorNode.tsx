@@ -36,7 +36,7 @@ function EscalationFactorNode({ id, data }: NodeProps) {
         </div>
         {d?.orientation === "right" ? (
           <>
-            <Handle id="left" type="source" position={Position.Left} />
+            <Handle id="left" type="target" position={Position.Left} />
           </>
         ) : (
           <>

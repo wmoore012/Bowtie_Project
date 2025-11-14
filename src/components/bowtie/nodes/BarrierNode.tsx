@@ -69,8 +69,8 @@ function BarrierNode({ id, data }: NodeProps) {
         </div>
         {d?.orientation === "right" ? (
           <>
-            <Handle id="left" type="source" position={Position.Left} />
-            <Handle id="right" type="target" position={Position.Right} />
+            <Handle id="left" type="target" position={Position.Left} />
+            <Handle id="right" type="source" position={Position.Right} />
           </>
         ) : (
           <>

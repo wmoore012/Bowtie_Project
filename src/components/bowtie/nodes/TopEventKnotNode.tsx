@@ -30,7 +30,7 @@ function TopEventKnotNode({ id, data }: NodeProps) {
         </div>
         <Handle id="top-event-hazard" type="target" position={Position.Top} />
         <Handle id="left"  type="target" position={Position.Left} />
-        <Handle id="right" type="target" position={Position.Right} />
+        <Handle id="right" type="source" position={Position.Right} />
       </button>
       <p id={descId} hidden>
         {d?.metadata?.eli5 ?? d?.label}

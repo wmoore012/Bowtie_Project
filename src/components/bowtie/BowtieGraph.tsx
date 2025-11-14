@@ -1364,8 +1364,10 @@ function InnerGraph({ diagram, initialMode = "demo" }: { diagram: BowtieDiagram;
         onNodeClick={(_, n) => {
           const dn = diagram.nodes.find((x) => x.id === n.id) || null;
           const bt = dn?.type;
-          if (bt === "hazard") setLeftExpanded((v) => !v);
-          if (bt === "topEvent") setRightExpanded((v) => !v);
+          if (bt === "topEvent") {
+            setLeftExpanded((v) => !v);
+            setRightExpanded((v) => !v);
+          }
           handleNodeClick(n);
         }}
         onNodeMouseEnter={(_, n) => {

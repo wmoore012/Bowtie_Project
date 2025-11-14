@@ -64,12 +64,10 @@ export function computeStepDiagram(full: BowtieDiagram, opts: StepModeOptions): 
 
   // Wing overrides: if collapsed, remove corresponding types regardless of step
   if (!leftExpanded) {
-    includeTypes.delete("threat");
     includeTypes.delete("preventionBarrier");
   }
   if (!rightExpanded) {
     includeTypes.delete("mitigationBarrier");
-    includeTypes.delete("consequence");
   }
 
   // Filter nodes by type and (for barriers during partial group steps) by allowNodeIds

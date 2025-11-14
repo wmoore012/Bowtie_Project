@@ -53,7 +53,7 @@ function ConsequenceNode({ id, data }: NodeProps) {
             ) : null}
           </div>
         </div>
-        <Handle id="left" type="source" position={Position.Left} />
+        <Handle id="left" type="target" position={Position.Left} />
       </div>
       <p id={descId} hidden>
         {d?.metadata?.eli5 ?? d?.label}

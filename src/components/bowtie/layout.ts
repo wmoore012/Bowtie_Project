@@ -130,11 +130,6 @@ export function computeSimpleLayout(diagram: BowtieDiagram): {
     let sourcePosition = Position.Right;
     let targetPosition = Position.Left;
 
-    if (orientation === "right") {
-      sourcePosition = Position.Left;
-      targetPosition = Position.Right;
-    }
-
     if (n.type === "hazard") {
       sourcePosition = Position.Bottom;
       targetPosition = Position.Top;
@@ -167,61 +162,30 @@ export function computeSimpleLayout(diagram: BowtieDiagram): {
   nodes.forEach((n) => nodeMap.set(n.id, n));
 
   const edges: Edge[] = diagram.edges.map((e) => {
-    // Start with raw ids and any existing handle hints from the JSON
     let source = e.source;
     let target = e.target;
     let sourceHandle = (e as any).sourceHandle as string | undefined;
     let targetHandle = (e as any).targetHandle as string | undefined;
 
-    // Look at the original (pre-swap) types so we can decide if we need to flip
-    const rawSrc = nodeMap.get(source);
-    const rawTgt = nodeMap.get(target);
-    const rawSrcData = rawSrc?.data as BowtieNodeData | undefined;
-    const rawTgtData = rawTgt?.data as BowtieNodeData | undefined;
-    const rawSrcType = rawSrcData?.bowtieType;
-    const rawTgtType = rawTgtData?.bowtieType;
-
-    //
-    // 1) Flip mitigation edges so they flow outside → in
-    //
-    //    Old data:   topEvent → mitigationBarrier → consequence
-    //    New model:  consequence → mitigationBarrier → topEvent
-    //
-    if (rawSrcType === "topEvent" && rawTgtType === "mitigationBarrier") {
-      // barrier → top event
-      [source, target] = [target, source];
-      sourceHandle = undefined;
-      targetHandle = undefined;
-    } else if (rawSrcType === "mitigationBarrier" && rawTgtType === "consequence") {
-      // consequence → barrier
-      [source, target] = [target, source];
-      sourceHandle = undefined;
-      targetHandle = undefined;
-    }
-
     const src = nodeMap.get(source);
     const tgt = nodeMap.get(target);
     const srcData = src?.data as BowtieNodeData | undefined;
     const tgtData = tgt?.data as BowtieNodeData | undefined;
-
     const srcType = srcData?.bowtieType;
     const tgtType = tgtData?.bowtieType;
     const srcOrientation = srcData?.orientation;
-
-    if (sourceHandle === "target" || sourceHandle === "null") {
-      sourceHandle = undefined;
-    }
-    if (targetHandle === "target" || targetHandle === "null") {
-      targetHandle = undefined;
-    }
+    const tgtOrientation = tgtData?.orientation;
 
     if (srcType === "hazard" && tgtType === "topEvent") {
       targetHandle = "top-event-hazard";
     } else if (tgtType === "topEvent" && srcType !== "hazard") {
       if (srcOrientation === "left") {
         targetHandle = "left";
-      } else if (srcOrientation === "right") {
-        targetHandle = "right";
+      }
+    } else if (srcType === "topEvent") {
+      if (tgtOrientation === "right") {
+        sourceHandle = "right";
+        targetHandle = "left";
       }
     }
 
