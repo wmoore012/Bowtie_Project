@@ -89,8 +89,6 @@ export function computeSimpleLayout(diagram: BowtieDiagram): {
   const consequences = nodesByType("consequence");
   const preventionIds = new Set(prevention.map((n) => n.id));
   const mitigationIds = new Set(mitigation.map((n) => n.id));
-  const hasVisiblePrevention = prevention.length > 0;
-
   const spreadY = (count: number, cY: number, gap: number) =>
     Array.from({ length: count }, (_, i) => cY + (i - (count - 1) / 2) * gap);
 
@@ -99,8 +97,8 @@ export function computeSimpleLayout(diagram: BowtieDiagram): {
   const xHazard = centerX;
   const xMitigation = centerX + 1 * colGap;
   const xConsequence = xMitigation + consequenceDefaultGap;
-  const defaultThreatRightEdge = xPrevention - threatDefaultGap;
   const collapsedThreatRightEdge = xTopEvent - collapsedThreatGap;
+  const collapsedThreatColumnX = collapsedThreatRightEdge - threatColWidth;
 
   const leftEscalationFactors = escalationFactors.filter((n) => n.wing !== "right");
   const rightEscalationFactors = escalationFactors.filter((n) => n.wing === "right");
@@ -159,9 +157,6 @@ export function computeSimpleLayout(diagram: BowtieDiagram): {
 
   const leftBarrierRequests = new Map<string, { xs: number[]; ys: number[] }>();
 
-  const threatColumnRightEdge = hasVisiblePrevention ? defaultThreatRightEdge : collapsedThreatRightEdge;
-  const defaultThreatColumnX = threatColumnRightEdge - threatColWidth;
-
   threats.forEach((threat) => {
     const y = threatYMap.get(threat.id) ?? centerY;
     const chain = sortByLabel(
@@ -173,7 +168,7 @@ export function computeSimpleLayout(diagram: BowtieDiagram): {
     leftChains.set(threat.id, visibleChain);
     visibleChain.forEach((id) => leftChainBarriers.add(id));
     const chainLength = visibleChain.length;
-    const threatX = chainLength > 0 ? xPrevention - barrierChainSpacing * chainLength : defaultThreatColumnX;
+    const threatX = chainLength > 0 ? xPrevention - barrierChainSpacing * chainLength : collapsedThreatColumnX;
     pos.set(threat.id, { x: threatX, y });
     visibleChain.forEach((barrierId, idx) => {
       const desiredX = xPrevention - barrierChainSpacing * (chainLength - idx - 1);
@@ -365,8 +360,7 @@ export function computeSimpleLayout(diagram: BowtieDiagram): {
     if (chain && chain.length) return;
     const baseY = threatYMap.get(threat.id) ?? centerY;
     const threatWidth = NODE_WIDTHS[widthHintForType(threat.type)];
-    const targetRightEdge = hasVisiblePrevention ? defaultThreatRightEdge : collapsedThreatRightEdge;
-    const xAligned = targetRightEdge - threatWidth;
+    const xAligned = collapsedThreatRightEdge - threatWidth;
     const current = pos.get(threat.id);
     pos.set(threat.id, { x: xAligned, y: current?.y ?? baseY });
   });

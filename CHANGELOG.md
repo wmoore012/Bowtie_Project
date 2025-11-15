@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Deterministic barrier chaining on both wings (threat → sequential prevention barriers → top event and top event → mitigation chains → consequence), including node toggles that expand/collapse individual chains, automatic spacing, and story-mode driven reveals/highlights.
 - Interactive narrative controls that auto-reset manual highlights between steps, ensure focused nodes bring their required chain into view, and keep the entire bowtie highlighted when expanding from the Top Event.
 - Comprehensive regression coverage for the new layout, handle semantics, chain toggles, and narrative interactions.
+- Export enhancements: sidebar PDF action, rasterized PDF generation baked into BowtieGraph, and stabilized PNG/PDF snapshot flow that temporarily disables highlights/dimming while rendering.
 - Contributing guidelines (CONTRIBUTING.md)
 - Code of Conduct (CODE_OF_CONDUCT.md)
 - Security policy (SECURITY.md)
@@ -39,6 +40,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Top Event toggle no longer hides consequences or threats incorrectly; hazard clicks are likewise limited to their logical scope.
 - Removed the invisible/visible circle mismatch on the Top Event knot (padding, --knot-size, and layout tweaks) so the gradient ring matches the actual node size, text remains padded, and handles remain glued during animation.
 - Stories no longer retain manual highlights/reveals from previous steps, and narrative-controlled chains stay expanded even after the user interacts with other nodes.
+- Collapsed threats stay anchored near the Top Event even when other chains expand; left-wing nodes only shift vertically to make room for escalation branches.
+- Export snapshot flow temporarily clears highlights/dimming so PNG/PDF downloads are never washed out, and PDF export now works end-to-end without runtime errors.
 - Corrected handle ID targeting so that paths between nodes originate from the correct Top Event node
 - Separated escalation factors and barriers into two groups so they no longer default to left side nodes
 
