@@ -1,6 +1,6 @@
 import type { BowtieDiagram, BowtieNodeType } from "./bowtie.types";
 
-export type StepIndex = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10;
+export type StepIndex = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11;
 
 export interface StepModeOptions {
   step: StepIndex;
@@ -10,6 +10,8 @@ export interface StepModeOptions {
   mitigationGroups: string[][];  // arrays of mitigation barrier node ids (by consequence)
 }
 
+type DiagramNode = BowtieDiagram["nodes"][number];
+
 /**
  * Compute a filtered diagram according to the pedagogical step-mode sequence.
  * Always includes Hazard + Top Event. Steps then add context and barrier groups.
@@ -18,8 +20,10 @@ export interface StepModeOptions {
 export function computeStepDiagram(full: BowtieDiagram, opts: StepModeOptions): BowtieDiagram {
   const { step, leftExpanded, rightExpanded, preventionGroups, mitigationGroups } = opts;
 
-  const includeTypes = new Set<BowtieNodeType>(["hazard", "topEvent", "escalationFactor"]);
-  const allowNodeIds = new Set<string>();
+  const nodeById = new Map(full.nodes.map((n) => [n.id, n]));
+  const includeTypes = new Set<BowtieNodeType>(["hazard", "topEvent"]);
+  const allowedPrevention = new Set<string>();
+  const allowedMitigation = new Set<string>();
 
   // Step 1 adds threats + consequences (no barriers yet)
   if (step >= 1) {
@@ -27,56 +31,104 @@ export function computeStepDiagram(full: BowtieDiagram, opts: StepModeOptions): 
     includeTypes.add("consequence");
   }
 
-  // Steps 2-5 progressively add prevention barrier groups
-  if (step >= 2 && step <= 5) {
-    const groupsToInclude = Math.min(preventionGroups.length, step - 1); // step 2 -> 1 group, step 5 -> 4 groups
+  const preventionProgressStart = 2;
+  const preventionProgressEnd = preventionProgressStart + preventionGroups.length - 1;
+  const mitigationProgressStart = preventionProgressEnd + 1;
+  const mitigationProgressEnd = mitigationProgressStart + mitigationGroups.length - 1;
+
+  if (step >= preventionProgressStart && step <= preventionProgressEnd) {
+    const groupsToInclude = Math.min(preventionGroups.length, step - preventionProgressStart + 1);
     for (let i = 0; i < groupsToInclude; i++) {
       const g = preventionGroups[i];
-      if (g) for (const id of g) allowNodeIds.add(id);
+      if (g) for (const id of g) allowedPrevention.add(id);
     }
+    includeTypes.add("preventionBarrier");
+  } else if (step > preventionProgressEnd) {
+    for (const group of preventionGroups) for (const id of group) allowedPrevention.add(id);
+    if (preventionGroups.length) includeTypes.add("preventionBarrier");
   }
 
-  // Step 6 includes all prevention barriers
-  if (step >= 6) {
-    for (const group of preventionGroups) for (const id of group) allowNodeIds.add(id);
-    includeTypes.add("preventionBarrier");
-  } else if (step >= 2) {
-    // From steps 2-5 we also need the prevention type, but filtered by allowNodeIds
-    includeTypes.add("preventionBarrier");
-  }
-
-  // Steps 7-9 progressively add mitigation barrier groups
-  if (step >= 7 && step <= 9) {
-    const groupsToInclude = Math.min(mitigationGroups.length, step - 6); // step 7 -> 1 group, step 9 -> 3 groups
+  if (step >= mitigationProgressStart && step <= mitigationProgressEnd) {
+    const groupsToInclude = Math.min(mitigationGroups.length, step - mitigationProgressStart + 1);
     for (let i = 0; i < groupsToInclude; i++) {
       const g = mitigationGroups[i];
-      if (g) for (const id of g) allowNodeIds.add(id);
+      if (g) for (const id of g) allowedMitigation.add(id);
     }
+    includeTypes.add("mitigationBarrier");
+  } else if (step > mitigationProgressEnd) {
+    for (const group of mitigationGroups) for (const id of group) allowedMitigation.add(id);
+    if (mitigationGroups.length) includeTypes.add("mitigationBarrier");
   }
 
-  // Step 10 includes all mitigation barriers
-  if (step >= 10) {
-    for (const group of mitigationGroups) for (const id of group) allowNodeIds.add(id);
-    includeTypes.add("mitigationBarrier");
-  } else if (step >= 7) {
-    includeTypes.add("mitigationBarrier");
+  if (allowedPrevention.size > 0 || includeTypes.has("preventionBarrier")) {
+    includeTypes.add("escalationBarrier");
+    includeTypes.add("escalationFactor");
+  }
+  if (allowedMitigation.size > 0 || includeTypes.has("mitigationBarrier")) {
+    includeTypes.add("escalationBarrier");
+    includeTypes.add("escalationFactor");
   }
 
   // Wing overrides: if collapsed, remove corresponding types regardless of step
   if (!leftExpanded) {
     includeTypes.delete("preventionBarrier");
+    includeTypes.delete("threat");
   }
   if (!rightExpanded) {
     includeTypes.delete("mitigationBarrier");
+    includeTypes.delete("consequence");
   }
 
-  // Filter nodes by type and (for barriers during partial group steps) by allowNodeIds
+  const escalationParents = new Map<string, string>();
+  const factorParents = new Map<string, string>();
+  for (const edge of full.edges ?? []) {
+    const src = nodeById.get(edge.source);
+    const tgt = nodeById.get(edge.target);
+    if (!src || !tgt) continue;
+    if (
+      (src.type === "preventionBarrier" || src.type === "mitigationBarrier") &&
+      tgt.type === "escalationBarrier"
+    ) {
+      escalationParents.set(tgt.id, src.id);
+    }
+    if (src.type === "escalationBarrier" && tgt.type === "escalationFactor") {
+      factorParents.set(tgt.id, src.id);
+    }
+  }
+
+  const isLeftWingNode = (node: DiagramNode) =>
+    node.type === "threat" ||
+    node.type === "preventionBarrier" ||
+    ((node.type === "escalationBarrier" || node.type === "escalationFactor") && node.wing !== "right");
+
+  const isRightWingNode = (node: DiagramNode) =>
+    node.type === "consequence" ||
+    node.type === "mitigationBarrier" ||
+    ((node.type === "escalationBarrier" || node.type === "escalationFactor") && node.wing === "right");
+
+  // Filter nodes by type and parent visibility
   const visibleNodes = full.nodes.filter((n) => {
-    if (!includeTypes.has(n.type)) return n.type === "hazard" || n.type === "topEvent"; // always include spine
-    if (n.type === "preventionBarrier" || n.type === "mitigationBarrier" || n.type === "escalationBarrier") {
-      // If the wing is entirely visible (step >= 6 left or step >= 10 right), allowNodeIds already includes all
-      // Otherwise require explicit ID allowance
-      return allowNodeIds.size === 0 || allowNodeIds.has(n.id);
+    if (n.type === "hazard" || n.type === "topEvent") return true;
+    if (!leftExpanded && isLeftWingNode(n)) return false;
+    if (!rightExpanded && isRightWingNode(n)) return false;
+    if (!includeTypes.has(n.type)) return false;
+    if (n.type === "preventionBarrier") {
+      return allowedPrevention.has(n.id);
+    }
+    if (n.type === "mitigationBarrier") {
+      return allowedMitigation.has(n.id);
+    }
+    if (n.type === "escalationBarrier") {
+      const parentId = escalationParents.get(n.id);
+      if (!parentId) return false;
+      return allowedPrevention.has(parentId) || allowedMitigation.has(parentId);
+    }
+    if (n.type === "escalationFactor") {
+      const barrierId = factorParents.get(n.id);
+      if (!barrierId) return false;
+      const parentId = escalationParents.get(barrierId);
+      if (!parentId) return false;
+      return allowedPrevention.has(parentId) || allowedMitigation.has(parentId);
     }
     return true;
   });

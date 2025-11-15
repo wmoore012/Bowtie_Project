@@ -63,7 +63,7 @@ describe("validateDiagram (Highway Driving)", () => {
     // Intentionally duplicate the id of a different node to create a real collision
     const dup = {
       ...highwayDrivingExample,
-      nodes: highwayDrivingExample.nodes.map((n, i) => (i === 0 ? { ...n, id: "t-distracted" } : n)),
+      nodes: highwayDrivingExample.nodes.map((n, i) => (i === 0 ? { ...n, id: "th-distracted" } : n)),
     } as any;
     const result = validateDiagram(dup);
     expect(result.ok).toBe(false);

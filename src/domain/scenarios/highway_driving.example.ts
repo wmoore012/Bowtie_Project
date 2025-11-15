@@ -211,9 +211,22 @@ export const highwayDrivingExample: BowtieDiagram = {
       },
     },
     {
-      id: "pb-lane-warning",
+      id: "pb-lane-warning-t1",
       type: "preventionBarrier",
-      label: "PB-1.4 / PB-3.1 🚨 Lane departure warning system",
+      label: "PB-1.4 Lane departure warning system",
+      metadata: {
+        eli5: "Alerts nudge drivers back between the lines.",
+        details: [
+          "Camera alignment verified after windshield work",
+          "Drivers coached on response to alerts",
+        ],
+        chips: ["Active hardware", "Human"],
+      },
+    },
+    {
+      id: "pb-lane-warning-t3",
+      type: "preventionBarrier",
+      label: "PB-3.1 Lane departure warning system",
       metadata: {
         eli5: "Alerts nudge drivers back between the lines.",
         details: [
@@ -237,31 +250,59 @@ export const highwayDrivingExample: BowtieDiagram = {
       },
     },
     {
-      id: "pb-weather-report",
+      id: "pb-weather-report-t4",
       type: "preventionBarrier",
-      label: "PB-4.1 / PB-6.1 🌧️ Listen to weather report",
+      label: "PB-4.1 🌧️ Listen to weather report",
       metadata: {
-        eli5: "Drivers brief on storms before each route.",
+        eli5: "Teams monitor weather radio, alerts, and traffic cams.",
         details: [
-          "Dispatch issues hourly alerts",
-          "Apps push radar snapshots to cabs",
+          "Dispatch subscribes to real-time weather alerts",
+          "Drivers note route conditions with ETAs",
         ],
         chips: ["Operations"],
       },
     },
     {
-      id: "pb-adjust-schedule",
+      id: "pb-weather-report-t6",
       type: "preventionBarrier",
-      label: "PB-4.2 / PB-6.2 🗓️ Adjust driving schedule",
+      label: "PB-6.1 🌧️ Listen to weather report",
       metadata: {
-        eli5: "Loads shift to daylight or safer routes when needed.",
+        eli5: "Teams monitor weather radio, alerts, and traffic cams.",
         details: [
-          "Supervisors reschedule when thresholds exceeded",
-          "Shippers notified about ETA impacts",
+          "Dispatch subscribes to real-time weather alerts",
+          "Drivers note route conditions with ETAs",
+        ],
+        chips: ["Operations"],
+      },
+    },
+
+    {
+      id: "pb-adjust-schedule-t4",
+      type: "preventionBarrier",
+      label: "PB-4.2 🗓️ Adjust driving schedule",
+      metadata: {
+        eli5: "Dispatch delays or reroutes to avoid hazardous windows.",
+        details: [
+          "Dynamic routing suggests safer corridors",
+          "Coaching sessions reinforce compliance",
         ],
         chips: ["Operations", "Customer"],
       },
     },
+    {
+      id: "pb-adjust-schedule-t6",
+      type: "preventionBarrier",
+      label: "PB-6.2 🗓️ Adjust driving schedule",
+      metadata: {
+        eli5: "Dispatch delays or reroutes to avoid hazardous windows.",
+        details: [
+          "Dynamic routing suggests safer corridors",
+          "Coaching sessions reinforce compliance",
+        ],
+        chips: ["Operations", "Customer"],
+      },
+    },
+
     {
       id: "pb-no-high-risk",
       type: "preventionBarrier",
@@ -576,22 +617,22 @@ export const highwayDrivingExample: BowtieDiagram = {
     { id: "edge-th1-pb-screen", source: "th-intoxicated", target: "pb-screening" },
     { id: "edge-th1-pb-designated", source: "th-intoxicated", target: "pb-designated-driver" },
     { id: "edge-th1-pb-ignition", source: "th-intoxicated", target: "pb-ignition-lock" },
-    { id: "edge-th1-pb-lane", source: "th-intoxicated", target: "pb-lane-warning" },
+    { id: "edge-th1-pb-lane", source: "th-intoxicated", target: "pb-lane-warning-t1" },
 
     { id: "edge-th2-pb-calibration", source: "th-miscalibrated", target: "pb-calibration" },
 
-    { id: "edge-th3-pb-lane", source: "th-distracted", target: "pb-lane-warning" },
+    { id: "edge-th3-pb-lane", source: "th-distracted", target: "pb-lane-warning-t3" },
 
-    { id: "edge-th4-pb-weather", source: "th-slippery", target: "pb-weather-report" },
-    { id: "edge-th4-pb-adjust", source: "th-slippery", target: "pb-adjust-schedule" },
+    { id: "edge-th4-pb-weather", source: "th-slippery", target: "pb-weather-report-t4" },
+    { id: "edge-th4-pb-adjust", source: "th-slippery", target: "pb-adjust-schedule-t4" },
     { id: "edge-th4-pb-no-risk", source: "th-slippery", target: "pb-no-high-risk" },
     { id: "edge-th4-pb-defensive", source: "th-slippery", target: "pb-defensive-driving" },
     { id: "edge-th4-pb-abs", source: "th-slippery", target: "pb-abs" },
 
     { id: "edge-th5-pb-inspection", source: "th-impaired-vehicle", target: "pb-inspection-maint" },
 
-    { id: "edge-th6-pb-weather", source: "th-visibility", target: "pb-weather-report" },
-    { id: "edge-th6-pb-adjust", source: "th-visibility", target: "pb-adjust-schedule" },
+    { id: "edge-th6-pb-weather", source: "th-visibility", target: "pb-weather-report-t6" },
+    { id: "edge-th6-pb-adjust", source: "th-visibility", target: "pb-adjust-schedule-t6" },
     { id: "edge-th6-pb-lights", source: "th-visibility", target: "pb-lights-always" },
     { id: "edge-th6-pb-light-spec", source: "th-visibility", target: "pb-light-spec" },
     { id: "edge-th6-pb-preferred", source: "th-visibility", target: "pb-preferred-hire" },
@@ -600,10 +641,13 @@ export const highwayDrivingExample: BowtieDiagram = {
     { id: "edge-pb-screen-top", source: "pb-screening", target: "te-loss-control" },
     { id: "edge-pb-designated-top", source: "pb-designated-driver", target: "te-loss-control" },
     { id: "edge-pb-ignition-top", source: "pb-ignition-lock", target: "te-loss-control" },
-    { id: "edge-pb-lane-top", source: "pb-lane-warning", target: "te-loss-control" },
+    { id: "edge-pb-lane-t1-top", source: "pb-lane-warning-t1", target: "te-loss-control" },
+    { id: "edge-pb-lane-t3-top", source: "pb-lane-warning-t3", target: "te-loss-control" },
     { id: "edge-pb-calibration-top", source: "pb-calibration", target: "te-loss-control" },
-    { id: "edge-pb-weather-top", source: "pb-weather-report", target: "te-loss-control" },
-    { id: "edge-pb-adjust-top", source: "pb-adjust-schedule", target: "te-loss-control" },
+    { id: "edge-pb-weather-t4-top", source: "pb-weather-report-t4", target: "te-loss-control" },
+    { id: "edge-pb-weather-t6-top", source: "pb-weather-report-t6", target: "te-loss-control" },
+    { id: "edge-pb-adjust-t4-top", source: "pb-adjust-schedule-t4", target: "te-loss-control" },
+    { id: "edge-pb-adjust-t6-top", source: "pb-adjust-schedule-t6", target: "te-loss-control" },
     { id: "edge-pb-no-risk-top", source: "pb-no-high-risk", target: "te-loss-control" },
     { id: "edge-pb-defensive-top", source: "pb-defensive-driving", target: "te-loss-control" },
     { id: "edge-pb-abs-top", source: "pb-abs", target: "te-loss-control" },
@@ -613,17 +657,17 @@ export const highwayDrivingExample: BowtieDiagram = {
     { id: "edge-pb-preferred-top", source: "pb-preferred-hire", target: "te-loss-control" },
 
     // Escalation factor chains
-    { id: "edge-ef-miscal", source: "ef-miscalibration", target: "eb-calibration-discipline" },
-    { id: "edge-eb-calibration-top", source: "eb-calibration-discipline", target: "te-loss-control" },
+    { id: "edge-pb-calibration-eb-calibration", source: "pb-calibration", target: "eb-calibration-discipline" },
+    { id: "edge-eb-calibration-ef-miscal", source: "eb-calibration-discipline", target: "ef-miscalibration" },
 
-    { id: "edge-ef-maint", source: "ef-maint-backlog", target: "eb-maintenance-discipline" },
-    { id: "edge-eb-maint-top", source: "eb-maintenance-discipline", target: "te-loss-control" },
+    { id: "edge-pb-inspection-eb-maint", source: "pb-inspection-maint", target: "eb-maintenance-discipline" },
+    { id: "edge-eb-maint-ef-maint", source: "eb-maintenance-discipline", target: "ef-maint-backlog" },
 
-    { id: "edge-ef-seatbelt", source: "ef-seatbelt", target: "eb-seatbelt-discipline" },
-    { id: "edge-eb-seatbelt-top", source: "eb-seatbelt-discipline", target: "te-loss-control" },
+    { id: "edge-mb-seatbelt-alarm-eb-seatbelt", source: "mb-seatbelt-alarm", target: "eb-seatbelt-discipline" },
+    { id: "edge-eb-seatbelt-ef-seatbelt", source: "eb-seatbelt-discipline", target: "ef-seatbelt" },
 
-    { id: "edge-ef-rollover", source: "ef-rollover", target: "eb-rollover-readiness" },
-    { id: "edge-eb-rollover-top", source: "eb-rollover-readiness", target: "te-loss-control" },
+    { id: "edge-mb-rollover-eb-rollover", source: "mb-rollover-protection", target: "eb-rollover-readiness" },
+    { id: "edge-eb-rollover-ef-rollover", source: "eb-rollover-readiness", target: "ef-rollover" },
 
     // Top event -> Mitigation
     { id: "edge-top-mb-forward", source: "te-loss-control", target: "mb-forward-warning" },

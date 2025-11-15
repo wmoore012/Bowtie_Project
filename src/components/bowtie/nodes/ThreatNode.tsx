@@ -12,6 +12,7 @@ function ThreatNode({ id, data }: NodeProps) {
   const labelText = d?.displayLabel ?? d?.label;
   const orientation = d?.orientation ?? "left";
   const widthHint = d?.widthHint ?? "medium";
+  const widthPx = typeof d?.widthPx === "number" ? d.widthPx : undefined;
   const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
     if (e.key === "Enter" || e.key === " ") {
       e.preventDefault();
@@ -32,6 +33,7 @@ function ThreatNode({ id, data }: NodeProps) {
         data-dimmed={d?.dimmed ? "true" : undefined}
         data-orientation={orientation}
         data-width={widthHint}
+        style={widthPx ? { width: `${widthPx}px` } : undefined}
       >
         <div className={animStyles.animationWrapper} data-narrative-role="threat">
           {d?.badge && (
@@ -44,6 +46,15 @@ function ThreatNode({ id, data }: NodeProps) {
               {d?.emoji && <span aria-hidden="true" className={styles.emoji}>{d.emoji}</span>}
               <span>{labelText}</span>
             </div>
+            {d?.metadata?.chips?.length ? (
+              <div className={styles.chips}>
+                {d.metadata!.chips!.map((chip) => (
+                  <span key={chip} className={styles.chip}>
+                    {chip}
+                  </span>
+                ))}
+              </div>
+            ) : null}
           </div>
         </div>
         <Handle id="right" type="source" position={Position.Right} />

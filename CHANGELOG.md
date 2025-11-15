@@ -8,6 +8,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- Deterministic barrier chaining on both wings (threat → sequential prevention barriers → top event and top event → mitigation chains → consequence), including node toggles that expand/collapse individual chains, automatic spacing, and story-mode driven reveals/highlights.
+- Interactive narrative controls that auto-reset manual highlights between steps, ensure focused nodes bring their required chain into view, and keep the entire bowtie highlighted when expanding from the Top Event.
+- Comprehensive regression coverage for the new layout, handle semantics, chain toggles, and narrative interactions.
 - Contributing guidelines (CONTRIBUTING.md)
 - Code of Conduct (CODE_OF_CONDUCT.md)
 - Security policy (SECURITY.md)
@@ -16,6 +19,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - CODEOWNERS file for review assignments
 
 ### Changed
+- Rebuilt `computeSimpleLayout` into a symmetric bow tie so Hazard sits above the Top Event, left-wing nodes flow threat → prevention → (left) escalation, and right-wing nodes flow mitigation → consequence with the proper hierarchy and spacing.
+- Redesigned handle semantics across every node type (hazard bottom source, top event top/left/right handles, threats with right sources, consequences with left targets, barriers with left targets + right/bottom sources, wing-specific escalation factor handles) and updated all node components accordingly.
+- Extended the story stepper to 11 phases so each prevention and mitigation chain reveals one-at-a-time, synchronized with the builder/demo keyboard navigation.
+- Updated Top Event highlighting/pulse behaviour: the knot wrapper now owns sizing, handles stick to true centers, and highlight growth keeps the visual circle aligned with the hitbox.
+- Top Event click logic now expands the entire diagram (including highlight state) unless everything is already expanded, in which case it collapses back to the hazard/top-event spine without affecting unrelated nodes.
+- General UX polish: consistent node orientations, predictable spacing, improved sr-only counts, and smoother reveal/highlight transitions.
 - Updated README with contributing section
 
 ### Deprecated
@@ -25,6 +34,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - None
 
 ### Fixed
+- Edge construction now uses the correct handles/ordering for every bow-tie chain: hazard → top (top-event-hazard handle), threat chains into left/top event handle, mitigation chains out of the right handle, and sequential barrier links with orientation-aware handles. This eliminated the “couldn’t create edge for handle id …” warnings and restored proper flow to mitigation barriers, consequences, and both escalation wings.
+- Escalation factors/barriers respect the `wing` metadata so left/right clusters anchor to the correct sides.
+- Top Event toggle no longer hides consequences or threats incorrectly; hazard clicks are likewise limited to their logical scope.
+- Removed the invisible/visible circle mismatch on the Top Event knot (padding, --knot-size, and layout tweaks) so the gradient ring matches the actual node size, text remains padded, and handles remain glued during animation.
+- Stories no longer retain manual highlights/reveals from previous steps, and narrative-controlled chains stay expanded even after the user interacts with other nodes.
 - Corrected handle ID targeting so that paths between nodes originate from the correct Top Event node
 - Separated escalation factors and barriers into two groups so they no longer default to left side nodes
 

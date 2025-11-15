@@ -18,12 +18,14 @@ function countByType(d: BowtieDiagram): Record<BowtieNodeType, number> {
 }
 
 function idsLen(groups: string[][], uptoInclusive: number): number {
-  let n = 0;
+  const ids = new Set<string>();
   for (let i = 0; i <= uptoInclusive && i < groups.length; i++) {
     const g = groups[i];
-    n += g ? g.length : 0;
+    if (g) {
+      for (const id of g) ids.add(id);
+    }
   }
-  return n;
+  return ids.size;
 }
 
 describe("stepMode computeStepDiagram", () => {
@@ -58,8 +60,8 @@ describe("stepMode computeStepDiagram", () => {
     expect(c.mitigationBarrier).toBe(0);
   });
 
-  it("steps 2-5 cumulatively add prevention groups", () => {
-    for (let s = 2 as StepIndex; s <= (5 as StepIndex); s = ((s + 1) as StepIndex)) {
+  it("steps 2-7 cumulatively add prevention groups", () => {
+    for (let s = 2 as StepIndex; s <= (7 as StepIndex); s = ((s + 1) as StepIndex)) {
       const d = computeStepDiagram(highwayDrivingExample, {
         step: s,
         leftExpanded: true,
@@ -74,9 +76,9 @@ describe("stepMode computeStepDiagram", () => {
     }
   });
 
-  it("step 6 shows all prevention barriers", () => {
+  it("step 8 keeps all prevention barriers visible", () => {
     const d = computeStepDiagram(highwayDrivingExample, {
-      step: 6 as StepIndex,
+      step: 8 as StepIndex,
       leftExpanded: true,
       rightExpanded: true,
       preventionGroups: PREVENTION_GROUPS,
@@ -87,8 +89,8 @@ describe("stepMode computeStepDiagram", () => {
     expect(c.preventionBarrier).toBe(totalPrev);
   });
 
-  it("steps 7-9 cumulatively add mitigation groups", () => {
-    for (let s = 7 as StepIndex; s <= (9 as StepIndex); s = ((s + 1) as StepIndex)) {
+  it("steps 8-10 cumulatively add mitigation groups", () => {
+    for (let s = 8 as StepIndex; s <= (10 as StepIndex); s = ((s + 1) as StepIndex)) {
       const d = computeStepDiagram(highwayDrivingExample, {
         step: s,
         leftExpanded: true,
@@ -97,14 +99,14 @@ describe("stepMode computeStepDiagram", () => {
         mitigationGroups: MITIGATION_GROUPS,
       });
       const c = countByType(d);
-      const expected = idsLen(MITIGATION_GROUPS, s - 7);
+      const expected = idsLen(MITIGATION_GROUPS, s - 8);
       expect(c.mitigationBarrier).toBe(expected);
     }
   });
 
-  it("step 10 shows all nodes", () => {
+  it("step 11 shows all nodes", () => {
     const d = computeStepDiagram(highwayDrivingExample, {
-      step: 10 as StepIndex,
+      step: 11 as StepIndex,
       leftExpanded: true,
       rightExpanded: true,
       preventionGroups: PREVENTION_GROUPS,
@@ -117,9 +119,9 @@ describe("stepMode computeStepDiagram", () => {
     expect(c.mitigationBarrier).toBe(totalMit);
   });
 
-  it("leftExpanded=false hides left wing even at step 10", () => {
+  it("leftExpanded=false hides left wing even at step 11", () => {
     const d = computeStepDiagram(highwayDrivingExample, {
-      step: 10 as StepIndex,
+      step: 11 as StepIndex,
       leftExpanded: false,
       rightExpanded: true,
       preventionGroups: PREVENTION_GROUPS,
@@ -130,9 +132,9 @@ describe("stepMode computeStepDiagram", () => {
     expect(c.preventionBarrier).toBe(0);
   });
 
-  it("rightExpanded=false hides right wing even at step 10", () => {
+  it("rightExpanded=false hides right wing even at step 11", () => {
     const d = computeStepDiagram(highwayDrivingExample, {
-      step: 10 as StepIndex,
+      step: 11 as StepIndex,
       leftExpanded: true,
       rightExpanded: false,
       preventionGroups: PREVENTION_GROUPS,

@@ -1,11 +1,11 @@
 // Group prevention barriers by threat branch (used by guided stepper)
 export const PREVENTION_GROUPS: string[][] = [
-  ["pb-screening", "pb-designated-driver", "pb-ignition-lock", "pb-lane-warning"], // Intoxicated driving
+  ["pb-screening", "pb-designated-driver", "pb-ignition-lock", "pb-lane-warning-t1"], // Intoxicated driving
   ["pb-calibration"], // Miscalibrated systems
-  ["pb-lane-warning"], // Distracted driving
-  ["pb-weather-report", "pb-adjust-schedule", "pb-no-high-risk", "pb-defensive-driving", "pb-abs"], // Slippery surface
+  ["pb-lane-warning-t3"], // Distracted driving
+  ["pb-weather-report-t4", "pb-adjust-schedule-t4", "pb-no-high-risk", "pb-defensive-driving", "pb-abs"], // Slippery surface
   ["pb-inspection-maint"], // Impaired vehicle condition
-  ["pb-weather-report", "pb-adjust-schedule", "pb-lights-always", "pb-light-spec", "pb-preferred-hire"], // Visibility
+  ["pb-weather-report-t6", "pb-adjust-schedule-t6", "pb-lights-always", "pb-light-spec", "pb-preferred-hire"], // Visibility
 ];
 
 // Group mitigation barriers by their target consequences
