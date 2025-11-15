@@ -51,7 +51,9 @@ import {
 import { highwayDrivingNarrative } from "../../domain/scenarios/highway_driving_narrative";
 import gsap from "gsap";
 
-/**
+const pxToPt = (px: number) => (px * 72) / 96;
+
+/** 
  * Determine the role/category for a given step index for visual styling.
  * Step 1: Hazard, Step 2: TopEvent, Step 3: Threat,
  * Steps 4-6: Prevention, Steps 7-8: Mitigation, Steps 9-10: Consequence, Steps 11-12: Meta
@@ -139,6 +141,8 @@ function InnerGraph({ diagram, initialMode = "demo" }: { diagram: BowtieDiagram;
   const hasSeenBuilderConfirmRef = useRef(false);
   // Toast notification for connection validation errors
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [exportingSnapshot, setExportingSnapshot] = useState(false);
+  const exportingSnapshotRef = useRef(false);
   useEffect(() => { setMode(initialMode); }, [initialMode]);
   useEffect(() => { setPaletteOpen(mode === "builder"); }, [mode]);
   useEffect(() => {
@@ -713,6 +717,27 @@ function InnerGraph({ diagram, initialMode = "demo" }: { diagram: BowtieDiagram;
   const [edges, setEdges, onEdgesChange] = useEdgesState(base.edges);
   const rf = useReactFlow();
 
+  const waitForNextFrame = useCallback(
+    () =>
+      new Promise<void>((resolve) => {
+        requestAnimationFrame(() => requestAnimationFrame(() => resolve()));
+      }),
+    []
+  );
+
+  const beginExportSnapshot = useCallback(async () => {
+    if (exportingSnapshotRef.current) return;
+    exportingSnapshotRef.current = true;
+    setExportingSnapshot(true);
+    await waitForNextFrame();
+  }, [waitForNextFrame]);
+
+  const endExportSnapshot = useCallback(() => {
+    if (!exportingSnapshotRef.current) return;
+    exportingSnapshotRef.current = false;
+    setExportingSnapshot(false);
+  }, []);
+
   useEffect(() => {
     if (!selectedInspectorId) return;
     const exists = nodes.some((n) => n.id === selectedInspectorId);
@@ -936,8 +961,8 @@ function InnerGraph({ diagram, initialMode = "demo" }: { diagram: BowtieDiagram;
           ...n,
           data: {
             ...(n.data as BowtieNodeData),
-            highlighted: activeFocusIds.has(n.id),
-            dimmed: shouldDim && !activeFocusIds.has(n.id),
+            highlighted: !exportingSnapshot && activeFocusIds.has(n.id),
+            dimmed: !exportingSnapshot && shouldDim && !activeFocusIds.has(n.id),
           },
         }));
         setNodes(hydrated);
@@ -949,7 +974,20 @@ function InnerGraph({ diagram, initialMode = "demo" }: { diagram: BowtieDiagram;
     return () => {
       alive = false;
     };
-  }, [renderDiagram, mode, activeFocusIds, shouldDim]);
+  }, [renderDiagram, mode, activeFocusIds, shouldDim, exportingSnapshot]);
+
+  const filenameSlug = useCallback(() => {
+    const titleNode =
+      renderDiagram.nodes.find((n) => n.type === "topEvent") ??
+      renderDiagram.nodes.find((n) => n.type === "hazard");
+    return (
+      (titleNode?.label ?? "bowtie")
+        .toLowerCase()
+        .replace(/\s+/g, "-")
+        .replace(/[^a-z0-9\-]/g, "")
+        .slice(0, 60) || "bowtie"
+    );
+  }, [renderDiagram.nodes]);
 
   useEffect(() => {
     if (mode === "builder") {
@@ -961,6 +999,7 @@ function InnerGraph({ diagram, initialMode = "demo" }: { diagram: BowtieDiagram;
   useEffect(() => {
     if (typeof window === "undefined") return;
     const onExport = () => { void exportPng(); };
+    const onExportPdf = () => { void exportPdf(); };
     const onToggle = () => {
       setMode((m) => {
         if (m === "demo" && !hasSeenBuilderConfirmRef.current) {
@@ -1031,12 +1070,14 @@ function InnerGraph({ diagram, initialMode = "demo" }: { diagram: BowtieDiagram;
       }
     };
     window.addEventListener("bowtie:exportPng", onExport as any);
+    window.addEventListener("bowtie:exportPdf", onExportPdf as any);
     window.addEventListener("bowtie:toggleBuilder", onToggle as any);
     window.addEventListener("bowtie:clearDiagram", onClear as any);
     window.addEventListener("bowtie:exportJSON", onExportJSON as any);
     window.addEventListener("bowtie:importJSON", onImportJSON as any);
     return () => {
       window.removeEventListener("bowtie:exportPng", onExport as any);
+      window.removeEventListener("bowtie:exportPdf", onExportPdf as any);
       window.removeEventListener("bowtie:toggleBuilder", onToggle as any);
       window.removeEventListener("bowtie:clearDiagram", onClear as any);
       window.removeEventListener("bowtie:exportJSON", onExportJSON as any);
@@ -1099,6 +1140,11 @@ function InnerGraph({ diagram, initialMode = "demo" }: { diagram: BowtieDiagram;
   // Focus dimming + failed-path highlight + barrier group expansion on card open
   useEffect(() => {
     if (storyOpen) return;
+    if (exportingSnapshot) {
+      setEdges((eds) => eds.map((e) => ({ ...e, style: { ...(e.style || {}), opacity: 1 } })));
+      setNodes((nds) => nds.map((n) => ({ ...n, style: { ...(n.style || {}), opacity: 1, transform: undefined } })));
+      return;
+    }
     const baseStrokeFor = (e: any) => {
       const failureEdge = failedMode && isFailureEdge(e);
       return failureEdge ? "var(--edge-fail)" : "var(--edge)";
@@ -1147,22 +1193,125 @@ function InnerGraph({ diagram, initialMode = "demo" }: { diagram: BowtieDiagram;
         };
       })
     );
-  }, [cardNode, failedMode, storyOpen]);
+  }, [cardNode, failedMode, storyOpen, exportingSnapshot]);
+
+  const rasterizeToJpeg = useCallback(async (dataUrl: string) => {
+    const img = new Image();
+    img.src = dataUrl;
+    await new Promise((resolve, reject) => {
+      img.onload = resolve;
+      img.onerror = reject;
+    });
+    const canvas = document.createElement("canvas");
+    canvas.width = img.width;
+    canvas.height = img.height;
+    const ctx = canvas.getContext("2d");
+    ctx?.drawImage(img, 0, 0);
+    const jpegUrl = canvas.toDataURL("image/jpeg", 0.92);
+    return { dataUrl: jpegUrl, width: img.width, height: img.height };
+  }, []);
+
+  const buildPdfBlob = useCallback((jpegBase64: string, pxWidth: number, pxHeight: number) => {
+    const jpegBytes = Uint8Array.from(atob(jpegBase64), (c) => c.charCodeAt(0));
+    const widthPt = pxToPt(pxWidth);
+    const heightPt = pxToPt(pxHeight);
+    const encoder = new TextEncoder();
+    const chunks: Uint8Array[] = [];
+    let offset = 0;
+    const offsets: number[] = [];
+
+    const write = (str: string) => {
+      const bytes = encoder.encode(str);
+      chunks.push(bytes);
+      offset += bytes.length;
+    };
+
+    const writeObject = (str: string) => {
+      offsets.push(offset);
+      write(str);
+    };
+
+    const writeBinaryObject = (header: string, bytes: Uint8Array, footer: string) => {
+      offsets.push(offset);
+      write(header);
+      chunks.push(bytes);
+      offset += bytes.length;
+      write(footer);
+    };
+
+    write("%PDF-1.4\n");
+    writeObject("1 0 obj << /Type /Catalog /Pages 2 0 R >> endobj\n");
+    writeObject("2 0 obj << /Type /Pages /Kids [3 0 R] /Count 1 >> endobj\n");
+    writeObject(
+      `3 0 obj << /Type /Page /Parent 2 0 R /MediaBox [0 0 ${widthPt.toFixed(2)} ${heightPt.toFixed(
+        2
+      )}] /Resources << /XObject << /I1 4 0 R >> >> /Contents 5 0 R >> endobj\n`
+    );
+    writeBinaryObject(
+      `4 0 obj << /Type /XObject /Subtype /Image /Width ${pxWidth} /Height ${pxHeight} /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length ${jpegBytes.length} >> stream\n`,
+      jpegBytes,
+      "\nendstream\nendobj\n"
+    );
+    const contentStream = `q\n${widthPt.toFixed(2)} 0 0 ${heightPt.toFixed(2)} 0 0 cm\n/I1 Do\nQ\n`;
+    const contentBytes = encoder.encode(contentStream);
+    offsets.push(offset);
+    write(`5 0 obj << /Length ${contentBytes.length} >> stream\n`);
+    chunks.push(contentBytes);
+    offset += contentBytes.length;
+    write("endstream\nendobj\n");
+
+    const xrefOffset = offset;
+    write("xref\n0 6\n0000000000 65535 f \n");
+    offsets.forEach((pos) => {
+      write(`${pos.toString().padStart(10, "0")} 00000 n \n`);
+    });
+    write(`trailer << /Size 6 /Root 1 0 R >>\nstartxref\n${xrefOffset}\n%%EOF`);
+
+    return new Blob(chunks, { type: "application/pdf" });
+  }, []);
 
   async function exportPng() {
     const el = wrapperRef.current;
     if (!el) return;
-    const dataUrl = await toPng(el, { backgroundColor: "#ffffff" });
-    const titleNode = diagram.nodes.find((n) => n.type === "topEvent") ?? diagram.nodes.find((n) => n.type === "hazard");
-    const slug = (titleNode?.label ?? "bowtie")
-      .toLowerCase()
-      .replace(/\s+/g, "-")
-      .replace(/[^a-z0-9\-]/g, "")
-      .slice(0, 60);
-    const a = document.createElement("a");
-    a.href = dataUrl;
-    a.download = `${slug || "bowtie"}-${Date.now()}.png`;
-    a.click();
+    await beginExportSnapshot();
+    try {
+      const dataUrl = await toPng(el, { backgroundColor: "#ffffff" });
+      const slug = filenameSlug();
+      const a = document.createElement("a");
+      a.href = dataUrl;
+      a.download = `${slug}-${Date.now()}.png`;
+      a.click();
+    } catch (error) {
+      console.error("PNG export failed", error);
+      setToastMessage("Unable to generate PNG export.");
+    } finally {
+      endExportSnapshot();
+    }
+  }
+
+  async function exportPdf() {
+    const el = wrapperRef.current;
+    if (!el) return;
+    await beginExportSnapshot();
+    try {
+      const dataUrl = await toPng(el, { backgroundColor: "#ffffff" });
+      const { dataUrl: jpegUrl, width, height } = await rasterizeToJpeg(dataUrl);
+      const base64 = jpegUrl.split(",")[1];
+      if (!base64) throw new Error("Invalid image data");
+      const pdfBlob = buildPdfBlob(base64, width, height);
+      const slug = filenameSlug();
+      const link = document.createElement("a");
+      const objectUrl = URL.createObjectURL(pdfBlob);
+      link.href = objectUrl;
+      link.download = `${slug}-${Date.now()}.pdf`;
+      link.click();
+      URL.revokeObjectURL(objectUrl);
+    } catch (error) {
+      console.error("PDF export failed", error);
+      setToastMessage("Unable to generate PDF export.");
+    } finally {
+      endExportSnapshot();
+    }
   }
 
   // Clear any render overrides when leaving Builder mode

@@ -315,6 +315,16 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
               <button
                 className={styles.dropdownButton}
                 type="button"
+                onClick={() => {
+                  dispatch("bowtie:exportPdf");
+                  setOpenDropdown(null);
+                }}
+              >
+                📄 Export PDF
+              </button>
+              <button
+                className={styles.dropdownButton}
+                type="button"
                 disabled
                 title="Coming soon"
               >
@@ -367,3 +377,4 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
     </aside>
   );
 }
+

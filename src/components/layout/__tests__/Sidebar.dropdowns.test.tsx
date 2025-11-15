@@ -130,6 +130,16 @@ describe("Sidebar inline dropdown panels", () => {
     const exportPngButton = screen.getByRole("button", { name: /export png/i });
     expect(exportPngButton).toBeInTheDocument();
   });
+  it("export dropdown contains Export PDF button", async () => {
+    const user = userEvent.setup();
+    render(<Sidebar collapsed={false} onToggle={vi.fn()} />);
+
+    const exportButton = screen.getByRole("button", { name: /open export panel/i });
+    await user.click(exportButton);
+
+    const exportPdfButton = screen.getByRole("button", { name: /export pdf/i });
+    expect(exportPdfButton).toBeInTheDocument();
+  });
 
   it("actions dropdown contains Clear Diagram button", async () => {
     const user = userEvent.setup();
@@ -159,6 +169,23 @@ describe("Sidebar inline dropdown panels", () => {
       expect.objectContaining({ type: "bowtie:exportPng" })
     );
   });
+  it("dispatches bowtie:exportPdf event when Export PDF is clicked", async () => {
+    const user = userEvent.setup();
+    const dispatchSpy = vi.fn();
+    window.dispatchEvent = dispatchSpy;
+
+    render(<Sidebar collapsed={false} onToggle={vi.fn()} />);
+
+    const exportButton = screen.getByRole("button", { name: /open export panel/i });
+    await user.click(exportButton);
+
+    const exportPdfButton = screen.getByRole("button", { name: /export pdf/i });
+    await user.click(exportPdfButton);
+
+    expect(dispatchSpy).toHaveBeenCalledWith(
+      expect.objectContaining({ type: "bowtie:exportPdf" })
+    );
+  });
 
   it("closes dropdown after Export PNG is clicked", async () => {
     const user = userEvent.setup();
@@ -169,6 +196,18 @@ describe("Sidebar inline dropdown panels", () => {
 
     const exportPngButton = screen.getByRole("button", { name: /export png/i });
     await user.click(exportPngButton);
+
+    expect(screen.queryByRole("region", { name: /export/i })).not.toBeInTheDocument();
+  });
+  it("closes dropdown after Export PDF is clicked", async () => {
+    const user = userEvent.setup();
+    render(<Sidebar collapsed={false} onToggle={vi.fn()} />);
+
+    const exportButton = screen.getByRole("button", { name: /open export panel/i });
+    await user.click(exportButton);
+
+    const exportPdfButton = screen.getByRole("button", { name: /export pdf/i });
+    await user.click(exportPdfButton);
 
     expect(screen.queryByRole("region", { name: /export/i })).not.toBeInTheDocument();
   });
