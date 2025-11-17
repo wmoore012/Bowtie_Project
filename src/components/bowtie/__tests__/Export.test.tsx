@@ -72,6 +72,7 @@ describe("Export PNG functionality", () => {
   it("handles export errors gracefully", async () => {
     // Mock toPng to reject
     vi.mocked(htmlToImage.toPng).mockRejectedValue(new Error("Export failed"));
+    const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
 
     render(<BowtieGraph diagram={highwayDrivingExample} initialMode="builder" />);
 
@@ -86,6 +87,7 @@ describe("Export PNG functionality", () => {
 
     // Click should not have been called due to error
     expect(mockClick).not.toHaveBeenCalled();
+    consoleSpy.mockRestore();
   });
 });
 

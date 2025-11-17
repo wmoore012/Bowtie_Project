@@ -1216,7 +1216,7 @@ function InnerGraph({ diagram, initialMode = "demo" }: { diagram: BowtieDiagram;
     const widthPt = pxToPt(pxWidth);
     const heightPt = pxToPt(pxHeight);
     const encoder = new TextEncoder();
-    const chunks: Uint8Array[] = [];
+    const chunks: BlobPart[] = [];
     let offset = 0;
     const offsets: number[] = [];
 
@@ -1234,7 +1234,7 @@ function InnerGraph({ diagram, initialMode = "demo" }: { diagram: BowtieDiagram;
     const writeBinaryObject = (header: string, bytes: Uint8Array, footer: string) => {
       offsets.push(offset);
       write(header);
-      chunks.push(bytes);
+      chunks.push(bytes.slice());
       offset += bytes.length;
       write(footer);
     };
@@ -1256,7 +1256,7 @@ function InnerGraph({ diagram, initialMode = "demo" }: { diagram: BowtieDiagram;
     const contentBytes = encoder.encode(contentStream);
     offsets.push(offset);
     write(`5 0 obj << /Length ${contentBytes.length} >> stream\n`);
-    chunks.push(contentBytes);
+    chunks.push(contentBytes.slice());
     offset += contentBytes.length;
     write("endstream\nendobj\n");
 
