@@ -14,7 +14,7 @@ import {
   type Connection,
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
-import type { Node as RFNode } from "@xyflow/react";
+import type { Node as RFNode, Edge as RFEdge } from "@xyflow/react";
 
 import type { BowtieDiagram, BowtieNodeType, BowtieNodeData, ThreatLaneOrder } from "../../domain/bowtie.types";
 import { computeSimpleLayout, computeElkLayout } from "./layout";
@@ -146,6 +146,121 @@ function deriveThreatLaneOrderFromDiagram(diagram: BowtieDiagram): ThreatLaneOrd
   });
 
   return { lanes };
+}
+
+function buildThreatLaneEdges(
+  lanes: ThreatLaneOrder,
+  baseNodes: RFNode<BowtieNodeData>[],
+  strictConnections: Map<string, Set<string>>
+): RFEdge[] {
+  void strictConnections;
+  const nodeIndex = new Map(baseNodes.map((node) => [node.id, node]));
+  const topEventNode = baseNodes.find(
+    (node) => (node.data as BowtieNodeData | undefined)?.bowtieType === "topEvent"
+  );
+
+  const edges: RFEdge[] = [];
+
+  const addLaneEdge = (sourceId: string | undefined, targetId: string | undefined) => {
+    if (!sourceId || !targetId) return;
+
+    const sourceNode = nodeIndex.get(sourceId);
+    const targetNode = nodeIndex.get(targetId);
+    if (!sourceNode || !targetNode) return;
+
+    const sourceData = sourceNode.data as BowtieNodeData | undefined;
+    const targetData = targetNode.data as BowtieNodeData | undefined;
+    const sourceType = sourceData?.bowtieType;
+    const targetType = targetData?.bowtieType;
+    if (!sourceType || !targetType) return;
+
+    const sourceOrientation = sourceData?.orientation;
+    const targetOrientation = targetData?.orientation;
+
+    let sourceHandle: string | undefined;
+    let targetHandle: string | undefined;
+
+    if (
+      (sourceType === "preventionBarrier" || sourceType === "mitigationBarrier") &&
+      targetType === "escalationBarrier"
+    ) {
+      sourceHandle = "bottom";
+      targetHandle = targetOrientation === "right" ? "left" : "right";
+    } else if (sourceType === "escalationBarrier" && targetType === "escalationFactor") {
+      if (sourceOrientation === "right") {
+        sourceHandle = "right";
+        targetHandle = "left";
+      } else {
+        sourceHandle = "left";
+        targetHandle = "right";
+      }
+    } else if (sourceType === "hazard" && targetType === "topEvent") {
+      targetHandle = "top-event-hazard";
+    } else if (targetType === "topEvent" && sourceType !== "hazard") {
+      if (sourceOrientation === "left") {
+        targetHandle = "left";
+      }
+    } else if (sourceType === "topEvent") {
+      if (targetOrientation === "right") {
+        sourceHandle = "right";
+        targetHandle = "left";
+      }
+    }
+
+    edges.push({
+      id: `chain-${sourceId}-${targetId}`,
+      source: sourceId,
+      target: targetId,
+      ...(sourceHandle && { sourceHandle }),
+      ...(targetHandle && { targetHandle }),
+      markerEnd: { type: MarkerType.ArrowClosed },
+      style: { stroke: "var(--edge)", strokeWidth: 2 },
+    });
+  };
+
+  const topEventId = topEventNode?.id;
+
+  Object.entries(lanes.lanes).forEach(([threatId, barrierIds]) => {
+    const threatNode = nodeIndex.get(threatId);
+    if (!threatNode) return;
+
+    const visibleBarriers = barrierIds.filter((id) => {
+      const node = nodeIndex.get(id);
+      const data = node?.data as BowtieNodeData | undefined;
+      return !!node && data?.bowtieType === "preventionBarrier";
+    });
+
+    if (visibleBarriers.length === 0) {
+      if (topEventId) {
+        addLaneEdge(threatId, topEventId);
+      }
+      return;
+    }
+
+    addLaneEdge(threatId, visibleBarriers[0]);
+
+    for (let i = 0; i < visibleBarriers.length - 1; i += 1) {
+      addLaneEdge(visibleBarriers[i], visibleBarriers[i + 1]);
+    }
+
+    if (topEventId) {
+      addLaneEdge(visibleBarriers[visibleBarriers.length - 1], topEventId);
+    }
+  });
+
+  return edges;
+}
+
+function replaceThreatLaneEdges(existingEdges: RFEdge[], laneEdges: RFEdge[]): RFEdge[] {
+  if (!laneEdges.length) return existingEdges;
+
+  const lanePairs = new Set(laneEdges.map((edge) => `${edge.source}->${edge.target}`));
+
+  const preservedEdges = existingEdges.filter(
+    (edge) => !lanePairs.has(`${edge.source}->${edge.target}`)
+  );
+
+  return [...preservedEdges, ...laneEdges];
 }
 
 
@@ -891,12 +1006,19 @@ function InnerGraph({ diagram, initialMode = "demo" }: { diagram: BowtieDiagram;
       return [...hydrated, ...extraNodes];
     });
 
+    const laneEdges = buildThreatLaneEdges(
+      threatLanes,
+      laid.nodes as RFNode<BowtieNodeData>[],
+      strictConnections
+    );
+
     setEdges((currentEdges) => {
-      const laidIds = new Set(laid.edges.map((e) => e.id));
+      const laidWithLanes = replaceThreatLaneEdges(laid.edges as RFEdge[], laneEdges);
+      const laidIds = new Set(laidWithLanes.map((e) => e.id));
       const extraEdges = currentEdges.filter((e) => !laidIds.has(e.id));
-      return [...laid.edges, ...extraEdges];
+      return [...laidWithLanes, ...extraEdges];
     });
-  }, [renderOverride, revealDiagram, setNodes, setEdges]);
+  }, [renderOverride, revealDiagram, setNodes, setEdges, threatLanes, strictConnections]);
 
 
   // Fit view on initial mount
