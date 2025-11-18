@@ -35,12 +35,6 @@ function HazardTagNode({ id, data }: NodeProps) {
           <span className={styles.label}>{labelText}</span>
         </div>
         <Handle
-          type="target"
-          position={Position.Top}
-          id="hazard-target"
-          style={{ left: "50%", transform: "translate(-50%, -50%)" }}
-        />
-        <Handle
           type="source"
           position={Position.Bottom}
           id="hazard-source"

@@ -5,12 +5,12 @@
   box-shadow: var(--shadow);
   color: var(--text);
   min-width: 220px;
-  max-width: 300px;
+  max-width: 280px;
   cursor: pointer;
   position: relative;
   transition: transform 160ms ease, box-shadow 160ms ease;
 }
-.card[data-width="wide"] { max-width: 360px; }
+.card[data-width="wide"] { max-width: 320px; }
 .card[data-width="narrow"] { max-width: 220px; }
 .card[data-orientation="right"] { text-align: right; }
 .content {
@@ -23,6 +23,26 @@
   display: flex;
   align-items: center;
   gap: 6px;
+}
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 10px;
+  justify-content: flex-start;
+}
+.card[data-orientation="right"] .chips {
+  justify-content: flex-end;
+}
+.chip {
+  font-size: 11px;
+  line-height: 1;
+  padding: 4px 8px;
+  border-radius: 999px;
+  background: rgba(251, 191, 36, 0.18);
+  color: #b45309;
+  font-weight: 600;
+  text-transform: capitalize;
 }
 .emoji { font-size: 18px; }
 .badge {

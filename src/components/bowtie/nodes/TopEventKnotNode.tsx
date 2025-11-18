@@ -28,14 +28,9 @@ function TopEventKnotNode({ id, data }: NodeProps) {
             <span className={styles.label}>{labelText}</span>
           </div>
         </div>
-        <Handle
-          type="target"
-          position={Position.Top}
-          id="top-event-hazard"
-          style={{ left: "50%", transform: "translate(-50%, -50%)" }}
-        />
-        <Handle type="target" position={Position.Left} />
-        <Handle type="source" position={Position.Right} />
+        <Handle id="top-event-hazard" type="target" position={Position.Top} />
+        <Handle id="left"  type="target" position={Position.Left} />
+        <Handle id="right" type="source" position={Position.Right} />
       </button>
       <p id={descId} hidden>
         {d?.metadata?.eli5 ?? d?.label}

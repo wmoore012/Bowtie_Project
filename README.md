@@ -98,8 +98,8 @@ The visual system follows the principle **"one pattern = one meaning"** (Krug-co
 {
   title: "🛡 PREVENTION: Managing Weather & Visibility",
   body: "🌧️🌫️ Environmental threats countered by:<br>• <strong>🌧️ Hourly weather alerts</strong> to dispatch<br>• <strong>🗓️ Schedule shifts</strong> to daylight/safer routes<br>• <strong>🚧 No-drive thresholds</strong> when traction gone<br>• <strong>💡 Running lights always on</strong> (conspicuity)<br>• <strong>🛞 ABS braking systems</strong> preserve steering",
-  focusIds: ["th-slippery", "th-visibility", "pb-weather-report", "pb-adjust-schedule", "pb-no-high-risk", "pb-lights-always", "pb-abs"],
-  revealIds: ["pb-weather-report", "pb-adjust-schedule", "pb-no-high-risk", "pb-lights-always", "pb-abs"],
+  focusIds: ["th-slippery", "th-visibility", "pb-weather-report-t4", "pb-weather-report-t6", "pb-adjust-schedule-t4", "pb-adjust-schedule-t6", "pb-no-high-risk", "pb-lights-always", "pb-abs"],
+  revealIds: ["pb-weather-report-t4", "pb-weather-report-t6", "pb-adjust-schedule-t4", "pb-adjust-schedule-t6", "pb-no-high-risk", "pb-lights-always", "pb-abs"],
 }
 ```
 

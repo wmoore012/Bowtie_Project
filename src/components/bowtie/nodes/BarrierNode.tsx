@@ -19,6 +19,13 @@ function BarrierNode({ id, data }: NodeProps) {
   const labelText = d?.displayLabel ?? d?.label;
   const orientation = d?.orientation ?? "left";
   const widthHint = d?.widthHint ?? "medium";
+  const bowtieType = d?.bowtieType;
+  const isEscalationLeft = bowtieType === "escalationBarrier" && d?.role === "escalation-left";
+  const incomingPosition = isEscalationLeft ? Position.Right : Position.Left;
+  const outgoingPosition = isEscalationLeft ? Position.Left : Position.Right;
+  const incomingId = incomingPosition === Position.Left ? "left" : "right";
+  const outgoingId = outgoingPosition === Position.Left ? "left" : "right";
+  const hasBottomHandle = bowtieType === "preventionBarrier" || bowtieType === "mitigationBarrier";
   const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
     if (e.key === "Enter" || e.key === " ") {
       e.preventDefault();
@@ -67,8 +74,9 @@ function BarrierNode({ id, data }: NodeProps) {
             ) : null}
           </div>
         </div>
-        <Handle type="target" position={Position.Left} />
-        <Handle type="source" position={Position.Right} />
+        <Handle id={outgoingId} type="source" position={outgoingPosition} />
+        <Handle id={incomingId} type="target" position={incomingPosition} />
+        {hasBottomHandle && <Handle id="bottom" type="source" position={Position.Bottom} />}
       </div>
 
       <p id={descId} hidden>

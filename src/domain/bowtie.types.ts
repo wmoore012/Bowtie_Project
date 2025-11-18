@@ -88,6 +88,7 @@ export interface BowtieNodeData extends Record<string, unknown> {
   emoji?: string;
   orientation?: "left" | "right" | "center";
   widthHint?: "narrow" | "medium" | "wide";
+  widthPx?: number;
   builder?: BuilderNodeFields;
 }
 

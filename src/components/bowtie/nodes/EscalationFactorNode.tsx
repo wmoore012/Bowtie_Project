@@ -34,8 +34,11 @@ function EscalationFactorNode({ id, data }: NodeProps) {
             <div className={styles.title}>{d?.label}</div>
           </div>
         </div>
-        <Handle type="target" position={Position.Left} />
-        <Handle type="source" position={Position.Right} />
+        {d?.orientation === "right" ? (
+          <Handle id="left" type="target" position={Position.Left} />
+        ) : (
+          <Handle id="right" type="target" position={Position.Right} />
+        )}
       </div>
       <p id={descId} hidden>
         {d?.metadata?.eli5 ?? d?.label}

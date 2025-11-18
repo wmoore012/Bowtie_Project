@@ -51,7 +51,9 @@ import {
 import { highwayDrivingNarrative } from "../../domain/scenarios/highway_driving_narrative";
 import gsap from "gsap";
 
-/**
+const pxToPt = (px: number) => (px * 72) / 96;
+
+/** 
  * Determine the role/category for a given step index for visual styling.
  * Step 1: Hazard, Step 2: TopEvent, Step 3: Threat,
  * Steps 4-6: Prevention, Steps 7-8: Mitigation, Steps 9-10: Consequence, Steps 11-12: Meta
@@ -85,6 +87,8 @@ const nodeTypes = {
   topEvent: TopEventKnotNode,
   consequence: ConsequenceNode,
 } as const;
+
+const MAX_STEP: StepIndex = 11;
 
 
 
@@ -137,11 +141,19 @@ function InnerGraph({ diagram, initialMode = "demo" }: { diagram: BowtieDiagram;
   const hasSeenBuilderConfirmRef = useRef(false);
   // Toast notification for connection validation errors
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [exportingSnapshot, setExportingSnapshot] = useState(false);
+  const exportingSnapshotRef = useRef(false);
   useEffect(() => { setMode(initialMode); }, [initialMode]);
   useEffect(() => { setPaletteOpen(mode === "builder"); }, [mode]);
   useEffect(() => {
+    if (mode !== "demo") {
+      setExpandedChainRoots(new Set());
+      setHighlightedChainRootId(null);
+    }
+  }, [mode]);
+  useEffect(() => {
     if (mode === "builder") {
-      setStep(10 as StepIndex);
+      setStep(MAX_STEP);
     } else {
       setStep(lastDemoStepRef.current ?? (1 as StepIndex));
     }
@@ -170,6 +182,8 @@ function InnerGraph({ diagram, initialMode = "demo" }: { diagram: BowtieDiagram;
   const [storyIdx, setStoryIdx] = useState<number>(highwayDrivingNarrative.length);
   const [manualRevealIds, setManualRevealIds] = useState<Set<string>>(new Set());
   const [manualFocusIds, setManualFocusIds] = useState<Set<string>>(new Set());
+  const [expandedChainRoots, setExpandedChainRoots] = useState<Set<string>>(new Set());
+  const [highlightedChainRootId, setHighlightedChainRootId] = useState<string | null>(null);
   const [storyRevealIds, setStoryRevealIds] = useState<Set<string>>(new Set());
   const [storyFocusIds, setStoryFocusIds] = useState<Set<string>>(new Set());
   const lastDemoStepRef = useRef<StepIndex>(1 as StepIndex);
@@ -194,10 +208,115 @@ function InnerGraph({ diagram, initialMode = "demo" }: { diagram: BowtieDiagram;
     }
     return map;
   }, [diagram]);
+  const { chainNodesByRoot, nodeToRoot } = useMemo(() => {
+    const nodeIndex = new Map(diagram.nodes.map((n) => [n.id, n]));
+    const nodeToRoot = new Map<string, string>();
+    const addToMap = (map: Map<string, Set<string>>, key: string, value: string) => {
+      if (!key || !value) return;
+      const existing = map.get(key);
+      if (existing) existing.add(value);
+      else map.set(key, new Set([value]));
+    };
+    const threatToBarriers = new Map<string, Set<string>>();
+    const consequenceToBarriers = new Map<string, Set<string>>();
+    const barrierToEscalations = new Map<string, Set<string>>();
+    const escalationToFactors = new Map<string, Set<string>>();
+    for (const edge of diagram.edges) {
+      const source = nodeIndex.get(edge.source);
+      const target = nodeIndex.get(edge.target);
+      if (!source || !target) continue;
+      if (source.type === "threat" && target.type === "preventionBarrier") {
+        addToMap(threatToBarriers, source.id, target.id);
+      } else if (target.type === "threat" && source.type === "preventionBarrier") {
+        addToMap(threatToBarriers, target.id, source.id);
+      }
+      if (source.type === "mitigationBarrier" && target.type === "consequence") {
+        addToMap(consequenceToBarriers, target.id, source.id);
+      } else if (target.type === "mitigationBarrier" && source.type === "consequence") {
+        addToMap(consequenceToBarriers, source.id, target.id);
+      }
+      const sourceIsBarrier =
+        source.type === "preventionBarrier" || source.type === "mitigationBarrier";
+      const targetIsBarrier =
+        target.type === "preventionBarrier" || target.type === "mitigationBarrier";
+      if (sourceIsBarrier && target.type === "escalationBarrier") {
+        addToMap(barrierToEscalations, source.id, target.id);
+      } else if (targetIsBarrier && source.type === "escalationBarrier") {
+        addToMap(barrierToEscalations, target.id, source.id);
+      }
+      if (source.type === "escalationBarrier" && target.type === "escalationFactor") {
+        addToMap(escalationToFactors, source.id, target.id);
+      } else if (target.type === "escalationBarrier" && source.type === "escalationFactor") {
+        addToMap(escalationToFactors, target.id, source.id);
+      }
+    }
+    const addNodeToRoot = (rootId: string, nodeId: string, acc: Set<string>) => {
+      acc.add(nodeId);
+      nodeToRoot.set(nodeId, rootId);
+    };
+    const expandBarrierCluster = (barrierId: string, rootId: string, acc: Set<string>) => {
+      addNodeToRoot(rootId, barrierId, acc);
+      const escBarriers = barrierToEscalations.get(barrierId);
+      escBarriers?.forEach((escId) => {
+        addNodeToRoot(rootId, escId, acc);
+        escalationToFactors.get(escId)?.forEach((factorId) => addNodeToRoot(rootId, factorId, acc));
+      });
+    };
+    const combined = new Map<string, Set<string>>();
+    threatToBarriers.forEach((barriers, threatId) => {
+      if (!barriers.size) return;
+      const nodes = new Set<string>();
+      barriers.forEach((barrierId) => expandBarrierCluster(barrierId, threatId, nodes));
+      if (nodes.size) combined.set(threatId, nodes);
+    });
+    consequenceToBarriers.forEach((barriers, consequenceId) => {
+      if (!barriers.size) return;
+      const nodes = new Set<string>();
+      barriers.forEach((barrierId) => expandBarrierCluster(barrierId, consequenceId, nodes));
+      if (nodes.size) combined.set(consequenceId, nodes);
+    });
+    return { chainNodesByRoot: combined, nodeToRoot };
+  }, [diagram]);
   const barrierTypes = useMemo(
     () => new Set<BowtieNodeType>(["preventionBarrier", "mitigationBarrier", "escalationBarrier"]),
     []
   );
+  const chainRevealIds = useMemo(() => {
+    const ids = new Set<string>();
+    expandedChainRoots.forEach((rootId) => {
+      const nodes = chainNodesByRoot.get(rootId);
+      nodes?.forEach((nodeId) => ids.add(nodeId));
+    });
+    return ids;
+  }, [expandedChainRoots, chainNodesByRoot]);
+  useEffect(() => {
+    setExpandedChainRoots((prev) => {
+      let changed = false;
+      const next = new Set<string>();
+      prev.forEach((id) => {
+        if (chainNodesByRoot.has(id)) {
+          next.add(id);
+        } else {
+          changed = true;
+        }
+      });
+      return changed ? next : prev;
+    });
+  }, [chainNodesByRoot]);
+  useEffect(() => {
+    if (highlightedChainRootId && !expandedChainRoots.has(highlightedChainRootId)) {
+      setHighlightedChainRootId(null);
+    }
+  }, [highlightedChainRootId, expandedChainRoots]);
+  const chainFocusIds = useMemo(() => {
+    const ids = new Set<string>();
+    if (highlightedChainRootId && expandedChainRoots.has(highlightedChainRootId)) {
+      ids.add(highlightedChainRootId);
+      const nodes = chainNodesByRoot.get(highlightedChainRootId);
+      nodes?.forEach((nodeId) => ids.add(nodeId));
+    }
+    return ids;
+  }, [highlightedChainRootId, expandedChainRoots, chainNodesByRoot]);
 
   const collectRevealForNode = useCallback(
     (nodeId: string) => {
@@ -219,8 +338,53 @@ function InnerGraph({ diagram, initialMode = "demo" }: { diagram: BowtieDiagram;
     },
     [adjacency, barrierTypes, nodeById]
   );
+  const toggleChainExpansion = useCallback(
+    (rootId: string) => {
+      const nodes = chainNodesByRoot.get(rootId);
+      if (!nodes || nodes.size === 0) return "noop" as const;
+      if (expandedChainRoots.has(rootId)) {
+        const chainMembers = new Set(nodes);
+        setExpandedChainRoots((prev) => {
+          const next = new Set(prev);
+          next.delete(rootId);
+          return next;
+        });
+        setManualRevealIds((prev) => {
+          if (!prev.size) return prev;
+          let changed = false;
+          const next = new Set(prev);
+          chainMembers.forEach((id) => {
+            if (next.delete(id)) changed = true;
+          });
+          return changed ? next : prev;
+        });
+        setManualFocusIds((prev) => {
+          if (!prev.size) return prev;
+          let changed = false;
+          const next = new Set(prev);
+          chainMembers.forEach((id) => {
+            if (next.delete(id)) changed = true;
+          });
+          return changed ? next : prev;
+        });
+        setHighlightedChainRootId((prev) => (prev === rootId ? null : prev));
+        return "collapsed" as const;
+      }
+      setExpandedChainRoots((prev) => {
+        const next = new Set(prev);
+        next.add(rootId);
+        return next;
+      });
+      setHighlightedChainRootId(rootId);
+      return "expanded" as const;
+    },
+    [chainNodesByRoot, expandedChainRoots]
+  );
 
-  const handleNodeClick = (node: RFNode<BowtieNodeData>) => {
+  const handleNodeClick = (
+    node: RFNode<BowtieNodeData>,
+    opts?: { skipReveal?: boolean; revealIds?: Set<string> }
+  ) => {
     setLastFocusedNodeId(node.id);
     if (mode === "builder") {
       setSelectedInspectorId(node.id);
@@ -229,8 +393,8 @@ function InnerGraph({ diagram, initialMode = "demo" }: { diagram: BowtieDiagram;
       return;
     }
     setCardNode(node);
-    if (mode === "demo") {
-      const reveal = collectRevealForNode(node.id);
+    if (mode === "demo" && !opts?.skipReveal) {
+      const reveal = opts?.revealIds ?? collectRevealForNode(node.id);
       const revealArr = Array.from(reveal);
       setManualRevealIds(new Set(revealArr));
       setManualFocusIds(new Set<string>([node.id, ...revealArr]));
@@ -431,13 +595,13 @@ function InnerGraph({ diagram, initialMode = "demo" }: { diagram: BowtieDiagram;
         setStep((s) => (s > 0 ? ((s - 1) as StepIndex) : s));
       } else if (e.key === "ArrowRight") {
         e.preventDefault();
-        setStep((s) => (s < 10 ? ((s + 1) as StepIndex) : s));
+        setStep((s) => (s < MAX_STEP ? ((s + 1) as StepIndex) : s));
       } else if (e.key === "Home") {
         e.preventDefault();
         setStep(0 as StepIndex);
       } else if (e.key === "End") {
         e.preventDefault();
-        setStep(10 as StepIndex);
+        setStep(MAX_STEP);
       }
     };
     window.addEventListener("keydown", onKey);
@@ -467,8 +631,9 @@ function InnerGraph({ diagram, initialMode = "demo" }: { diagram: BowtieDiagram;
     const union = new Set<string>();
     manualRevealIds.forEach((id) => union.add(id));
     storyRevealIds.forEach((id) => union.add(id));
+    chainRevealIds.forEach((id) => union.add(id));
     return union;
-  }, [manualRevealIds, storyRevealIds, mode]);
+  }, [manualRevealIds, storyRevealIds, chainRevealIds, mode]);
 
   const revealDiagram = useMemo(() => {
     if (mode === "builder" || activeRevealIds.size === 0) return filteredDiagram;
@@ -503,13 +668,37 @@ function InnerGraph({ diagram, initialMode = "demo" }: { diagram: BowtieDiagram;
     btn?.focus();
   }, [cardNode]);
 
-  const renderDiagram = renderOverride ?? revealDiagram;
+  const baseDiagram = renderOverride ?? revealDiagram;
+  const renderDiagram = useMemo(() => {
+    if (expandedChainRoots.size === 0) return baseDiagram;
+    if (expandedChainRoots.size === chainNodesByRoot.size) return baseDiagram;
+    const allowedRoots = expandedChainRoots;
+    let changed = false;
+    const allowedNodeIds = new Set<string>();
+    baseDiagram.nodes.forEach((node) => {
+      const root = nodeToRoot.get(node.id);
+      if (!root || allowedRoots.has(root)) {
+        allowedNodeIds.add(node.id);
+      } else {
+        changed = true;
+      }
+    });
+    if (!changed) return baseDiagram;
+    return {
+      ...baseDiagram,
+      nodes: baseDiagram.nodes.filter((n) => allowedNodeIds.has(n.id)),
+      edges: baseDiagram.edges.filter(
+        (e) => allowedNodeIds.has(e.source) && allowedNodeIds.has(e.target)
+      ),
+    };
+  }, [baseDiagram, expandedChainRoots, chainNodesByRoot.size, nodeToRoot]);
   const activeFocusIds = useMemo(() => {
     const ids = new Set<string>();
     manualFocusIds.forEach((id) => ids.add(id));
     storyFocusIds.forEach((id) => ids.add(id));
+    chainFocusIds.forEach((id) => ids.add(id));
     return ids;
-  }, [manualFocusIds, storyFocusIds]);
+  }, [manualFocusIds, storyFocusIds, chainFocusIds]);
   const shouldDim = storyOpen && activeFocusIds.size > 0;
   const strictConnections = useMemo(() => {
     const map = new Map<string, Set<string>>();
@@ -527,6 +716,27 @@ function InnerGraph({ diagram, initialMode = "demo" }: { diagram: BowtieDiagram;
   );
   const [edges, setEdges, onEdgesChange] = useEdgesState(base.edges);
   const rf = useReactFlow();
+
+  const waitForNextFrame = useCallback(
+    () =>
+      new Promise<void>((resolve) => {
+        requestAnimationFrame(() => requestAnimationFrame(() => resolve()));
+      }),
+    []
+  );
+
+  const beginExportSnapshot = useCallback(async () => {
+    if (exportingSnapshotRef.current) return;
+    exportingSnapshotRef.current = true;
+    setExportingSnapshot(true);
+    await waitForNextFrame();
+  }, [waitForNextFrame]);
+
+  const endExportSnapshot = useCallback(() => {
+    if (!exportingSnapshotRef.current) return;
+    exportingSnapshotRef.current = false;
+    setExportingSnapshot(false);
+  }, []);
 
   useEffect(() => {
     if (!selectedInspectorId) return;
@@ -751,8 +961,8 @@ function InnerGraph({ diagram, initialMode = "demo" }: { diagram: BowtieDiagram;
           ...n,
           data: {
             ...(n.data as BowtieNodeData),
-            highlighted: activeFocusIds.has(n.id),
-            dimmed: shouldDim && !activeFocusIds.has(n.id),
+            highlighted: !exportingSnapshot && activeFocusIds.has(n.id),
+            dimmed: !exportingSnapshot && shouldDim && !activeFocusIds.has(n.id),
           },
         }));
         setNodes(hydrated);
@@ -764,7 +974,20 @@ function InnerGraph({ diagram, initialMode = "demo" }: { diagram: BowtieDiagram;
     return () => {
       alive = false;
     };
-  }, [renderDiagram, mode, activeFocusIds, shouldDim]);
+  }, [renderDiagram, mode, activeFocusIds, shouldDim, exportingSnapshot]);
+
+  const filenameSlug = useCallback(() => {
+    const titleNode =
+      renderDiagram.nodes.find((n) => n.type === "topEvent") ??
+      renderDiagram.nodes.find((n) => n.type === "hazard");
+    return (
+      (titleNode?.label ?? "bowtie")
+        .toLowerCase()
+        .replace(/\s+/g, "-")
+        .replace(/[^a-z0-9\-]/g, "")
+        .slice(0, 60) || "bowtie"
+    );
+  }, [renderDiagram.nodes]);
 
   useEffect(() => {
     if (mode === "builder") {
@@ -776,6 +999,7 @@ function InnerGraph({ diagram, initialMode = "demo" }: { diagram: BowtieDiagram;
   useEffect(() => {
     if (typeof window === "undefined") return;
     const onExport = () => { void exportPng(); };
+    const onExportPdf = () => { void exportPdf(); };
     const onToggle = () => {
       setMode((m) => {
         if (m === "demo" && !hasSeenBuilderConfirmRef.current) {
@@ -846,12 +1070,14 @@ function InnerGraph({ diagram, initialMode = "demo" }: { diagram: BowtieDiagram;
       }
     };
     window.addEventListener("bowtie:exportPng", onExport as any);
+    window.addEventListener("bowtie:exportPdf", onExportPdf as any);
     window.addEventListener("bowtie:toggleBuilder", onToggle as any);
     window.addEventListener("bowtie:clearDiagram", onClear as any);
     window.addEventListener("bowtie:exportJSON", onExportJSON as any);
     window.addEventListener("bowtie:importJSON", onImportJSON as any);
     return () => {
       window.removeEventListener("bowtie:exportPng", onExport as any);
+      window.removeEventListener("bowtie:exportPdf", onExportPdf as any);
       window.removeEventListener("bowtie:toggleBuilder", onToggle as any);
       window.removeEventListener("bowtie:clearDiagram", onClear as any);
       window.removeEventListener("bowtie:exportJSON", onExportJSON as any);
@@ -914,6 +1140,11 @@ function InnerGraph({ diagram, initialMode = "demo" }: { diagram: BowtieDiagram;
   // Focus dimming + failed-path highlight + barrier group expansion on card open
   useEffect(() => {
     if (storyOpen) return;
+    if (exportingSnapshot) {
+      setEdges((eds) => eds.map((e) => ({ ...e, style: { ...(e.style || {}), opacity: 1 } })));
+      setNodes((nds) => nds.map((n) => ({ ...n, style: { ...(n.style || {}), opacity: 1, transform: undefined } })));
+      return;
+    }
     const baseStrokeFor = (e: any) => {
       const failureEdge = failedMode && isFailureEdge(e);
       return failureEdge ? "var(--edge-fail)" : "var(--edge)";
@@ -962,22 +1193,125 @@ function InnerGraph({ diagram, initialMode = "demo" }: { diagram: BowtieDiagram;
         };
       })
     );
-  }, [cardNode, failedMode, storyOpen]);
+  }, [cardNode, failedMode, storyOpen, exportingSnapshot]);
+
+  const rasterizeToJpeg = useCallback(async (dataUrl: string) => {
+    const img = new Image();
+    img.src = dataUrl;
+    await new Promise((resolve, reject) => {
+      img.onload = resolve;
+      img.onerror = reject;
+    });
+    const canvas = document.createElement("canvas");
+    canvas.width = img.width;
+    canvas.height = img.height;
+    const ctx = canvas.getContext("2d");
+    ctx?.drawImage(img, 0, 0);
+    const jpegUrl = canvas.toDataURL("image/jpeg", 0.92);
+    return { dataUrl: jpegUrl, width: img.width, height: img.height };
+  }, []);
+
+  const buildPdfBlob = useCallback((jpegBase64: string, pxWidth: number, pxHeight: number) => {
+    const jpegBytes = Uint8Array.from(atob(jpegBase64), (c) => c.charCodeAt(0));
+    const widthPt = pxToPt(pxWidth);
+    const heightPt = pxToPt(pxHeight);
+    const encoder = new TextEncoder();
+    const chunks: BlobPart[] = [];
+    let offset = 0;
+    const offsets: number[] = [];
+
+    const write = (str: string) => {
+      const bytes = encoder.encode(str);
+      chunks.push(bytes);
+      offset += bytes.length;
+    };
+
+    const writeObject = (str: string) => {
+      offsets.push(offset);
+      write(str);
+    };
+
+    const writeBinaryObject = (header: string, bytes: Uint8Array, footer: string) => {
+      offsets.push(offset);
+      write(header);
+      chunks.push(bytes.slice());
+      offset += bytes.length;
+      write(footer);
+    };
+
+    write("%PDF-1.4\n");
+    writeObject("1 0 obj << /Type /Catalog /Pages 2 0 R >> endobj\n");
+    writeObject("2 0 obj << /Type /Pages /Kids [3 0 R] /Count 1 >> endobj\n");
+    writeObject(
+      `3 0 obj << /Type /Page /Parent 2 0 R /MediaBox [0 0 ${widthPt.toFixed(2)} ${heightPt.toFixed(
+        2
+      )}] /Resources << /XObject << /I1 4 0 R >> >> /Contents 5 0 R >> endobj\n`
+    );
+    writeBinaryObject(
+      `4 0 obj << /Type /XObject /Subtype /Image /Width ${pxWidth} /Height ${pxHeight} /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length ${jpegBytes.length} >> stream\n`,
+      jpegBytes,
+      "\nendstream\nendobj\n"
+    );
+    const contentStream = `q\n${widthPt.toFixed(2)} 0 0 ${heightPt.toFixed(2)} 0 0 cm\n/I1 Do\nQ\n`;
+    const contentBytes = encoder.encode(contentStream);
+    offsets.push(offset);
+    write(`5 0 obj << /Length ${contentBytes.length} >> stream\n`);
+    chunks.push(contentBytes.slice());
+    offset += contentBytes.length;
+    write("endstream\nendobj\n");
+
+    const xrefOffset = offset;
+    write("xref\n0 6\n0000000000 65535 f \n");
+    offsets.forEach((pos) => {
+      write(`${pos.toString().padStart(10, "0")} 00000 n \n`);
+    });
+    write(`trailer << /Size 6 /Root 1 0 R >>\nstartxref\n${xrefOffset}\n%%EOF`);
+
+    return new Blob(chunks, { type: "application/pdf" });
+  }, []);
 
   async function exportPng() {
     const el = wrapperRef.current;
     if (!el) return;
-    const dataUrl = await toPng(el, { backgroundColor: "#ffffff" });
-    const titleNode = diagram.nodes.find((n) => n.type === "topEvent") ?? diagram.nodes.find((n) => n.type === "hazard");
-    const slug = (titleNode?.label ?? "bowtie")
-      .toLowerCase()
-      .replace(/\s+/g, "-")
-      .replace(/[^a-z0-9\-]/g, "")
-      .slice(0, 60);
-    const a = document.createElement("a");
-    a.href = dataUrl;
-    a.download = `${slug || "bowtie"}-${Date.now()}.png`;
-    a.click();
+    await beginExportSnapshot();
+    try {
+      const dataUrl = await toPng(el, { backgroundColor: "#ffffff" });
+      const slug = filenameSlug();
+      const a = document.createElement("a");
+      a.href = dataUrl;
+      a.download = `${slug}-${Date.now()}.png`;
+      a.click();
+    } catch (error) {
+      console.error("PNG export failed", error);
+      setToastMessage("Unable to generate PNG export.");
+    } finally {
+      endExportSnapshot();
+    }
+  }
+
+  async function exportPdf() {
+    const el = wrapperRef.current;
+    if (!el) return;
+    await beginExportSnapshot();
+    try {
+      const dataUrl = await toPng(el, { backgroundColor: "#ffffff" });
+      const { dataUrl: jpegUrl, width, height } = await rasterizeToJpeg(dataUrl);
+      const base64 = jpegUrl.split(",")[1];
+      if (!base64) throw new Error("Invalid image data");
+      const pdfBlob = buildPdfBlob(base64, width, height);
+      const slug = filenameSlug();
+      const link = document.createElement("a");
+      const objectUrl = URL.createObjectURL(pdfBlob);
+      link.href = objectUrl;
+      link.download = `${slug}-${Date.now()}.pdf`;
+      link.click();
+      URL.revokeObjectURL(objectUrl);
+    } catch (error) {
+      console.error("PDF export failed", error);
+      setToastMessage("Unable to generate PDF export.");
+    } finally {
+      endExportSnapshot();
+    }
   }
 
   // Clear any render overrides when leaving Builder mode
@@ -992,16 +1326,32 @@ function InnerGraph({ diagram, initialMode = "demo" }: { diagram: BowtieDiagram;
   useEffect(() => {
     if (storyOpen && mode === "demo") {
       const stepData = highwayDrivingNarrative[storyIdx - 1];
-      setStoryFocusIds(new Set(stepData?.focusIds ?? []));
-      const revealList = stepData?.revealIds ?? stepData?.focusIds ?? [];
-      setStoryRevealIds(new Set(revealList));
+      const focusSet = new Set(stepData?.focusIds ?? []);
+      const revealSet = new Set(stepData?.revealIds ?? stepData?.focusIds ?? []);
+      const autoRevealCandidates = new Set([...focusSet, ...revealSet]);
+      const narrativeChainRoots = new Set<string>();
+      autoRevealCandidates.forEach((id) => {
+        const nodeType = nodeById.get(id)?.type;
+        if (nodeType === "threat" || nodeType === "consequence") return;
+        const rootId = nodeToRoot.get(id);
+        if (!rootId) return;
+        narrativeChainRoots.add(rootId);
+        revealSet.add(rootId);
+        chainNodesByRoot.get(rootId)?.forEach((nodeId) => revealSet.add(nodeId));
+      });
+      setStoryFocusIds(focusSet);
+      setStoryRevealIds(revealSet);
       setManualFocusIds(new Set());
       setManualRevealIds(new Set());
+      setExpandedChainRoots(new Set(narrativeChainRoots));
+      setHighlightedChainRootId(null);
     } else {
       setStoryFocusIds(new Set());
       setStoryRevealIds(new Set());
+      setExpandedChainRoots(new Set());
+      setHighlightedChainRootId(null);
     }
-  }, [storyIdx, storyOpen, mode]);
+  }, [storyIdx, storyOpen, mode, chainNodesByRoot, nodeToRoot, nodeById]);
 
   // GSAP Animation System - Animate wrapper elements on story step changes
   useEffect(() => {
@@ -1338,7 +1688,7 @@ function InnerGraph({ diagram, initialMode = "demo" }: { diagram: BowtieDiagram;
 
 
         <div className={styles.srOnly} aria-live="polite">
-          Showing {filteredDiagram.nodes.length} nodes
+          Showing {renderDiagram.nodes.length} nodes
         </div>
 
         <Legend />
@@ -1364,8 +1714,44 @@ function InnerGraph({ diagram, initialMode = "demo" }: { diagram: BowtieDiagram;
         onNodeClick={(_, n) => {
           const dn = diagram.nodes.find((x) => x.id === n.id) || null;
           const bt = dn?.type;
-          if (bt === "hazard") setLeftExpanded((v) => !v);
-          if (bt === "topEvent") setRightExpanded((v) => !v);
+          if (bt === "topEvent") {
+            const totalChainRoots = chainNodesByRoot.size;
+            const allChainsExpanded =
+              totalChainRoots === 0 || expandedChainRoots.size >= totalChainRoots;
+            const atFinalStep = step === MAX_STEP;
+            const isFullyExpanded = leftExpanded && rightExpanded && atFinalStep && allChainsExpanded;
+            if (isFullyExpanded) {
+              setExpandedChainRoots(new Set());
+              setHighlightedChainRootId(null);
+              setManualRevealIds(new Set());
+              setManualFocusIds(new Set());
+              setCardNode(null);
+              setStep(1 as StepIndex);
+              return;
+            }
+            setLeftExpanded(true);
+            setRightExpanded(true);
+            setStep(MAX_STEP);
+            if (totalChainRoots > 0) {
+              const allRoots = new Set<string>();
+              chainNodesByRoot.forEach((_, rootId) => allRoots.add(rootId));
+              setExpandedChainRoots(allRoots);
+            }
+            setHighlightedChainRootId(null);
+            const allIds = new Set(diagram.nodes.map((node) => node.id));
+            setManualFocusIds(allIds);
+            handleNodeClick(n, { skipReveal: true });
+            return;
+          } else if (mode === "demo" && (bt === "threat" || bt === "consequence")) {
+            const toggled = toggleChainExpansion(n.id);
+            if (toggled !== "noop") {
+              handleNodeClick(n, { skipReveal: true });
+              return;
+            }
+          }
+          if (highlightedChainRootId && highlightedChainRootId !== n.id) {
+            setHighlightedChainRootId(null);
+          }
           handleNodeClick(n);
         }}
         onNodeMouseEnter={(_, n) => {
