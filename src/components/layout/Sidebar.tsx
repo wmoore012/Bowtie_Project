@@ -20,11 +20,13 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
       try {
         const d = (e as CustomEvent).detail as { mode?: "demo" | "builder" } | undefined;
         if (d?.mode) setMode(d.mode);
-      } catch {}
+      } catch {
+        // Ignore mode change errors
+      }
     };
-    window.addEventListener("bowtie:modeChanged", onMode as any);
+    window.addEventListener("bowtie:modeChanged", onMode as EventListener);
     return () => {
-      window.removeEventListener("bowtie:modeChanged", onMode as any);
+      window.removeEventListener("bowtie:modeChanged", onMode as EventListener);
     };
   }, []);
 
@@ -45,14 +47,16 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
       if (typeof window !== "undefined") {
         localStorage.setItem("sidebarExpanded", String(!collapsed));
       }
-    } catch {}
+    } catch {
+      // Ignore localStorage errors
+    }
     onToggle();
   };
 
-  const isCurrent = (hash: string) => {
+  const isCurrent = (hash: string): "page" | undefined => {
     try {
       if (typeof window === "undefined") return undefined;
-      return window.location.hash === hash ? ("page" as any) : undefined;
+      return window.location.hash === hash ? "page" : undefined;
     } catch {
       return undefined;
     }
@@ -110,11 +114,11 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
           <span className={styles.icon}>🏠</span>
           {!collapsed && <span className={styles.label}>Dashboard</span>}
         </a>
-        <a href="#bowtie" className={styles.navItem} aria-current={isCurrent("#bowtie") ?? ("page" as any)} style={{ display: "none" }}>
+        <a href="#bowtie" className={styles.navItem} aria-current={isCurrent("#bowtie") ?? "page"} style={{ display: "none" }}>
           <span className={styles.icon}>�</span>
           {!collapsed && <span className={styles.label}>Bowtie View</span>}
         </a>
-        <a href="#bowtie" className={styles.navItem} aria-current={isCurrent("#bowtie") ?? ("page" as any)}>
+        <a href="#bowtie" className={styles.navItem} aria-current={isCurrent("#bowtie") ?? "page"}>
           <span className={styles.icon}>{"\u{1F578}\uFE0F"}</span>
           {!collapsed && <span className={styles.label}>Bowtie View</span>}
         </a>
@@ -134,7 +138,7 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
             <span
               className={styles.switchThumb}
               data-mode={mode}
-              style={{ ["--thumb-x" as any]: mode === "builder" ? "29px" : "3px" }}
+              style={{ "--thumb-x": mode === "builder" ? "29px" : "3px" } as React.CSSProperties}
               aria-hidden="true"
             />
           </span>

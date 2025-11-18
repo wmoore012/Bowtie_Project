@@ -128,7 +128,7 @@ export function validateDiagram(diagram: BowtieDiagram): ValidationResult {
     else if (nodeIds.has(n.id)) errors.push(`Duplicate node id: ${n.id}`);
     else nodeIds.add(n.id);
 
-    const rawType = String((n as any).type ?? "");
+    const rawType = String((n as { type?: string }).type ?? "");
     if (rawType.toLowerCase() === "degradation") {
       errors.push(`Degradation factors are excluded (node id=${n.id}).`);
     }

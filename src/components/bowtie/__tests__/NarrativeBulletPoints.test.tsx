@@ -64,7 +64,7 @@ describe("Narrative bullet points rendering", () => {
     
     // Step 4 has prevention barriers with bullet points
     expect(storyBody?.textContent).toContain('•');
-    expect(storyBody?.textContent).toContain('Random alcohol & drug screening');
+    expect(storyBody?.textContent).toContain('Random drug screening');
     expect(storyBody?.textContent).toContain('Designated driver pairs');
     expect(storyBody?.textContent).toContain('Breath interlock');
   });

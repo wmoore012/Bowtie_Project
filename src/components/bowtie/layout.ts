@@ -27,7 +27,7 @@ function isEmoji(char: string | undefined): boolean {
 function parseVisualLabel(label: string): { badge?: string; emoji?: string; text: string } {
   let remaining = label.trim();
   const parsed: { badge?: string; emoji?: string; text: string } = { text: remaining };
-  const badgeMatch = remaining.match(/^([A-Z]{1,3}[-\d\.]+)\s+(.*)$/);
+  const badgeMatch = remaining.match(/^([A-Z]{1,3}[-\d.]+)\s+(.*)$/);
   if (badgeMatch) {
     const [, maybeBadge, rest] = badgeMatch;
     if (maybeBadge) parsed.badge = maybeBadge;
@@ -513,10 +513,10 @@ export function computeSimpleLayout(diagram: BowtieDiagram): {
   const effectiveEdges = [...filteredEdges, ...chainEdges];
 
   const edges: Edge[] = effectiveEdges.map((e) => {
-    let source = e.source;
-    let target = e.target;
-    let sourceHandle = (e as any).sourceHandle as string | undefined;
-    let targetHandle = (e as any).targetHandle as string | undefined;
+    const source = e.source;
+    const target = e.target;
+    let sourceHandle = (e as BowtieEdge & { sourceHandle?: string }).sourceHandle;
+    let targetHandle = (e as BowtieEdge & { targetHandle?: string }).targetHandle;
 
     const src = nodeMap.get(source);
     const tgt = nodeMap.get(target);

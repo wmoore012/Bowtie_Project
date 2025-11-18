@@ -49,7 +49,7 @@ export function importDiagramFromJSON(file: File): Promise<BowtieDiagram> {
         }
         
         resolve(validation.diagram!);
-      } catch (error) {
+      } catch {
         reject(new Error("Failed to parse JSON file"));
       }
     };

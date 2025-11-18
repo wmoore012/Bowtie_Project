@@ -401,7 +401,7 @@ function InnerGraph({ diagram, initialMode = "demo" }: { diagram: BowtieDiagram;
     }
   };
 
-  const handleCloseCard = () => {
+  const handleCloseCard = useCallback(() => {
     setCardNode(null);
     setManualRevealIds(new Set());
     setManualFocusIds(new Set());
@@ -409,7 +409,7 @@ function InnerGraph({ diagram, initialMode = "demo" }: { diagram: BowtieDiagram;
       const elem = document.querySelector(`[data-nodeid="${lastFocusedNodeId}"], [data-id="${lastFocusedNodeId}"]`) as HTMLElement | null;
       elem?.focus();
     }
-  };
+  }, [lastFocusedNodeId]);
 
   // Escape to close the card
   useEffect(() => {
@@ -421,7 +421,7 @@ function InnerGraph({ diagram, initialMode = "demo" }: { diagram: BowtieDiagram;
     };
     window.addEventListener("keydown", listener);
     return () => window.removeEventListener("keydown", listener);
-  }, [cardNode]);
+  }, [cardNode, handleCloseCard]);
   // Escape to close toolbar menus
   // Escape to close popup panels
   useEffect(() => {
@@ -517,10 +517,10 @@ function InnerGraph({ diagram, initialMode = "demo" }: { diagram: BowtieDiagram;
 
     const onDown = (e: MouseEvent) => {
       const target = e.target as EventTarget | null;
-      const el = cardRef.current as unknown as { contains?: (t: any) => boolean } | null;
+      const el = cardRef.current as unknown as { contains?: (t: Node) => boolean } | null;
       let outside = true;
       try {
-        outside = !!(el && el.contains ? !el.contains(target as any) : true);
+        outside = !!(el && el.contains ? !el.contains(target as Node) : true);
       } catch {
         outside = true;
       }
@@ -541,11 +541,11 @@ function InnerGraph({ diagram, initialMode = "demo" }: { diagram: BowtieDiagram;
 
     const onTouchStart = (e: TouchEvent) => {
       const target = e.target as EventTarget | null;
-      const el = cardRef.current as unknown as { contains?: (t: any) => boolean } | null;
+      const el = cardRef.current as unknown as { contains?: (t: Node) => boolean } | null;
       const t = e.touches[0];
       let outside = true;
       try {
-        outside = !!(el && el.contains ? !el.contains(target as any) : true);
+        outside = !!(el && el.contains ? !el.contains(target as Node) : true);
       } catch {
         outside = true;
       }
@@ -579,7 +579,7 @@ function InnerGraph({ diagram, initialMode = "demo" }: { diagram: BowtieDiagram;
       window.removeEventListener("touchstart", onTouchStart);
       window.removeEventListener("touchend", onTouchEnd);
     };
-  }, [cardNode]);
+  }, [cardNode, handleCloseCard]);
 
   // Keyboard step navigation: ArrowLeft/ArrowRight/Home/End (only when no menus or card are open)
   useEffect(() => {
@@ -823,13 +823,26 @@ function InnerGraph({ diagram, initialMode = "demo" }: { diagram: BowtieDiagram;
   const applyBuilderLayout = useCallback(() => {
     const baseDiagram = renderOverride ?? revealDiagram;
     const laid = computeSimpleLayout(baseDiagram);
-    const hydrated = laid.nodes.map((n) => ({
-      ...n,
-      data: { ...(n.data as BowtieNodeData), highlighted: false, dimmed: false },
-    }));
-    setNodes(hydrated);
-    setEdges(laid.edges);
-  }, [renderOverride, revealDiagram, setEdges, setNodes]);
+
+    // Re-apply the designed layout to known nodes while preserving any
+    // user-added Builder nodes/edges so Reset Layout can be triggered
+    // frequently without "losing" work.
+    setNodes((currentNodes) => {
+      const laidById = new Map(laid.nodes.map((n) => [n.id, n]));
+      const hydrated = laid.nodes.map((n) => ({
+        ...n,
+        data: { ...(n.data as BowtieNodeData), highlighted: false, dimmed: false },
+      }));
+      const extraNodes = currentNodes.filter((n) => !laidById.has(n.id));
+      return [...hydrated, ...extraNodes];
+    });
+
+    setEdges((currentEdges) => {
+      const laidIds = new Set(laid.edges.map((e) => e.id));
+      const extraEdges = currentEdges.filter((e) => !laidIds.has(e.id));
+      return [...laid.edges, ...extraEdges];
+    });
+  }, [renderOverride, revealDiagram, setNodes, setEdges]);
 
 
   // Fit view on initial mount
@@ -843,9 +856,9 @@ function InnerGraph({ diagram, initialMode = "demo" }: { diagram: BowtieDiagram;
       // Visual drag preview so users immediately recognize what they're dragging
       if (typeof document !== "undefined") {
         const preview = document.createElement("div");
-        preview.className = (styles as any).dragPreview || ""; // fallback if CSS module changes
+        preview.className = (styles as Record<string, string>).dragPreview || ""; // fallback if CSS module changes
         let bg = "#fff";
-        let fg = "#111827";
+        const fg = "#111827";
         let label = "";
         switch (t) {
           case "hazard": bg = "#fff7ed"; label = "Hazard"; break;
@@ -865,11 +878,21 @@ function InnerGraph({ diagram, initialMode = "demo" }: { diagram: BowtieDiagram;
         document.body.appendChild(preview);
         try {
           e.dataTransfer.setDragImage(preview, Math.ceil(preview.offsetWidth / 2), Math.ceil(preview.offsetHeight / 2));
-        } catch {}
-        const cleanup = () => { try { preview.remove(); } catch {} };
-        (e.currentTarget as HTMLElement).addEventListener("dragend", cleanup, { once: true } as any);
+        } catch {
+          // Ignore drag image errors
+        }
+        const cleanup = () => {
+          try {
+            preview.remove();
+          } catch {
+            // Ignore cleanup errors
+          }
+        };
+        (e.currentTarget as HTMLElement).addEventListener("dragend", cleanup, { once: true });
       }
-    } catch {}
+    } catch {
+      // Ignore drag start errors
+    }
   };
 
   const getSnapXForType = (t: BowtieNodeType, initialX: number) => {
@@ -885,7 +908,11 @@ function InnerGraph({ diagram, initialMode = "demo" }: { diagram: BowtieDiagram;
   const onCanvasDragOver = (e: React.DragEvent) => {
     if (mode !== "builder") return;
     e.preventDefault();
-    try { e.dataTransfer.dropEffect = "copy"; } catch {}
+    try {
+      e.dataTransfer.dropEffect = "copy";
+    } catch {
+      // Ignore dataTransfer errors
+    }
   };
 
   const onCanvasDrop = (e: React.DragEvent) => {
@@ -927,22 +954,104 @@ function InnerGraph({ diagram, initialMode = "demo" }: { diagram: BowtieDiagram;
       displayLabel: defaultLabel[t],
     } as BowtieNodeData);
 
-    setNodes((nds) =>
-      nds.concat({
-        id,
-        type: t,
-        data: nodeData,
-        position: { x: snappedX, y: pos.y },
-        sourcePosition: Position.Right,
-        targetPosition: Position.Left,
-      } as RFNode<BowtieNodeData>)
-    );
+    const newNode: RFNode<BowtieNodeData> = {
+      id,
+      type: t,
+      data: nodeData,
+      position: { x: snappedX, y: pos.y },
+      sourcePosition: Position.Right,
+      targetPosition: Position.Left,
+    };
+
+    setNodes((nds) => nds.concat(newNode));
     setSelectedInspectorId(id);
     setInspectorOpen(true);
+
+    // For barrier nodes, automatically chain them between the closest
+    // upstream and downstream nodes on the same row so users do not
+    // have to manually wire every edge.
+    if (t === "preventionBarrier" || t === "mitigationBarrier") {
+      const candidateTypes: BowtieNodeType[] =
+        t === "preventionBarrier"
+          ? ["threat", "preventionBarrier", "topEvent"]
+          : ["topEvent", "mitigationBarrier", "consequence"];
+
+      const rowThreshold = 80; // px distance for considering nodes on the same row
+      const existingNodes = rf.getNodes() as RFNode<BowtieNodeData>[];
+      const rowNodes = existingNodes.filter((node) => {
+        const nodeDataForType = node.data as BowtieNodeData | undefined;
+        const nodeType = nodeDataForType?.bowtieType;
+        if (!nodeType || !candidateTypes.includes(nodeType)) return false;
+        return Math.abs(node.position.y - pos.y) <= rowThreshold;
+      });
+
+      if (rowNodes.length > 0) {
+        const withNew = rowNodes.concat({
+          ...newNode,
+          position: { x: snappedX, y: pos.y },
+        });
+        withNew.sort((a, b) => a.position.x - b.position.x);
+        const index = withNew.findIndex((n) => n.id === id);
+        const leftNeighbor = index > 0 ? withNew[index - 1] : undefined;
+        const rightNeighbor = index >= 0 && index < withNew.length - 1 ? withNew[index + 1] : undefined;
+
+        setEdges((eds) => {
+          let nextEdges = eds;
+
+          const maybeAddEdge = (sourceNode?: RFNode<BowtieNodeData>, targetNode?: RFNode<BowtieNodeData>) => {
+            if (!sourceNode || !targetNode) return;
+            const sourceData = sourceNode.data as BowtieNodeData | undefined;
+            const targetData = targetNode.data as BowtieNodeData | undefined;
+            const sourceType = sourceData?.bowtieType;
+            const targetType = targetData?.bowtieType;
+            if (!sourceType || !targetType) return;
+
+            const { valid } = validateConnection(sourceType, targetType, sourceNode.id, targetNode.id);
+            if (!valid) return;
+
+            const strictTargets = strictConnections.get(sourceNode.id);
+            if (strictTargets && !strictTargets.has(targetNode.id)) {
+              return;
+            }
+
+            const alreadyExists = nextEdges.some(
+              (edge) => edge.source === sourceNode.id && edge.target === targetNode.id
+            );
+            if (alreadyExists) return;
+
+            const edgeId = `${sourceNode.id}-${targetNode.id}`;
+
+            nextEdges = addEdge(
+              {
+                id: edgeId,
+                source: sourceNode.id,
+                target: targetNode.id,
+                style: { stroke: "var(--edge)" },
+                markerEnd: { type: MarkerType.ArrowClosed },
+              },
+              nextEdges
+            );
+          };
+
+          maybeAddEdge(leftNeighbor, newNode);
+          maybeAddEdge(newNode, rightNeighbor);
+
+          return nextEdges;
+        });
+      }
+    }
+
+    // Keep layout tidy after structural changes without dropping
+    // user-added Builder nodes.
+    applyBuilderLayout();
   };
   useEffect(() => {
     const t = setTimeout(() => {
-      try { rf.fitView({ padding: 0.2 }); } catch {}
+      try {
+        rf.fitView({ padding: 0.2 });
+      } catch {
+        // Ignore fitView errors
+      }
     }, 60);
     return () => clearTimeout(t);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -974,7 +1083,7 @@ function InnerGraph({ diagram, initialMode = "demo" }: { diagram: BowtieDiagram;
     return () => {
       alive = false;
     };
-  }, [renderDiagram, mode, activeFocusIds, shouldDim, exportingSnapshot]);
+  }, [renderDiagram, mode, activeFocusIds, shouldDim, exportingSnapshot, setEdges, setNodes]);
 
   const filenameSlug = useCallback(() => {
     const titleNode =
@@ -984,216 +1093,10 @@ function InnerGraph({ diagram, initialMode = "demo" }: { diagram: BowtieDiagram;
       (titleNode?.label ?? "bowtie")
         .toLowerCase()
         .replace(/\s+/g, "-")
-        .replace(/[^a-z0-9\-]/g, "")
+        .replace(/[^a-z0-9-]/g, "")
         .slice(0, 60) || "bowtie"
     );
   }, [renderDiagram.nodes]);
-
-  useEffect(() => {
-    if (mode === "builder") {
-      applyBuilderLayout();
-    }
-  }, [mode, applyBuilderLayout, renderDiagram]);
-
-  // Global events from the left Sidebar (export, toggle builder, clear diagram)
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    const onExport = () => { void exportPng(); };
-    const onExportPdf = () => { void exportPdf(); };
-    const onToggle = () => {
-      setMode((m) => {
-        if (m === "demo" && !hasSeenBuilderConfirmRef.current) {
-          // First time switching to builder mode - show confirmation
-          setShowBuilderConfirm(true);
-          return m; // Don't change mode yet
-        }
-        return m === "builder" ? "demo" : "builder";
-      });
-    };
-    const onClear = () => {
-      if (mode !== "builder") return;
-      try {
-        const hazard = diagram.nodes.find((n) => n.type === "hazard");
-        const topEvent = diagram.nodes.find((n) => n.type === "topEvent");
-        const hazardLabel = hazard?.label || "Hazard";
-        const topLabel = topEvent?.label || "Thermal runaway";
-        const cleared: BowtieDiagram = {
-          id: "cleared",
-          title: diagram.title,
-          createdAt: diagram.createdAt,
-          updatedAt: new Date().toISOString(),
-          nodes: [
-            { id: "hazard", type: "hazard", label: hazardLabel },
-            { id: "topEvent", type: "topEvent", label: topLabel },
-          ],
-          edges: [
-            { id: "h_to_top", source: "hazard", target: "topEvent" },
-          ],
-        };
-        setRenderOverride(cleared);
-        setInspectorOpen(false);
-        setSelectedInspectorId(null);
-        setCardNode(null);
-      } catch {}
-    };
-    const onExportJSON = () => {
-      try {
-        const currentDiagram = renderOverride || diagram;
-        exportDiagramToJSON(currentDiagram);
-        setToastMessage("Diagram exported successfully!");
-      } catch (error) {
-        console.error("Export JSON error:", error);
-        setToastMessage("Failed to export diagram. Please try again.");
-      }
-    };
-    const onImportJSON = () => {
-      try {
-        const input = document.createElement("input");
-        input.type = "file";
-        input.accept = ".json,application/json";
-        input.onchange = async (e) => {
-          const file = (e.target as HTMLInputElement).files?.[0];
-          if (!file) return;
-          try {
-            const imported = await importDiagramFromJSON(file);
-            setRenderOverride(imported);
-            setToastMessage("Diagram imported successfully!");
-          } catch (error) {
-            console.error("Import JSON error:", error);
-            setToastMessage(error instanceof Error ? error.message : "Failed to import diagram.");
-          }
-        };
-        input.click();
-      } catch (error) {
-        console.error("Import JSON error:", error);
-        setToastMessage("Failed to import diagram. Please try again.");
-      }
-    };
-    window.addEventListener("bowtie:exportPng", onExport as any);
-    window.addEventListener("bowtie:exportPdf", onExportPdf as any);
-    window.addEventListener("bowtie:toggleBuilder", onToggle as any);
-    window.addEventListener("bowtie:clearDiagram", onClear as any);
-    window.addEventListener("bowtie:exportJSON", onExportJSON as any);
-    window.addEventListener("bowtie:importJSON", onImportJSON as any);
-    return () => {
-      window.removeEventListener("bowtie:exportPng", onExport as any);
-      window.removeEventListener("bowtie:exportPdf", onExportPdf as any);
-      window.removeEventListener("bowtie:toggleBuilder", onToggle as any);
-      window.removeEventListener("bowtie:clearDiagram", onClear as any);
-      window.removeEventListener("bowtie:exportJSON", onExportJSON as any);
-      window.removeEventListener("bowtie:importJSON", onImportJSON as any);
-    };
-  }, [setMode, mode, diagram, renderOverride]);
-
-  // Handle builder mode confirmation dialog
-  const handleBuilderConfirm = useCallback((clearDiagram: boolean) => {
-    hasSeenBuilderConfirmRef.current = true;
-    setShowBuilderConfirm(false);
-
-    if (clearDiagram) {
-      // Clear diagram to just hazard + top event
-      try {
-        const hazard = diagram.nodes.find((n) => n.type === "hazard");
-        const topEvent = diagram.nodes.find((n) => n.type === "topEvent");
-        const hazardLabel = hazard?.label || "Hazard";
-        const topLabel = topEvent?.label || "Thermal runaway";
-        const cleared: BowtieDiagram = {
-          id: "cleared",
-          title: diagram.title,
-          createdAt: diagram.createdAt,
-          updatedAt: new Date().toISOString(),
-          nodes: [
-            { id: "hazard", type: "hazard", label: hazardLabel },
-            { id: "topEvent", type: "topEvent", label: topLabel },
-          ],
-          edges: [
-            { id: "h_to_top", source: "hazard", target: "topEvent" },
-          ],
-        };
-        setRenderOverride(cleared);
-      } catch {}
-    }
-
-    // Switch to builder mode
-    setMode("builder");
-
-    // Auto-trigger layout reset after confirmation dialog closes
-    // This ensures nodes are properly positioned regardless of which button was clicked
-    setTimeout(() => {
-      applyBuilderLayout();
-    }, 50); // Small delay to ensure mode switch completes first
-  }, [diagram, applyBuilderLayout]);
-
-
-  // Broadcast mode changes so Sidebar can reflect state
-  useEffect(() => {
-    try {
-      if (typeof window !== "undefined") {
-        window.dispatchEvent(new CustomEvent("bowtie:modeChanged", { detail: { mode } }));
-      }
-    } catch {}
-  }, [mode]);
-
-
-
-
-  // Focus dimming + failed-path highlight + barrier group expansion on card open
-  useEffect(() => {
-    if (storyOpen) return;
-    if (exportingSnapshot) {
-      setEdges((eds) => eds.map((e) => ({ ...e, style: { ...(e.style || {}), opacity: 1 } })));
-      setNodes((nds) => nds.map((n) => ({ ...n, style: { ...(n.style || {}), opacity: 1, transform: undefined } })));
-      return;
-    }
-    const baseStrokeFor = (e: any) => {
-      const failureEdge = failedMode && isFailureEdge(e);
-      return failureEdge ? "var(--edge-fail)" : "var(--edge)";
-    };
-    // Determine if we should enlarge a barrier group based on the opened card
-    const cardData = cardNode?.data as BowtieNodeData | undefined;
-    const enlargeRole =
-      cardNode && (cardNode.type === "preventionBarrier" || cardNode.type === "mitigationBarrier")
-        ? (cardData?.role as "prevention" | "mitigation" | undefined)
-        : undefined;
-
-    if (!cardNode) {
-      setEdges((eds) => eds.map((e) => ({ ...e, style: { ...(e.style || {}), stroke: baseStrokeFor(e), opacity: 1 } })));
-      setNodes((nds) => nds.map((n) => ({ ...n, style: { ...(n.style || {}), opacity: 1, transform: undefined } })));
-      return;
-    }
-    const selId = cardNode.id;
-    const adjacent = new Set<string>();
-    rf.getEdges().forEach((e) => {
-      if (e.source === selId || e.target === selId) adjacent.add(e.id);
-    });
-    const neighborNodeIds = new Set<string>([selId]);
-    rf.getEdges().forEach((e) => {
-      if (e.source === selId) neighborNodeIds.add(e.target);
-      if (e.target === selId) neighborNodeIds.add(e.source);
-    });
-
-    setEdges((eds) =>
-      eds.map((e) => ({
-        ...e,
-        style: {
-          ...(e.style || {}),
-          stroke: baseStrokeFor(e),
-          opacity: adjacent.has(e.id) ? 1 : 0.3,
-        },
-      }))
-    );
-    setNodes((nds) =>
-      nds.map((n) => {
-        const isBarrier = n.type === "preventionBarrier" || n.type === "mitigationBarrier";
-        const nRole = (n.data as BowtieNodeData | undefined)?.role as "prevention" | "mitigation" | undefined;
-        const expand = !!enlargeRole && isBarrier && nRole === enlargeRole;
-        return {
-          ...n,
-          style: { ...(n.style || {}), opacity: neighborNodeIds.has(n.id) ? 1 : 0.3, transform: expand ? "scale(1.08)" : undefined },
-        };
-      })
-    );
-  }, [cardNode, failedMode, storyOpen, exportingSnapshot]);
 
   const rasterizeToJpeg = useCallback(async (dataUrl: string) => {
     const img = new Image();
@@ -1270,7 +1173,7 @@ function InnerGraph({ diagram, initialMode = "demo" }: { diagram: BowtieDiagram;
     return new Blob(chunks, { type: "application/pdf" });
   }, []);
 
-  async function exportPng() {
+  const exportPng = useCallback(async () => {
     const el = wrapperRef.current;
     if (!el) return;
     await beginExportSnapshot();
@@ -1287,9 +1190,9 @@ function InnerGraph({ diagram, initialMode = "demo" }: { diagram: BowtieDiagram;
     } finally {
       endExportSnapshot();
     }
-  }
+  }, [beginExportSnapshot, endExportSnapshot, filenameSlug]);
 
-  async function exportPdf() {
+  const exportPdf = useCallback(async () => {
     const el = wrapperRef.current;
     if (!el) return;
     await beginExportSnapshot();
@@ -1312,7 +1215,229 @@ function InnerGraph({ diagram, initialMode = "demo" }: { diagram: BowtieDiagram;
     } finally {
       endExportSnapshot();
     }
-  }
+  }, [beginExportSnapshot, buildPdfBlob, endExportSnapshot, filenameSlug, rasterizeToJpeg]);
+
+  useEffect(() => {
+    if (mode === "builder") {
+      applyBuilderLayout();
+    }
+  }, [mode, applyBuilderLayout, renderDiagram]);
+
+  // Global events from the left Sidebar (export, toggle builder, clear diagram)
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const onExport = () => { void exportPng(); };
+    const onExportPdf = () => { void exportPdf(); };
+    const onToggle = () => {
+      setMode((m) => {
+        if (m === "demo" && !hasSeenBuilderConfirmRef.current) {
+          // First time switching to builder mode - show confirmation
+          setShowBuilderConfirm(true);
+          return m; // Don't change mode yet
+        }
+        return m === "builder" ? "demo" : "builder";
+      });
+    };
+    const onClear = () => {
+      if (mode !== "builder") return;
+      try {
+        const hazard = diagram.nodes.find((n) => n.type === "hazard");
+        const topEvent = diagram.nodes.find((n) => n.type === "topEvent");
+        const hazardLabel = hazard?.label || "Hazard";
+        const topLabel = topEvent?.label || "Thermal runaway";
+        const cleared: BowtieDiagram = {
+          id: "cleared",
+          title: diagram.title,
+          createdAt: diagram.createdAt,
+          updatedAt: new Date().toISOString(),
+          nodes: [
+            { id: "hazard", type: "hazard", label: hazardLabel },
+            { id: "topEvent", type: "topEvent", label: topLabel },
+          ],
+          edges: [
+            { id: "h_to_top", source: "hazard", target: "topEvent" },
+          ],
+        };
+        setRenderOverride(cleared);
+        setInspectorOpen(false);
+        setSelectedInspectorId(null);
+        setCardNode(null);
+      } catch {
+        // Ignore clear diagram errors
+      }
+    };
+    const onExportJSON = () => {
+      try {
+        const currentDiagram = renderOverride || diagram;
+        exportDiagramToJSON(currentDiagram);
+        setToastMessage("Diagram exported successfully!");
+      } catch (error) {
+        console.error("Export JSON error:", error);
+        setToastMessage("Failed to export diagram. Please try again.");
+      }
+    };
+    const onImportJSON = () => {
+      try {
+        const input = document.createElement("input");
+        input.type = "file";
+        input.accept = ".json,application/json";
+        input.onchange = async (e) => {
+          const file = (e.target as HTMLInputElement).files?.[0];
+          if (!file) return;
+          try {
+            const imported = await importDiagramFromJSON(file);
+            setRenderOverride(imported);
+            setToastMessage("Diagram imported successfully!");
+          } catch (error) {
+            console.error("Import JSON error:", error);
+            setToastMessage(error instanceof Error ? error.message : "Failed to import diagram.");
+          }
+        };
+        input.click();
+      } catch (error) {
+        console.error("Import JSON error:", error);
+        setToastMessage("Failed to import diagram. Please try again.");
+      }
+    };
+    window.addEventListener("bowtie:exportPng", onExport as EventListener);
+    window.addEventListener("bowtie:exportPdf", onExportPdf as EventListener);
+    window.addEventListener("bowtie:toggleBuilder", onToggle as EventListener);
+    window.addEventListener("bowtie:clearDiagram", onClear as EventListener);
+    window.addEventListener("bowtie:exportJSON", onExportJSON as EventListener);
+    window.addEventListener("bowtie:importJSON", onImportJSON as EventListener);
+    return () => {
+      window.removeEventListener("bowtie:exportPng", onExport as EventListener);
+      window.removeEventListener("bowtie:exportPdf", onExportPdf as EventListener);
+      window.removeEventListener("bowtie:toggleBuilder", onToggle as EventListener);
+      window.removeEventListener("bowtie:clearDiagram", onClear as EventListener);
+      window.removeEventListener("bowtie:exportJSON", onExportJSON as EventListener);
+      window.removeEventListener("bowtie:importJSON", onImportJSON as EventListener);
+    };
+  }, [setMode, mode, diagram, renderOverride, exportPdf, exportPng]);
+
+  // Handle builder mode confirmation dialog
+  const handleBuilderConfirm = useCallback((clearDiagram: boolean) => {
+    hasSeenBuilderConfirmRef.current = true;
+    setShowBuilderConfirm(false);
+
+    if (clearDiagram) {
+      // Clear diagram to just hazard + top event
+      try {
+        const hazard = diagram.nodes.find((n) => n.type === "hazard");
+        const topEvent = diagram.nodes.find((n) => n.type === "topEvent");
+        const hazardLabel = hazard?.label || "Hazard";
+        const topLabel = topEvent?.label || "Thermal runaway";
+        const cleared: BowtieDiagram = {
+          id: "cleared",
+          title: diagram.title,
+          createdAt: diagram.createdAt,
+          updatedAt: new Date().toISOString(),
+          nodes: [
+            { id: "hazard", type: "hazard", label: hazardLabel },
+            { id: "topEvent", type: "topEvent", label: topLabel },
+          ],
+          edges: [
+            { id: "h_to_top", source: "hazard", target: "topEvent" },
+          ],
+        };
+        setRenderOverride(cleared);
+      } catch {
+        // Ignore clear diagram errors
+      }
+    }
+
+    // Switch to builder mode
+    setMode("builder");
+
+    // Auto-trigger layout reset after confirmation dialog closes
+    // This ensures nodes are properly positioned regardless of which button was clicked
+    setTimeout(() => {
+      applyBuilderLayout();
+    }, 50); // Small delay to ensure mode switch completes first
+  }, [diagram, applyBuilderLayout]);
+
+
+  // Broadcast mode changes so Sidebar can reflect state
+  useEffect(() => {
+    try {
+      if (typeof window !== "undefined") {
+        window.dispatchEvent(new CustomEvent("bowtie:modeChanged", { detail: { mode } }));
+      }
+    } catch {
+      // Ignore mode change broadcast errors
+    }
+  }, [mode]);
+
+  const typeById = useMemo(() => {
+    const m = new Map<string, BowtieNodeType>();
+    for (const n of renderDiagram.nodes) m.set(n.id, n.type);
+    return m;
+  }, [renderDiagram]);
+
+  const isFailureEdge = useCallback((e: { source: string; target: string }) => {
+    const st = typeById.get(e.source);
+    const tt = typeById.get(e.target);
+    return st === "topEvent" || st === "mitigationBarrier" || tt === "topEvent" || tt === "consequence";
+  }, [typeById]);
+
+  // Focus dimming + failed-path highlight + barrier group expansion on card open
+  useEffect(() => {
+    if (storyOpen) return;
+    if (exportingSnapshot) {
+      setEdges((eds) => eds.map((e) => ({ ...e, style: { ...(e.style || {}), opacity: 1 } })));
+      setNodes((nds) => nds.map((n) => ({ ...n, style: { ...(n.style || {}), opacity: 1, transform: undefined } })));
+      return;
+    }
+    const baseStrokeFor = (e: { id: string; source: string; target: string }) => {
+      const failureEdge = failedMode && isFailureEdge(e);
+      return failureEdge ? "var(--edge-fail)" : "var(--edge)";
+    };
+    // Determine if we should enlarge a barrier group based on the opened card
+    const cardData = cardNode?.data as BowtieNodeData | undefined;
+    const enlargeRole =
+      cardNode && (cardNode.type === "preventionBarrier" || cardNode.type === "mitigationBarrier")
+        ? (cardData?.role as "prevention" | "mitigation" | undefined)
+        : undefined;
+
+    if (!cardNode) {
+      setEdges((eds) => eds.map((e) => ({ ...e, style: { ...(e.style || {}), stroke: baseStrokeFor(e), opacity: 1 } })));
+      setNodes((nds) => nds.map((n) => ({ ...n, style: { ...(n.style || {}), opacity: 1, transform: undefined } })));
+      return;
+    }
+    const selId = cardNode.id;
+    const adjacent = new Set<string>();
+    rf.getEdges().forEach((e) => {
+      if (e.source === selId || e.target === selId) adjacent.add(e.id);
+    });
+    const neighborNodeIds = new Set<string>([selId]);
+    rf.getEdges().forEach((e) => {
+      if (e.source === selId) neighborNodeIds.add(e.target);
+      if (e.target === selId) neighborNodeIds.add(e.source);
+    });
+
+    setEdges((eds) =>
+      eds.map((e) => ({
+        ...e,
+        style: {
+          ...(e.style || {}),
+          stroke: baseStrokeFor(e),
+          opacity: adjacent.has(e.id) ? 1 : 0.3,
+        },
+      }))
+    );
+    setNodes((nds) =>
+      nds.map((n) => {
+        const isBarrier = n.type === "preventionBarrier" || n.type === "mitigationBarrier";
+        const nRole = (n.data as BowtieNodeData | undefined)?.role as "prevention" | "mitigation" | undefined;
+        const expand = !!enlargeRole && isBarrier && nRole === enlargeRole;
+        return {
+          ...n,
+          style: { ...(n.style || {}), opacity: neighborNodeIds.has(n.id) ? 1 : 0.3, transform: expand ? "scale(1.08)" : undefined },
+        };
+      })
+    );
+  }, [cardNode, failedMode, storyOpen, exportingSnapshot, isFailureEdge, rf, setEdges, setNodes]);
+
 
   // Clear any render overrides when leaving Builder mode
   useEffect(() => {
@@ -1536,13 +1661,13 @@ function InnerGraph({ diagram, initialMode = "demo" }: { diagram: BowtieDiagram;
     const onToggleFilters = () => setFiltersOpen((o) => !o);
     const onToggleActions = () => setActionsOpen((o) => !o);
     const onToggleExport = () => setExportOpen((o) => !o);
-    window.addEventListener("bowtie:toggleFilters", onToggleFilters as any);
-    window.addEventListener("bowtie:toggleActions", onToggleActions as any);
-    window.addEventListener("bowtie:toggleExport", onToggleExport as any);
+    window.addEventListener("bowtie:toggleFilters", onToggleFilters as EventListener);
+    window.addEventListener("bowtie:toggleActions", onToggleActions as EventListener);
+    window.addEventListener("bowtie:toggleExport", onToggleExport as EventListener);
     return () => {
-      window.removeEventListener("bowtie:toggleFilters", onToggleFilters as any);
-      window.removeEventListener("bowtie:toggleActions", onToggleActions as any);
-      window.removeEventListener("bowtie:toggleExport", onToggleExport as any);
+      window.removeEventListener("bowtie:toggleFilters", onToggleFilters as EventListener);
+      window.removeEventListener("bowtie:toggleActions", onToggleActions as EventListener);
+      window.removeEventListener("bowtie:toggleExport", onToggleExport as EventListener);
     };
   }, []);
 
@@ -1562,15 +1687,15 @@ function InnerGraph({ diagram, initialMode = "demo" }: { diagram: BowtieDiagram;
       }
     };
 
-    window.addEventListener("bowtie:filterChanged", onFilterChanged as any);
-    return () => window.removeEventListener("bowtie:filterChanged", onFilterChanged as any);
+    window.addEventListener("bowtie:filterChanged", onFilterChanged as EventListener);
+    return () => window.removeEventListener("bowtie:filterChanged", onFilterChanged as EventListener);
   }, []);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
     const toggle = () => setHelpOpen((open) => !open);
-    window.addEventListener("bowtie:toggleHelp", toggle as any);
-    return () => window.removeEventListener("bowtie:toggleHelp", toggle as any);
+    window.addEventListener("bowtie:toggleHelp", toggle as EventListener);
+    return () => window.removeEventListener("bowtie:toggleHelp", toggle as EventListener);
   }, []);
 
   // Auto-save to localStorage (debounced)
@@ -1660,18 +1785,6 @@ function InnerGraph({ diagram, initialMode = "demo" }: { diagram: BowtieDiagram;
     return () => window.removeEventListener("keydown", onKey);
   }, [mode, storyOpen]);
 
-  const typeById = useMemo(() => {
-    const m = new Map<string, BowtieNodeType>();
-    for (const n of renderDiagram.nodes) m.set(n.id, n.type);
-    return m;
-  }, [renderDiagram]);
-
-  function isFailureEdge(e: { source: string; target: string }) {
-    const st = typeById.get(e.source);
-    const tt = typeById.get(e.target);
-    return st === "topEvent" || st === "mitigationBarrier" || tt === "topEvent" || tt === "consequence";
-  }
-
   const inspectorActive = mode === "builder" && inspectorOpen;
 
   return (
@@ -1760,7 +1873,9 @@ function InnerGraph({ diagram, initialMode = "demo" }: { diagram: BowtieDiagram;
             if (d && !preloadRef.current.has(n.id)) {
               preloadRef.current.set(n.id, d);
             }
-          } catch {}
+          } catch {
+            // Ignore preload errors
+          }
         }}
         nodeTypes={nodeTypes}
         defaultEdgeOptions={{ markerEnd: { type: MarkerType.ArrowClosed }, style: { stroke: "var(--edge)" } }}
@@ -1784,20 +1899,44 @@ function InnerGraph({ diagram, initialMode = "demo" }: { diagram: BowtieDiagram;
                   dangerouslySetInnerHTML={{ __html: highwayDrivingNarrative[storyIdx - 1]?.body || "" }}
                 />
                 <div className={styles.storyControls}>
-                  <button className={styles.bowtieButton} onClick={() => setStoryOpen(false)} type="button">Hide</button>
-                  <div style={{ marginLeft: "auto", display: "flex", gap: 8 }}>
+                  <div className={styles.storyControlsLeft}>
+                    <button className={styles.bowtieButton} onClick={() => setStoryOpen(false)} type="button">
+                      Hide
+                    </button>
+                  </div>
+                  <div className={styles.storyControlsCenter}>
+                    {storyIdx !== highwayDrivingNarrative.length && (
+                      <span
+                        className={`${styles.stepLabel} ${styles[`stepRole${getStepRole(storyIdx)}`] || ""}`}
+                        aria-live="polite"
+                      >
+                        Step {storyIdx} of {highwayDrivingNarrative.length}
+                      </span>
+                    )}
+                  </div>
+                  <div className={styles.storyControlsRight}>
                     {storyIdx === highwayDrivingNarrative.length ? (
-                      <button className={styles.bowtieButton} onClick={() => setStoryIdx(1)} type="button">START</button>
+                      <button className={styles.bowtieButton} onClick={() => setStoryIdx(1)} type="button">
+                        START
+                      </button>
                     ) : (
                       <>
-                        <button className={styles.bowtieButton} onClick={() => setStoryIdx((i) => (i > 1 ? i - 1 : i))} disabled={storyIdx === 1} type="button">◀ Prev</button>
-                        <span
-                          className={`${styles.stepLabel} ${styles[`stepRole${getStepRole(storyIdx)}`] || ""}`}
-                          aria-live="polite"
+                        <button
+                          className={styles.bowtieButton}
+                          onClick={() => setStoryIdx((i) => (i > 1 ? i - 1 : i))}
+                          disabled={storyIdx === 1}
+                          type="button"
                         >
-                          Step {storyIdx} of {highwayDrivingNarrative.length}
-                        </span>
-                        <button className={styles.bowtieButton} onClick={() => setStoryIdx((i) => (i < highwayDrivingNarrative.length ? i + 1 : i))} disabled={storyIdx === highwayDrivingNarrative.length} type="button">Next ▶</button>
+                          ◀ Prev
+                        </button>
+                        <button
+                          className={styles.bowtieButton}
+                          onClick={() => setStoryIdx((i) => (i < highwayDrivingNarrative.length ? i + 1 : i))}
+                          disabled={storyIdx === highwayDrivingNarrative.length}
+                          type="button"
+                        >
+                          Next ▶
+                        </button>
                       </>
                     )}
                   </div>
@@ -1866,7 +2005,7 @@ function InnerGraph({ diagram, initialMode = "demo" }: { diagram: BowtieDiagram;
                   <button className={styles.bowtieButton} type="button" aria-pressed={failedMode} onClick={() => setFailedMode((v) => !v)}>
                     {failedMode ? 'Disable failure highlight' : 'Simulate failure'}
                   </button>
-                  <button className={styles.bowtieButton} type="button" onClick={() => { try { rf.fitView({ padding: 0.2 }); } catch {} }}>Fit All</button>
+                  <button className={styles.bowtieButton} type="button" onClick={() => { try { rf.fitView({ padding: 0.2 }); } catch { /* Ignore fitView errors */ } }}>Fit All</button>
                   <button className={styles.bowtieButton} type="button" onClick={() => { void exportPng(); }}>Export PNG</button>
                 </div>
               </div>

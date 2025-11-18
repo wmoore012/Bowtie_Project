@@ -8,10 +8,18 @@ const STORAGE_KEY = "bowtie.legend.expanded";
 describe("Legend collapsible behavior", () => {
   beforeEach(() => {
     // ensure a clean slate without depending on removeItem availability in jsdom/node
-    try { window.localStorage?.setItem?.(STORAGE_KEY, ""); } catch {}
+    try {
+      window.localStorage?.setItem?.(STORAGE_KEY, "");
+    } catch {
+      // Ignore localStorage errors
+    }
   });
   afterEach(() => {
-    try { window.localStorage?.setItem?.(STORAGE_KEY, ""); } catch {}
+    try {
+      window.localStorage?.setItem?.(STORAGE_KEY, "");
+    } catch {
+      // Ignore localStorage errors
+    }
   });
 
   it("is collapsed by default for first-time users and toggles open", async () => {

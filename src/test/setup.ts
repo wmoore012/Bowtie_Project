@@ -3,7 +3,7 @@ import '@testing-library/jest-dom/vitest';
 // Robust localStorage polyfill for Node/jsdom where methods may be missing
 (() => {
   try {
-    const w: any = window;
+    const w = window as Window & { localStorage?: Storage };
     const ls = w.localStorage;
     const needsPatch = !ls ||
       typeof ls.getItem !== 'function' ||
@@ -14,7 +14,7 @@ import '@testing-library/jest-dom/vitest';
     if (needsPatch) {
       const store = new Map<string, string>();
       const storage: Storage = {
-        get length() { return store.size as any; },
+        get length() { return store.size; },
         clear() { store.clear(); },
         getItem(key: string) {
           const v = store.get(String(key));
@@ -26,10 +26,12 @@ import '@testing-library/jest-dom/vitest';
         },
         removeItem(key: string) { store.delete(String(key)); },
         setItem(key: string, value: string) { store.set(String(key), String(value)); },
-      } as any;
+      };
       Object.defineProperty(w, 'localStorage', { value: storage, configurable: true });
     }
-  } catch {}
+  } catch {
+    // Ignore localStorage polyfill errors
+  }
 })();
 
 
@@ -40,13 +42,13 @@ if (!('ResizeObserver' in globalThis)) {
     unobserve() {}
     disconnect() {}
   }
-  (globalThis as any).ResizeObserver = ResizeObserver as any;
+  (globalThis as typeof globalThis & { ResizeObserver?: typeof ResizeObserver }).ResizeObserver = ResizeObserver;
 }
 
 // Provide non-zero layout metrics so libraries that measure containers (e.g., React Flow)
 // can render in jsdom. We only override for React Flow containers to minimize side effects.
 (() => {
-  const proto = (globalThis as any).HTMLElement?.prototype;
+  const proto = (globalThis as typeof globalThis & { HTMLElement?: { prototype: HTMLElement } }).HTMLElement?.prototype;
   if (!proto) return;
   const originalGetBoundingClientRect = proto.getBoundingClientRect;
   Object.defineProperty(proto, 'getBoundingClientRect', {

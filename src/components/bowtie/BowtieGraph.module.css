@@ -417,10 +417,28 @@
   font-size: 14px;
 }
 .storyControls {
-  display: flex;
-  gap: 8px;
-  justify-content: space-between;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  column-gap: 8px;
   margin-top: 8px;
+}
+
+.storyControlsLeft {
+  display: flex;
+  align-items: center;
+}
+
+.storyControlsCenter {
+  display: flex;
+  justify-content: center;
+}
+
+.storyControlsRight {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  min-width: 220px;
 }
 
 

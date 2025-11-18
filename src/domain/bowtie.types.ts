@@ -93,5 +93,5 @@ export interface BowtieNodeData extends Record<string, unknown> {
 }
 
 export function isBowtieNodeData(v: unknown): v is BowtieNodeData {
-  return !!v && typeof (v as any).label === "string" && typeof (v as any).bowtieType === "string";
+  return !!v && typeof (v as Record<string, unknown>).label === "string" && typeof (v as Record<string, unknown>).bowtieType === "string";
 }

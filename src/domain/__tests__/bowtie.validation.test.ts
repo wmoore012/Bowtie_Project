@@ -1,6 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { validateDiagram } from "../bowtie.validation";
 import { highwayDrivingExample } from "../scenarios/highway_driving.example";
+import type { BowtieDiagram } from "../bowtie.types";
 
 describe("validateDiagram (Highway Driving)", () => {
   it("accepts a valid highway driving bowtie", () => {
@@ -15,7 +16,7 @@ describe("validateDiagram (Highway Driving)", () => {
     const broken = {
       ...highwayDrivingExample,
       nodes: highwayDrivingExample.nodes.filter((n) => n.type !== "hazard"),
-    } as any;
+    } as BowtieDiagram;
     const result = validateDiagram(broken);
     expect(result.ok).toBe(false);
     if (!result.ok) {
@@ -27,7 +28,7 @@ describe("validateDiagram (Highway Driving)", () => {
     const broken = {
       ...highwayDrivingExample,
       nodes: highwayDrivingExample.nodes.filter((n) => n.type !== "topEvent"),
-    } as any;
+    } as BowtieDiagram;
     const result = validateDiagram(broken);
     expect(result.ok).toBe(false);
     if (!result.ok) {
@@ -38,8 +39,8 @@ describe("validateDiagram (Highway Driving)", () => {
   it("fails when there are multiple Hazards (exactly-one rule)", () => {
     const broken = {
       ...highwayDrivingExample,
-      nodes: [...highwayDrivingExample.nodes, { id: "hz2", type: "hazard" as any, label: "Extra hazard" }],
-    } as any;
+      nodes: [...highwayDrivingExample.nodes, { id: "hz2", type: "hazard" as const, label: "Extra hazard" }],
+    } as BowtieDiagram;
     const result = validateDiagram(broken);
     expect(result.ok).toBe(false);
     if (!result.ok) {
@@ -50,8 +51,8 @@ describe("validateDiagram (Highway Driving)", () => {
   it("fails when there are multiple Top Events (exactly-one rule)", () => {
     const broken = {
       ...highwayDrivingExample,
-      nodes: [...highwayDrivingExample.nodes, { id: "te2", type: "topEvent" as any, label: "Extra top" }],
-    } as any;
+      nodes: [...highwayDrivingExample.nodes, { id: "te2", type: "topEvent" as const, label: "Extra top" }],
+    } as BowtieDiagram;
     const result = validateDiagram(broken);
     expect(result.ok).toBe(false);
     if (!result.ok) {
@@ -64,7 +65,7 @@ describe("validateDiagram (Highway Driving)", () => {
     const dup = {
       ...highwayDrivingExample,
       nodes: highwayDrivingExample.nodes.map((n, i) => (i === 0 ? { ...n, id: "th-distracted" } : n)),
-    } as any;
+    } as BowtieDiagram;
     const result = validateDiagram(dup);
     expect(result.ok).toBe(false);
     if (!result.ok) {
@@ -76,7 +77,7 @@ describe("validateDiagram (Highway Driving)", () => {
     const bad = {
       ...highwayDrivingExample,
       edges: [...highwayDrivingExample.edges, { id: "bad", source: "nope", target: "hz-highway" }],
-    } as any;
+    } as BowtieDiagram;
     const result = validateDiagram(bad);
     expect(result.ok).toBe(false);
     if (!result.ok) {
@@ -88,7 +89,7 @@ describe("validateDiagram (Highway Driving)", () => {
     const back = {
       ...highwayDrivingExample,
       edges: [...highwayDrivingExample.edges, { id: "ebad1", source: "te-collision", target: "hz-highway" }],
-    } as any;
+    } as BowtieDiagram;
     const result = validateDiagram(back);
     expect(result.ok).toBe(false);
   });
@@ -96,8 +97,9 @@ describe("validateDiagram (Highway Driving)", () => {
   it("fails on invalid node type", () => {
     const badType = {
       ...highwayDrivingExample,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       nodes: [...highwayDrivingExample.nodes, { id: "x1", type: "bogus" as any, label: "Bad" }],
-    } as any;
+    } as BowtieDiagram;
     const result = validateDiagram(badType);
     expect(result.ok).toBe(false);
     if (!result.ok) {
@@ -108,8 +110,9 @@ describe("validateDiagram (Highway Driving)", () => {
   it("rejects degradation factors explicitly", () => {
     const badDegradation = {
       ...highwayDrivingExample,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       nodes: [...highwayDrivingExample.nodes, { id: "dg1", type: "degradation" as any, label: "Degradation" }],
-    } as any;
+    } as BowtieDiagram;
     const result = validateDiagram(badDegradation);
     expect(result.ok).toBe(false);
     if (!result.ok) {

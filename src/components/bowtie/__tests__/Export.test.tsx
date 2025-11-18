@@ -10,29 +10,17 @@ vi.mock("html-to-image", () => ({
 }));
 
 describe("Export PNG functionality", () => {
-  let mockCreateElement: any;
-  let mockClick: any;
-  let originalCreateElement: any;
-
   beforeEach(() => {
-    // Mock document.createElement for anchor element
-    mockClick = vi.fn();
-    originalCreateElement = document.createElement.bind(document);
-    mockCreateElement = vi.fn((tag: string) => {
-      const element = originalCreateElement(tag);
-      if (tag === "a") {
-        element.click = mockClick;
-      }
-      return element;
-    });
-    document.createElement = mockCreateElement as any;
+    // Spy on the native anchor click so we can assert that a download was
+    // triggered without changing DOM behavior.
+    vi.spyOn(HTMLAnchorElement.prototype, "click").mockImplementation(() => {});
 
     // Mock toPng to return a data URL
     vi.mocked(htmlToImage.toPng).mockResolvedValue("data:image/png;base64,mockImageData");
   });
 
   afterEach(() => {
-    document.createElement = originalCreateElement;
+    vi.restoreAllMocks();
     vi.clearAllMocks();
   });
 
@@ -50,7 +38,7 @@ describe("Export PNG functionality", () => {
 
     // Verify download was triggered
     await waitFor(() => {
-      expect(mockClick).toHaveBeenCalled();
+      expect(HTMLAnchorElement.prototype.click).toHaveBeenCalled();
     });
   });
 
@@ -86,7 +74,7 @@ describe("Export PNG functionality", () => {
     });
 
     // Click should not have been called due to error
-    expect(mockClick).not.toHaveBeenCalled();
+    expect(HTMLAnchorElement.prototype.click).not.toHaveBeenCalled();
     consoleSpy.mockRestore();
   });
 });

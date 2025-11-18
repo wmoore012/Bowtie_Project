@@ -16,7 +16,9 @@ function makeDataTransfer() {
     effectAllowed: "copy" as const,
     dropEffect: "copy" as const,
     files: [] as File[],
-    items: [] as any,
+    // JSDOM does not implement a real DataTransferItemList; we only need
+    // a structurally compatible placeholder for tests.
+    items: [] as unknown as DataTransferItemList,
     types: [] as string[],
   } as unknown as DataTransfer;
 }

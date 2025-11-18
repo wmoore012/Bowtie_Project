@@ -11,12 +11,18 @@ export const Legend = memo(function Legend() {
       const v = window.localStorage?.getItem(STORAGE_KEY);
       if (v === "true") return true;
       if (v === "false") return false;
-    } catch {}
+    } catch {
+      // Ignore localStorage errors
+    }
     return false; // default: collapsed to maximize canvas
   });
 
   useEffect(() => {
-    try { window?.localStorage?.setItem(STORAGE_KEY, expanded ? "true" : "false"); } catch {}
+    try {
+      window?.localStorage?.setItem(STORAGE_KEY, expanded ? "true" : "false");
+    } catch {
+      // Ignore localStorage errors
+    }
   }, [expanded]);
 
   const contentId = "legend-content";
