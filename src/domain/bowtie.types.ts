@@ -74,6 +74,13 @@ export interface BowtieDiagram {
   updatedAt: string;
 }
 
+export type ThreatId = string;
+export type BarrierId = string;
+
+export interface ThreatLaneOrder {
+  lanes: Record<ThreatId, BarrierId[]>;
+}
+
 // React Flow node data payload; centralized to avoid any-casts
 export interface BowtieNodeData extends Record<string, unknown> {
   label: string;

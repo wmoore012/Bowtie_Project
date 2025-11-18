@@ -16,7 +16,7 @@ import {
 import "@xyflow/react/dist/style.css";
 import type { Node as RFNode } from "@xyflow/react";
 
-import type { BowtieDiagram, BowtieNodeType, BowtieNodeData } from "../../domain/bowtie.types";
+import type { BowtieDiagram, BowtieNodeType, BowtieNodeData, ThreatLaneOrder } from "../../domain/bowtie.types";
 import { computeSimpleLayout, computeElkLayout } from "./layout";
 import { Legend } from "./Legend";
 import { toPng } from "html-to-image";
@@ -53,7 +53,7 @@ import gsap from "gsap";
 
 const pxToPt = (px: number) => (px * 72) / 96;
 
-/** 
+/**
  * Determine the role/category for a given step index for visual styling.
  * Step 1: Hazard, Step 2: TopEvent, Step 3: Threat,
  * Steps 4-6: Prevention, Steps 7-8: Mitigation, Steps 9-10: Consequence, Steps 11-12: Meta
@@ -109,6 +109,44 @@ const MAX_STEP: StepIndex = 11;
 
 
 
+
+
+function deriveThreatLaneOrderFromDiagram(diagram: BowtieDiagram): ThreatLaneOrder {
+  const nodeIndex = new Map(diagram.nodes.map((node) => [node.id, node]));
+  const threats = diagram.nodes.filter((node) => node.type === "threat");
+  const preventionIds = new Set(
+    diagram.nodes.filter((node) => node.type === "preventionBarrier").map((node) => node.id)
+  );
+
+  const edgesBySource = new Map<string, string[]>();
+  diagram.edges.forEach((edge) => {
+    if (!edgesBySource.has(edge.source)) edgesBySource.set(edge.source, []);
+    edgesBySource.get(edge.source)!.push(edge.target);
+  });
+
+  const sortByLabel = (ids: string[]) =>
+    ids
+      .filter((id) => nodeIndex.has(id))
+      .sort((a, b) => {
+        const labelA = nodeIndex.get(a)?.label ?? a;
+        const labelB = nodeIndex.get(b)?.label ?? b;
+        return labelA.localeCompare(labelB, undefined, { numeric: true });
+      });
+
+  const lanes: ThreatLaneOrder["lanes"] = {};
+
+  threats.forEach((threat) => {
+    const chain = sortByLabel(
+      (edgesBySource.get(threat.id) ?? []).filter(
+        (targetId) => nodeIndex.get(targetId)?.type === "preventionBarrier"
+      )
+    );
+    const visibleChain = chain.filter((id) => preventionIds.has(id));
+    lanes[threat.id] = visibleChain;
+  });
+
+  return { lanes };
+}
 
 
 function InnerGraph({ diagram, initialMode = "demo" }: { diagram: BowtieDiagram; initialMode?: "demo" | "builder" }) {
@@ -175,6 +213,22 @@ function InnerGraph({ diagram, initialMode = "demo" }: { diagram: BowtieDiagram;
   // Optional render override (e.g., Clear Diagram in Builder)
   const [renderOverride, setRenderOverride] = useState<BowtieDiagram | null>(null);
   const [helpOpen, setHelpOpen] = useState(false);
+
+  const [threatLanes, setThreatLanes] = useState<ThreatLaneOrder>(() =>
+    deriveThreatLaneOrderFromDiagram(diagram)
+  );
+
+  useEffect(() => {
+    if (mode !== "builder") return;
+    const baseDiagram = renderOverride ?? diagram;
+    setThreatLanes(deriveThreatLaneOrderFromDiagram(baseDiagram));
+  }, [mode, diagram, renderOverride]);
+
+  useEffect(() => {
+    if (mode !== "builder") return;
+    // For now we do not need extra side effects when lanes change, but this keeps
+    // ThreatLaneOrder wired into React state and ready for future steps.
+  }, [mode, threatLanes]);
 
   // Demo story overlay
   const [storyOpen, setStoryOpen] = useState(false);
