@@ -16,7 +16,14 @@ import {
 import "@xyflow/react/dist/style.css";
 import type { Node as RFNode, Edge as RFEdge } from "@xyflow/react";
 
-import type { BowtieDiagram, BowtieNodeType, BowtieNodeData, ThreatLaneOrder } from "../../domain/bowtie.types";
+import type {
+  BowtieDiagram,
+  BowtieNodeType,
+  BowtieNodeData,
+  ThreatLaneOrder,
+  BarrierId,
+  ThreatId,
+} from "../../domain/bowtie.types";
 import { computeSimpleLayout, computeElkLayout } from "./layout";
 import { Legend } from "./Legend";
 import { toPng } from "html-to-image";
@@ -262,6 +269,49 @@ function replaceThreatLaneEdges(existingEdges: RFEdge[], laneEdges: RFEdge[]): R
 
   return [...preservedEdges, ...laneEdges];
 }
+
+function moveBarrierToThreat(
+  lanes: ThreatLaneOrder,
+  barrierId: BarrierId,
+  newThreatId: ThreatId,
+  insertIndex: number
+): ThreatLaneOrder {
+  const nextLanes: ThreatLaneOrder["lanes"] = {};
+  let occurrences = 0;
+
+  Object.entries(lanes.lanes).forEach(([threatId, barrierIds]) => {
+    const filtered = barrierIds.filter((id) => {
+      if (id === barrierId) {
+        occurrences += 1;
+        return false;
+      }
+      return true;
+    });
+    nextLanes[threatId] = filtered;
+  });
+
+  if (occurrences > 1) {
+    // Fail loud in development; this should never happen if we maintain
+    // the invariant that a barrier belongs to at most one Threat lane.
+    console.error(
+      "ThreatLaneOrder invariant violation: barrier appears on more than one threat lane",
+      { barrierId, lanes }
+    );
+  }
+
+  const existingLane = nextLanes[newThreatId] ?? [];
+  const clampedIndex = Math.max(0, Math.min(insertIndex, existingLane.length));
+  const updatedLane = [
+    ...existingLane.slice(0, clampedIndex),
+    barrierId,
+    ...existingLane.slice(clampedIndex),
+  ];
+
+  nextLanes[newThreatId] = updatedLane;
+
+  return { lanes: nextLanes };
+}
+
 
 
 function InnerGraph({ diagram, initialMode = "demo" }: { diagram: BowtieDiagram; initialMode?: "demo" | "builder" }) {
@@ -989,36 +1039,39 @@ function InnerGraph({ diagram, initialMode = "demo" }: { diagram: BowtieDiagram;
     [rf, setEdges, strictConnections]
   );
 
-  const applyBuilderLayout = useCallback(() => {
-    const baseDiagram = renderOverride ?? revealDiagram;
-    const laid = computeSimpleLayout(baseDiagram);
+  const applyBuilderLayout = useCallback(
+    (laneOverride?: ThreatLaneOrder) => {
+      const baseDiagram = renderOverride ?? revealDiagram;
+      const laid = computeSimpleLayout(baseDiagram);
 
-    // Re-apply the designed layout to known nodes while preserving any
-    // user-added Builder nodes/edges so Reset Layout can be triggered
-    // frequently without "losing" work.
-    setNodes((currentNodes) => {
-      const laidById = new Map(laid.nodes.map((n) => [n.id, n]));
-      const hydrated = laid.nodes.map((n) => ({
-        ...n,
-        data: { ...(n.data as BowtieNodeData), highlighted: false, dimmed: false },
-      }));
-      const extraNodes = currentNodes.filter((n) => !laidById.has(n.id));
-      return [...hydrated, ...extraNodes];
-    });
+      // Re-apply the designed layout to known nodes while preserving any
+      // user-added Builder nodes/edges so Reset Layout can be triggered
+      // frequently without "losing" work.
+      setNodes((currentNodes) => {
+        const laidById = new Map(laid.nodes.map((n) => [n.id, n]));
+        const hydrated = laid.nodes.map((n) => ({
+          ...n,
+          data: { ...(n.data as BowtieNodeData), highlighted: false, dimmed: false },
+        }));
+        const extraNodes = currentNodes.filter((n) => !laidById.has(n.id));
+        return [...hydrated, ...extraNodes];
+      });
 
-    const laneEdges = buildThreatLaneEdges(
-      threatLanes,
-      laid.nodes as RFNode<BowtieNodeData>[],
-      strictConnections
-    );
+      const laneEdges = buildThreatLaneEdges(
+        laneOverride ?? threatLanes,
+        laid.nodes as RFNode<BowtieNodeData>[],
+        strictConnections
+      );
 
-    setEdges((currentEdges) => {
-      const laidWithLanes = replaceThreatLaneEdges(laid.edges as RFEdge[], laneEdges);
-      const laidIds = new Set(laidWithLanes.map((e) => e.id));
-      const extraEdges = currentEdges.filter((e) => !laidIds.has(e.id));
-      return [...laidWithLanes, ...extraEdges];
-    });
-  }, [renderOverride, revealDiagram, setNodes, setEdges, threatLanes, strictConnections]);
+      setEdges((currentEdges) => {
+        const laidWithLanes = replaceThreatLaneEdges(laid.edges as RFEdge[], laneEdges);
+        const laidIds = new Set(laidWithLanes.map((e) => e.id));
+        const extraEdges = currentEdges.filter((e) => !laidIds.has(e.id));
+        return [...laidWithLanes, ...extraEdges];
+      });
+    },
+    [renderOverride, revealDiagram, setNodes, setEdges, threatLanes, strictConnections]
+  );
 
 
   // Fit view on initial mount
@@ -1094,7 +1147,9 @@ function InnerGraph({ diagram, initialMode = "demo" }: { diagram: BowtieDiagram;
   const onCanvasDrop = (e: React.DragEvent) => {
     if (mode !== "builder") return;
     e.preventDefault();
-    const tRaw = e.dataTransfer.getData("application/bowtie-node-type") || e.dataTransfer.getData("text/plain");
+    const tRaw =
+      e.dataTransfer.getData("application/bowtie-node-type") ||
+      e.dataTransfer.getData("text/plain");
     const t = (tRaw as BowtieNodeType) || undefined;
     if (!t) return;
     const client = { x: e.clientX, y: e.clientY };
@@ -1143,15 +1198,77 @@ function InnerGraph({ diagram, initialMode = "demo" }: { diagram: BowtieDiagram;
     setSelectedInspectorId(id);
     setInspectorOpen(true);
 
-    // For barrier nodes, automatically chain them between the closest
-    // upstream and downstream nodes on the same row so users do not
-    // have to manually wire every edge.
-    if (t === "preventionBarrier" || t === "mitigationBarrier") {
-      const candidateTypes: BowtieNodeType[] =
-        t === "preventionBarrier"
-          ? ["threat", "preventionBarrier", "topEvent"]
-          : ["topEvent", "mitigationBarrier", "consequence"];
+    let appliedLaneLayoutForPrevention = false;
 
+    if (t === "preventionBarrier") {
+      const candidateTypes: BowtieNodeType[] = ["threat", "preventionBarrier", "topEvent"];
+      const rowThreshold = 80; // px distance for considering nodes on the same row
+      const existingNodes = rf.getNodes() as RFNode<BowtieNodeData>[];
+      const rowNodes = existingNodes.filter((node) => {
+        const nodeDataForType = node.data as BowtieNodeData | undefined;
+        const nodeType = nodeDataForType?.bowtieType;
+        if (!nodeType || !candidateTypes.includes(nodeType)) return false;
+        return Math.abs(node.position.y - pos.y) <= rowThreshold;
+      });
+
+      if (rowNodes.length > 0) {
+        const withNew = rowNodes.concat({
+          ...newNode,
+          position: { x: snappedX, y: pos.y },
+        });
+        withNew.sort((a, b) => a.position.x - b.position.x);
+
+        const threatNodes = withNew.filter((node) => {
+          const data = node.data as BowtieNodeData | undefined;
+          return data?.bowtieType === "threat";
+        });
+
+        let nearestThreatNode: RFNode<BowtieNodeData> | undefined;
+        let minDist = Number.POSITIVE_INFINITY;
+        for (const node of threatNodes) {
+          const dist = Math.abs(node.position.x - snappedX);
+          if (dist < minDist) {
+            nearestThreatNode = node;
+            minDist = dist;
+          }
+        }
+
+        if (!nearestThreatNode) {
+          setToastMessage(
+            "Could not determine a Threat lane for this barrier. Try dropping closer to a Threat.",
+          );
+        } else {
+          const threatId = nearestThreatNode.id as ThreatId;
+          const existingLaneIds = threatLanes.lanes[threatId] ?? [];
+          const laneBarrierSet = new Set(existingLaneIds);
+
+          const laneNodesOnRow = withNew.filter((node) => {
+            if (node.id === id) return true;
+            const data = node.data as BowtieNodeData | undefined;
+            return data?.bowtieType === "preventionBarrier" && laneBarrierSet.has(node.id);
+          });
+
+          laneNodesOnRow.sort((a, b) => a.position.x - b.position.x);
+          const insertionIndex = laneNodesOnRow.findIndex((n) => n.id === id);
+          const safeIndex = insertionIndex < 0 ? existingLaneIds.length : insertionIndex;
+
+          const updatedLanes = moveBarrierToThreat(
+            threatLanes,
+            id as BarrierId,
+            threatId,
+            safeIndex,
+          );
+          setThreatLanes(updatedLanes);
+          applyBuilderLayout(updatedLanes);
+          appliedLaneLayoutForPrevention = true;
+        }
+      } else {
+        setToastMessage(
+          "Could not find nearby nodes to attach this barrier. It was added without connections.",
+        );
+      }
+    } else if (t === "mitigationBarrier") {
+      const candidateTypes: BowtieNodeType[] = ["topEvent", "mitigationBarrier", "consequence"];
       const rowThreshold = 80; // px distance for considering nodes on the same row
       const existingNodes = rf.getNodes() as RFNode<BowtieNodeData>[];
       const rowNodes = existingNodes.filter((node) => {
@@ -1169,12 +1286,16 @@ function InnerGraph({ diagram, initialMode = "demo" }: { diagram: BowtieDiagram;
         withNew.sort((a, b) => a.position.x - b.position.x);
         const index = withNew.findIndex((n) => n.id === id);
         const leftNeighbor = index > 0 ? withNew[index - 1] : undefined;
-        const rightNeighbor = index >= 0 && index < withNew.length - 1 ? withNew[index + 1] : undefined;
+        const rightNeighbor =
+          index >= 0 && index < withNew.length - 1 ? withNew[index + 1] : undefined;
 
         setEdges((eds) => {
           let nextEdges = eds;
 
-          const maybeAddEdge = (sourceNode?: RFNode<BowtieNodeData>, targetNode?: RFNode<BowtieNodeData>) => {
+          const maybeAddEdge = (
+            sourceNode?: RFNode<BowtieNodeData>,
+            targetNode?: RFNode<BowtieNodeData>,
+          ) => {
             if (!sourceNode || !targetNode) return;
             const sourceData = sourceNode.data as BowtieNodeData | undefined;
             const targetData = targetNode.data as BowtieNodeData | undefined;
@@ -1182,7 +1303,12 @@ function InnerGraph({ diagram, initialMode = "demo" }: { diagram: BowtieDiagram;
             const targetType = targetData?.bowtieType;
             if (!sourceType || !targetType) return;
 
-            const { valid } = validateConnection(sourceType, targetType, sourceNode.id, targetNode.id);
+            const { valid } = validateConnection(
+              sourceType,
+              targetType,
+              sourceNode.id,
+              targetNode.id,
+            );
             if (!valid) return;
 
             const strictTargets = strictConnections.get(sourceNode.id);
@@ -1191,7 +1317,7 @@ function InnerGraph({ diagram, initialMode = "demo" }: { diagram: BowtieDiagram;
             }
 
             const alreadyExists = nextEdges.some(
-              (edge) => edge.source === sourceNode.id && edge.target === targetNode.id
+              (edge) => edge.source === sourceNode.id && edge.target === targetNode.id,
             );
             if (alreadyExists) return;
 
@@ -1205,7 +1331,7 @@ function InnerGraph({ diagram, initialMode = "demo" }: { diagram: BowtieDiagram;
                 style: { stroke: "var(--edge)" },
                 markerEnd: { type: MarkerType.ArrowClosed },
               },
-              nextEdges
+              nextEdges,
             );
           };
 
@@ -1217,9 +1343,11 @@ function InnerGraph({ diagram, initialMode = "demo" }: { diagram: BowtieDiagram;
       }
     }
 
-    // Keep layout tidy after structural changes without dropping
-    // user-added Builder nodes.
-    applyBuilderLayout();
+    if (!appliedLaneLayoutForPrevention) {
+      // Keep layout tidy after structural changes without dropping
+      // user-added Builder nodes.
+      applyBuilderLayout();
+    }
   };
   useEffect(() => {
     const t = setTimeout(() => {
@@ -2213,7 +2341,7 @@ function InnerGraph({ diagram, initialMode = "demo" }: { diagram: BowtieDiagram;
                 </button>
                 <button
                   className={`${styles.bowtieButton} ${styles.resetLayoutButton}`}
-                  onClick={applyBuilderLayout}
+                  onClick={() => applyBuilderLayout()}
                   type="button"
                   title="Reset node positions to default layout"
                   aria-label="Reset layout"
