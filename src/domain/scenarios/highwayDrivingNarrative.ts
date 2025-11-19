@@ -20,11 +20,11 @@ export const highwayDrivingNarrative: StoryStep[] = [
     focusIds: ["th-intoxicated", "th-miscalibrated", "th-distracted", "th-slippery", "th-impaired-vehicle", "th-visibility"],
   },
 
-  // 2. LATENT CONDITIONS
+  // 2. DEVIATION: Storm Hits (moved from old position 8 for simpler visual)
   {
-    title: "🕳️ LATENT WEAKNESS: Cracks in the Foundation",
-    body: "<strong>Hidden weaknesses building over months:</strong><br>• 📡 <strong>ADAS calibration overdue</strong> after windshield replacements<br>• 🛞 <strong>ABS faults ignored</strong>—not escalated to maintenance<br>• ✂️ <strong>Seatbelt alarms disconnected</strong> by drivers (too annoying)<br>• ⏭️ <strong>Weather alerts skipped</strong> when dispatch busy<br>• 💸 <strong>Defensive training postponed</strong> 6 months (budget cuts)",
-    focusIds: ["ef-miscalibration", "ef-maint-backlog", "ef-seatbelt", "pb-weather-report-t4", "pb-weather-report-t6", "pb-defensive-driving"],
+    title: "🌧️ DEVIATION: Storm Hits, Alert Missed",
+    body: "<strong>Friday 4:00 PM:</strong> Freezing rain moving toward I-80.<br>• 👤 <strong>WHO:</strong> Dispatcher handling 6 simultaneous calls<br>• ❌ <strong>WHAT:</strong> Weather alert system not checked<br>• 😓 <strong>WHY:</strong> Staffing shortage, no backup protocol<br>• ⚠️ <strong>IMPACT:</strong> Driver unaware—first barrier down",
+    focusIds: ["th-slippery", "pb-weather-report-t4"],
   },
 
   // 3. NEW TRANSITION: The Human Element
@@ -64,11 +64,11 @@ export const highwayDrivingNarrative: StoryStep[] = [
     focusIds: ["hz-highway", "te-loss-control"],
   },
 
-  // 8. (Old 8) DEVIATION: Storm Hits
+  // 8. LATENT CONDITIONS (moved from position 2 for narrative flow)
   {
-    title: "🌧️ DEVIATION: Storm Hits, Alert Missed",
-    body: "<strong>Friday 4:00 PM:</strong> Freezing rain moving toward I-80.<br>• 👤 <strong>WHO:</strong> Dispatcher handling 6 simultaneous calls<br>• ❌ <strong>WHAT:</strong> Weather alert system not checked<br>• 😓 <strong>WHY:</strong> Staffing shortage, no backup protocol<br>• ⚠️ <strong>IMPACT:</strong> Driver unaware—first barrier down",
-    focusIds: ["th-slippery", "pb-weather-report-t4"],
+    title: "🕳️ LATENT WEAKNESS: Cracks in the Foundation",
+    body: "<strong>Hidden weaknesses building over months:</strong><br>• 📡 <strong>ADAS calibration overdue</strong> after windshield replacements<br>• 🛞 <strong>ABS faults ignored</strong>—not escalated to maintenance<br>• ✂️ <strong>Seatbelt alarms disconnected</strong> by drivers (too annoying)<br>• ⏭️ <strong>Weather alerts skipped</strong> when dispatch busy<br>• 💸 <strong>Defensive training postponed</strong> 6 months (budget cuts)",
+    focusIds: ["ef-miscalibration", "ef-maint-backlog", "ef-seatbelt", "pb-weather-report-t4", "pb-weather-report-t6", "pb-defensive-driving"],
   },
 
   // 9. (Old 10) ESCALATION: Black Ice
