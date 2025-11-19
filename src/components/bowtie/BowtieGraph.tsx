@@ -59,6 +59,7 @@ import { calculatePreventionSlots, findNearestSlot, type DropSlot } from "./slot
 
 import { highwayDrivingNarrative } from "../../domain/scenarios/highway_driving_narrative";
 import gsap from "gsap";
+import { calculateFocusViewport } from "./story/autoZoom";
 
 const pxToPt = (px: number) => (px * 72) / 96;
 
@@ -421,6 +422,9 @@ function InnerGraph({ diagram, initialMode = "demo" }: { diagram: BowtieDiagram;
   // Slot visualization state
   const [dropSlots, setDropSlots] = useState<DropSlot[]>([]);
   const [activeSlot, setActiveSlot] = useState<DropSlot | null>(null);
+
+  // Story mode state
+  const [autoZoomEnabled, setAutoZoomEnabled] = useState(true);
 
   const nodeById = useMemo(() => new Map(diagram.nodes.map((n) => [n.id, n])), [diagram]);
   const adjacency = useMemo(() => {
@@ -1796,6 +1800,9 @@ function InnerGraph({ diagram, initialMode = "demo" }: { diagram: BowtieDiagram;
   useEffect(() => {
     setStoryOpen(mode === "demo");
   }, [mode]);
+
+
+
   useEffect(() => {
     if (storyOpen && mode === "demo") {
       const stepData = highwayDrivingNarrative[storyIdx - 1];
@@ -1825,6 +1832,43 @@ function InnerGraph({ diagram, initialMode = "demo" }: { diagram: BowtieDiagram;
       setHighlightedChainRootId(null);
     }
   }, [storyIdx, storyOpen, mode, chainNodesByRoot, nodeToRoot, nodeById]);
+
+  // Auto-zoom and dimming for story mode
+  useEffect(() => {
+    if (mode !== "demo") return; // Changed from "story" to "demo" to match existing code
+
+    const step = highwayDrivingNarrative[storyIdx - 1]; // Changed from stepIndex to storyIdx
+    if (!step) return;
+
+    // Apply focus/dimming
+    setNodes((nds) =>
+      nds.map((n) => {
+        const isFocused = !step.focusIds || step.focusIds.includes(n.id);
+        return {
+          ...n,
+          data: {
+            ...n.data,
+            dimmed: !isFocused,
+            highlighted: isFocused,
+          },
+        };
+      })
+    );
+
+    // Auto-zoom logic
+    if (autoZoomEnabled && step.focusIds && step.focusIds.length > 0) {
+      const currentNodes = rf.getNodes();
+      const container = document.querySelector('.react-flow');
+      if (container) {
+        const { width, height } = container.getBoundingClientRect();
+        const target = calculateFocusViewport(step.focusIds, currentNodes, { width, height });
+
+        if (target) {
+          rf.setCenter(target.x, target.y, { zoom: target.zoom, duration: 1000 });
+        }
+      }
+    }
+  }, [mode, storyIdx, setNodes, rf, autoZoomEnabled, highwayDrivingNarrative]); // Added highwayDrivingNarrative to dependencies
 
   // GSAP Animation System - Animate wrapper elements on story step changes
   useEffect(() => {
@@ -2233,7 +2277,20 @@ function InnerGraph({ diagram, initialMode = "demo" }: { diagram: BowtieDiagram;
               <Background gap={24} />
 
               <MiniMap />
-              <Controls />
+              <Controls>
+                {mode === "demo" && ( // Changed from "story" to "demo"
+                  <div className="react-flow__controls-button" title="Toggle Auto-Zoom">
+                    <label style={{ cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", width: "100%", height: "100%" }}>
+                      <input
+                        type="checkbox"
+                        checked={autoZoomEnabled}
+                        onChange={(e) => setAutoZoomEnabled(e.target.checked)}
+                        style={{ margin: 0, width: "12px", height: "12px" }}
+                      />
+                    </label>
+                  </div>
+                )}
+              </Controls>
               {mode === "builder" && dropSlots.length > 0 && (
                 <DropSlotLayer slots={dropSlots} activeSlot={activeSlot} />
               )}

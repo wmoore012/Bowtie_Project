@@ -29,6 +29,7 @@ describe("Narrative visuals", () => {
     await user.click(screen.getByRole("button", { name: /Next/i }));
     await user.click(screen.getByRole("button", { name: /Next/i }));
     await user.click(screen.getByRole("button", { name: /Next/i }));
-    expect(await screen.findByText(/Periodical alcohol and drug screening/i)).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: /Next/i }));
+    expect(await screen.findByText(/Hourly weather alerts/i)).toBeInTheDocument();
   });
 });
