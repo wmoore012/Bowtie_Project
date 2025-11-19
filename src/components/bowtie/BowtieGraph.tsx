@@ -1618,20 +1618,35 @@ function InnerGraph({ diagram, initialMode = "demo" }: { diagram: BowtieDiagram;
       const revealSet = new Set(stepData?.revealIds ?? stepData?.focusIds ?? []);
       const autoRevealCandidates = new Set([...focusSet, ...revealSet]);
       const narrativeChainRoots = new Set<string>();
+      let hasAnyBarriers = false;
+
       autoRevealCandidates.forEach((id) => {
         const nodeType = nodeById.get(id)?.type;
         if (nodeType === "threat" || nodeType === "consequence") return;
+
+        // If we get here, this is a barrier node (prevention/mitigation/escalation)
+        hasAnyBarriers = true;
+
         const rootId = nodeToRoot.get(id);
         if (!rootId) return;
         narrativeChainRoots.add(rootId);
         revealSet.add(rootId);
         chainNodesByRoot.get(rootId)?.forEach((nodeId) => revealSet.add(nodeId));
       });
+
       setStoryFocusIds(focusSet);
       setStoryRevealIds(revealSet);
       setManualFocusIds(new Set());
       setManualRevealIds(new Set());
-      setExpandedChainRoots(new Set(narrativeChainRoots));
+
+      // Defensive: if no barriers in focusIds/revealIds, FORCE empty expandedChainRoots
+      // This prevents race conditions or state persistence from incorrectly expanding chains
+      if (!hasAnyBarriers) {
+        setExpandedChainRoots(new Set());
+      } else {
+        setExpandedChainRoots(new Set(narrativeChainRoots));
+      }
+
       setHighlightedChainRootId(null);
     } else {
       setStoryFocusIds(new Set());
