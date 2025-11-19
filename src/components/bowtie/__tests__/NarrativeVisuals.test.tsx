@@ -24,12 +24,12 @@ describe("Narrative visuals", () => {
   it("reveals prevention barriers during the story at the prevention step", async () => {
     const user = userEvent.setup();
     render(<BowtieGraph diagram={highwayDrivingExample} initialMode="demo" />);
-    expect(screen.queryByText(/Periodical alcohol and drug screening/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/Random drug screening/i)).not.toBeInTheDocument();
     await user.click(await screen.findByRole("button", { name: /START/i }));
     await user.click(screen.getByRole("button", { name: /Next/i }));
     await user.click(screen.getByRole("button", { name: /Next/i }));
     await user.click(screen.getByRole("button", { name: /Next/i }));
     await user.click(screen.getByRole("button", { name: /Next/i }));
-    expect(await screen.findByText(/Hourly weather alerts/i)).toBeInTheDocument();
+    expect(await screen.findByText(/Random drug screening/i)).toBeInTheDocument();
   });
 });

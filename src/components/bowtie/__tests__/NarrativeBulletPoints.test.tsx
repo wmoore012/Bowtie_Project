@@ -49,11 +49,11 @@ describe("Narrative bullet points rendering", () => {
     expect(storyBody?.textContent).toContain('Distraction');
   });
 
-  it("renders bullet points (•) in Story Overlay for step 5 (Prevention: Weather)", async () => {
+  it("renders bullet points (•) in Story Overlay for step 4 (Prevention: Impaired Driving)", async () => {
     const user = userEvent.setup();
     render(<BowtieGraph diagram={highwayDrivingExample} initialMode="demo" />);
 
-    // Navigate to step 5
+    // Navigate to step 4
     await user.click(await screen.findByRole("button", { name: /START/i }));
     await user.click(screen.getByRole("button", { name: /Next/i }));
     await user.click(screen.getByRole("button", { name: /Next/i }));
@@ -63,11 +63,11 @@ describe("Narrative bullet points rendering", () => {
     const storyOverlay = screen.getByLabelText(/Demo narrative/i);
     const storyBody = storyOverlay.querySelector('p');
 
-    // Step 5 has prevention barriers with bullet points
+    // Step 4 has prevention barriers with bullet points
     expect(storyBody?.textContent).toContain('•');
-    expect(storyBody?.textContent).toContain('Hourly weather alerts');
-    expect(storyBody?.textContent).toContain('Schedule adjustments');
-    expect(storyBody?.textContent).toContain('No-drive thresholds');
+    expect(storyBody?.textContent).toContain('Random drug screening');
+    expect(storyBody?.textContent).toContain('Designated driver pairs');
+    expect(storyBody?.textContent).toContain('Breath interlock');
   });
 
   it("renders HTML line breaks (<br>) as actual line breaks", async () => {
