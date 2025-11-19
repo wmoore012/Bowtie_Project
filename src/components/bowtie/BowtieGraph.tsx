@@ -63,7 +63,7 @@ import {
   replaceThreatLaneEdges
 } from "./laneUtils";
 
-import { highwayDrivingNarrative } from "../../domain/scenarios/highway_driving_narrative";
+import { highwayDrivingNarrative } from "../../domain/scenarios/highwayDrivingNarrative";
 import gsap from "gsap";
 import { calculateFocusViewport } from "./story/autoZoom";
 
