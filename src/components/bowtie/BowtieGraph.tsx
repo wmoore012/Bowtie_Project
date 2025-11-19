@@ -1663,18 +1663,23 @@ function InnerGraph({ diagram, initialMode = "demo" }: { diagram: BowtieDiagram;
       })
     );
 
-    // Auto-zoom logic
+    // Auto-zoom logic - delayed to ensure nodes are measured
     if (autoZoomEnabled && step.focusIds && step.focusIds.length > 0) {
-      const currentNodes = rf.getNodes();
-      const container = document.querySelector('.react-flow');
-      if (container) {
-        const { width, height } = container.getBoundingClientRect();
-        const target = calculateFocusViewport(step.focusIds, currentNodes, { width, height });
+      // Small delay to ensure React Flow has measured the nodes after reveal/highlight
+      const timer = setTimeout(() => {
+        const currentNodes = rf.getNodes();
+        const container = document.querySelector('.react-flow');
+        if (container) {
+          const { width, height } = container.getBoundingClientRect();
+          const target = calculateFocusViewport(step.focusIds, currentNodes, { width, height });
 
-        if (target) {
-          rf.setCenter(target.x, target.y, { zoom: target.zoom, duration: 2000 });
+          if (target) {
+            rf.setCenter(target.x, target.y, { zoom: target.zoom, duration: 2000 });
+          }
         }
-      }
+      }, 100); // 100ms delay to allow DOM updates and measurements
+
+      return () => clearTimeout(timer);
     }
   }, [mode, storyIdx, setNodes, rf, autoZoomEnabled, highwayDrivingNarrative]); // Added highwayDrivingNarrative to dependencies
 
