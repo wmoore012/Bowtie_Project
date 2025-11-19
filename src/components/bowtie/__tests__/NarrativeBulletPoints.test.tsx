@@ -49,13 +49,12 @@ describe("Narrative bullet points rendering", () => {
     expect(storyBody?.textContent).toContain('Distraction');
   });
 
-  it("renders bullet points (•) in Story Overlay for step 4 (Prevention: Impaired Driving)", async () => {
+  it("renders bullet points (•) in Story Overlay for step 3 (Prevention: Impaired)", async () => {
     const user = userEvent.setup();
     render(<BowtieGraph diagram={highwayDrivingExample} initialMode="demo" />);
 
-    // Navigate to step 4
+    // Navigate to step 3
     await user.click(await screen.findByRole("button", { name: /START/i }));
-    await user.click(screen.getByRole("button", { name: /Next/i }));
     await user.click(screen.getByRole("button", { name: /Next/i }));
     await user.click(screen.getByRole("button", { name: /Next/i }));
     await user.click(screen.getByRole("button", { name: /Next/i }));
@@ -63,7 +62,7 @@ describe("Narrative bullet points rendering", () => {
     const storyOverlay = screen.getByLabelText(/Demo narrative/i);
     const storyBody = storyOverlay.querySelector('p');
 
-    // Step 4 has prevention barriers with bullet points
+    // Step 3 has prevention barriers with bullet points
     expect(storyBody?.textContent).toContain('•');
     expect(storyBody?.textContent).toContain('Random drug screening');
     expect(storyBody?.textContent).toContain('Designated driver pairs');
