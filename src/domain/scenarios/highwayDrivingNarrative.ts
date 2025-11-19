@@ -42,50 +42,14 @@ export const highwayDrivingNarrative: StoryStep[] = [
     revealIds: ["pb-screening", "pb-designated-driver", "pb-ignition-lock", "pb-lane-warning-t1"],
   },
 
-  // 5. (Old 9) DEVIATION: Eyes Off Road
+  // 5. NEW TRANSITION: When Prevention Fails
   {
-    title: "📱 DEVIATION: Eyes Off Road for 5 Seconds",
-    body: "<strong>Friday 5:15 PM:</strong> Driver checks phone to reroute around traffic.<br>• 👤 <strong>WHO:</strong> Driver with clean 10-year record<br>• 🔇 <strong>WHAT:</strong> Lane departure warning doesn't trigger<br>• 💸 <strong>WHY:</strong> ADAS calibration overdue 3 months<br>• ⚠️ <strong>IMPACT:</strong> Two barriers down—distraction + failed detection",
-    focusIds: ["th-distracted", "pb-lane-warning-t3", "ef-miscalibration"],
-  },
-
-  // 6. (Old 15) RECOVERY: Near-Miss Triggers Changes
-  {
-    title: "🛠️ NEAR-MISS: What We Changed",
-    body: "<strong>Actions taken within 48 hours:</strong><br>• 🔧 <strong>Fleet-wide ADAS calibration</strong> (3-day blitz)<br>• 🌦️ <strong>Weather alert automation</strong> with failsafe backup<br>• 🧠 <strong>Defensive driving refreshers</strong> moved up 6 months<br>• 🔔 <strong>Seatbelt alarm bypass = disciplinary action</strong><br>• 🛞 <strong>ABS faults escalation protocol</strong> revised",
-    focusIds: ["pb-calibration", "pb-weather-report-t4", "pb-weather-report-t6", "pb-defensive-driving", "mb-seatbelt-alarm", "pb-abs"],
-    revealIds: ["pb-calibration", "pb-weather-report-t4", "pb-weather-report-t6", "pb-defensive-driving"],
-  },
-
-  // 7. NEW TRANSITION: Catastrophic Events
-  {
-    title: "⚠️ TRANSITION: Catastrophic Events",
-    body: "<strong>What's at stake if none of our barriers work?</strong><br><br>Let's rewind and see the chain from bad weather to loss of control.",
-    focusIds: ["hz-highway", "te-loss-control"],
-  },
-
-  // 8. LATENT CONDITIONS (moved from position 2 for narrative flow)
-  {
-    title: "🕳️ LATENT WEAKNESS: Cracks in the Foundation",
-    body: "<strong>Hidden weaknesses building over months:</strong><br>• 📡 <strong>ADAS calibration overdue</strong> after windshield replacements<br>• 🛞 <strong>ABS faults ignored</strong>—not escalated to maintenance<br>• ✂️ <strong>Seatbelt alarms disconnected</strong> by drivers (too annoying)<br>• ⏭️ <strong>Weather alerts skipped</strong> when dispatch busy<br>• 💸 <strong>Defensive training postponed</strong> 6 months (budget cuts)",
-    focusIds: ["ef-miscalibration", "ef-maint-backlog", "ef-seatbelt", "pb-weather-report-t4", "pb-weather-report-t6", "pb-defensive-driving"],
-  },
-
-  // 9. (Old 10) ESCALATION: Black Ice
-  {
-    title: "❄️ ESCALATION: Black Ice Forms",
-    body: "<strong>Friday 5:17 PM:</strong> Temperature drops under bridge, pavement ices.<br>• 🧊 <strong>WHAT:</strong> Rear wheels lose traction at 65 mph<br>• 🛞 <strong>COMPOUNDING FACTOR:</strong> ABS fault from last week not fixed<br>• 📋 <strong>WHY:</strong> Maintenance backlog—non-critical items deferred<br>• 🌀 <strong>IMPACT:</strong> Braking asymmetric, truck starts rotating",
-    focusIds: ["th-slippery", "th-impaired-vehicle", "ef-maint-backlog"],
-  },
-
-  // 10. (Old 11) TOP EVENT
-  {
-    title: "🎯 TOP EVENT: Loss of Control",
-    body: "<strong>Friday 5:17:03 PM:</strong> Truck rotates 45° in lane, crosses centerline.<br><em>Prevention has failed. Mitigation is now the only hope.</em>",
+    title: "🎯 TRANSITION: When Prevention Fails",
+    body: "<strong>But what happens when barriers don't hold?</strong><br><br>The right side of the bowtie activates—mitigation and recovery.<br><br>Let's see how technology and training respond in real time.",
     focusIds: ["te-loss-control"],
   },
 
-  // 11. (Old 12) MITIGATION ENGAGES
+  // 6. (Old 11) MITIGATION: Tech + Training Respond
   {
     title: "🛡 MITIGATION: Tech + Training Respond",
     body: "<strong>Friday 5:17:04 PM:</strong> Three mitigation barriers activate:<br>• 🚨 <strong>Forward collision radar</strong> chirps—car 200 feet ahead<br>• 🧠 <strong>Defensive training kicks in</strong>—driver countersteers smoothly<br>• 🛡️ <strong>Crumple zone ready</strong> if impact occurs<br><em>Driver fighting for control.</em>",
@@ -93,11 +57,54 @@ export const highwayDrivingNarrative: StoryStep[] = [
     revealIds: ["mb-forward-warning", "mb-defensive-competence", "mb-crumple-zone"],
   },
 
-  // 12. (Old 14) OUTCOME: BARRIER WIN
+  // 7. (Old 12) OUTCOME: BARRIER WIN
   {
     title: "✅ BARRIER WIN: Control Regained",
     body: "<strong>Friday 5:17:08 PM:</strong> Driver regains lane position.<br>• 🎯 <strong>WHAT WORKED:</strong> Radar alert + defensive training<br>• ✅ <strong>RESULT:</strong> No collision, truck intact<br>• 😰 <strong>HUMAN COST:</strong> Driver's hands shaking, heart racing<br><em>Mitigation held—this time.</em>",
     focusIds: ["mb-forward-warning", "mb-defensive-competence"],
+  },
+
+  // 8. (Old 6) RECOVERY: Near-Miss Triggers Changes
+  {
+    title: "🛠️ NEAR-MISS: What We Changed",
+    body: "<strong>Actions taken within 48 hours:</strong><br>• 🔧 <strong>Fleet-wide ADAS calibration</strong> (3-day blitz)<br>• 🌦️ <strong>Weather alert automation</strong> with failsafe backup<br>• 🧠 <strong>Defensive driving refreshers</strong> moved up 6 months<br>• 🔔 <strong>Seatbelt alarm bypass = disciplinary action</strong><br>• 🛞 <strong>ABS faults escalation protocol</strong> revised",
+    focusIds: ["pb-calibration", "pb-weather-report-t4", "pb-weather-report-t6", "pb-defensive-driving", "mb-seatbelt-alarm", "pb-abs"],
+    revealIds: ["pb-calibration", "pb-weather-report-t4", "pb-weather-report-t6", "pb-defensive-driving"],
+  },
+
+  // 9. NEW TRANSITION: The Full Story
+  {
+    title: "📖 TRANSITION: The Full Story",
+    body: "<strong>Now that you've seen the outcome, let's rewind.</strong><br><br>How did we get to that moment of near-catastrophe?<br><br>The detailed chain of events reveals the hidden weaknesses.",
+    focusIds: ["hz-highway", "te-loss-control"],
+  },
+
+  // 10. LATENT CONDITIONS (moved from position 8 for narrative flow)
+  {
+    title: "🕳️ LATENT WEAKNESS: Cracks in the Foundation",
+    body: "<strong>Hidden weaknesses building over months:</strong><br>• 📡 <strong>ADAS calibration overdue</strong> after windshield replacements<br>• 🛞 <strong>ABS faults ignored</strong>—not escalated to maintenance<br>• ✂️ <strong>Seatbelt alarms disconnected</strong> by drivers (too annoying)<br>• ⏭️ <strong>Weather alerts skipped</strong> when dispatch busy<br>• 💸 <strong>Defensive training postponed</strong> 6 months (budget cuts)",
+    focusIds: ["ef-miscalibration", "ef-maint-backlog", "ef-seatbelt", "pb-weather-report-t4", "pb-weather-report-t6", "pb-defensive-driving"],
+  },
+
+  // 11. (Old 5) DEVIATION: Eyes Off Road
+  {
+    title: "📱 DEVIATION: Eyes Off Road for 5 Seconds",
+    body: "<strong>Friday 5:15 PM:</strong> Driver checks phone to reroute around traffic.<br>• 👤 <strong>WHO:</strong> Driver with clean 10-year record<br>• 🔇 <strong>WHAT:</strong> Lane departure warning doesn't trigger<br>• 💸 <strong>WHY:</strong> ADAS calibration overdue 3 months<br>• ⚠️ <strong>IMPACT:</strong> Two barriers down—distraction + failed detection",
+    focusIds: ["th-distracted", "pb-lane-warning-t3", "ef-miscalibration"],
+  },
+
+  // 12. (Old 9) ESCALATION: Black Ice
+  {
+    title: "❄️ ESCALATION: Black Ice Forms",
+    body: "<strong>Friday 5:17 PM:</strong> Temperature drops under bridge, pavement ices.<br>• 🧊 <strong>WHAT:</strong> Rear wheels lose traction at 65 mph<br>• 🛞 <strong>COMPOUNDING FACTOR:</strong> ABS fault from last week not fixed<br>• 📋 <strong>WHY:</strong> Maintenance backlog—non-critical items deferred<br>• 🌀 <strong>IMPACT:</strong> Braking asymmetric, truck starts rotating",
+    focusIds: ["th-slippery", "th-impaired-vehicle", "ef-maint-backlog"],
+  },
+
+  // 13. (Old 10) TOP EVENT
+  {
+    title: "🎯 TOP EVENT: Loss of Control",
+    body: "<strong>Friday 5:17:03 PM:</strong> Truck rotates 45° in lane, crosses centerline.<br><em>Prevention has failed. Mitigation is now the only hope.</em>",
+    focusIds: ["te-loss-control"],
   },
 
   // 13. (Old 5) ALTERNATE OUTCOME
