@@ -1672,7 +1672,7 @@ function InnerGraph({ diagram, initialMode = "demo" }: { diagram: BowtieDiagram;
         const target = calculateFocusViewport(step.focusIds, currentNodes, { width, height });
 
         if (target) {
-          rf.setCenter(target.x, target.y, { zoom: target.zoom, duration: 1000 });
+          rf.setCenter(target.x, target.y, { zoom: target.zoom, duration: 2000 });
         }
       }
     }
