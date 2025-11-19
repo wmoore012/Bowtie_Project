@@ -54,6 +54,8 @@ import {
   saveDiagramToLocalStorage,
   loadDiagramFromLocalStorage
 } from "../../utils/diagramIO";
+import { DropSlotLayer } from "./DropSlotLayer";
+import { calculatePreventionSlots, findNearestSlot, type DropSlot } from "./slotUtils";
 
 import { highwayDrivingNarrative } from "../../domain/scenarios/highway_driving_narrative";
 import gsap from "gsap";
@@ -415,6 +417,10 @@ function InnerGraph({ diagram, initialMode = "demo" }: { diagram: BowtieDiagram;
 
   const [cardNode, setCardNode] = useState<RFNode<BowtieNodeData> | null>(null);
   const [lastFocusedNodeId, setLastFocusedNodeId] = useState<string | null>(null);
+
+  // Slot visualization state
+  const [dropSlots, setDropSlots] = useState<DropSlot[]>([]);
+  const [activeSlot, setActiveSlot] = useState<DropSlot | null>(null);
 
   const nodeById = useMemo(() => new Map(diagram.nodes.map((n) => [n.id, n])), [diagram]);
   const adjacency = useMemo(() => {
@@ -1082,6 +1088,14 @@ function InnerGraph({ diagram, initialMode = "demo" }: { diagram: BowtieDiagram;
       e.dataTransfer.setData("text/plain", t);
       e.dataTransfer.effectAllowed = "copy";
 
+      // Pre-calculate slots if dragging a prevention barrier
+      if (t === "preventionBarrier") {
+        const slots = calculatePreventionSlots(threatLanes, nodes);
+        setDropSlots(slots);
+      } else {
+        setDropSlots([]);
+      }
+
       // Visual drag preview so users immediately recognize what they're dragging
       if (typeof document !== "undefined") {
         const preview = document.createElement("div");
@@ -1113,6 +1127,9 @@ function InnerGraph({ diagram, initialMode = "demo" }: { diagram: BowtieDiagram;
         const cleanup = () => {
           try {
             preview.remove();
+            // Clear slots on drag end
+            setDropSlots([]);
+            setActiveSlot(null);
           } catch {
             // Ignore cleanup errors
           }
@@ -1139,6 +1156,14 @@ function InnerGraph({ diagram, initialMode = "demo" }: { diagram: BowtieDiagram;
     e.preventDefault();
     try {
       e.dataTransfer.dropEffect = "copy";
+
+      // If we have active slots, find the nearest one
+      if (dropSlots.length > 0) {
+        const client = { x: e.clientX, y: e.clientY };
+        const pos = rf.screenToFlowPosition(client, { snapToGrid: false });
+        const nearest = findNearestSlot(dropSlots, pos.x, pos.y);
+        setActiveSlot(nearest);
+      }
     } catch {
       // Ignore dataTransfer errors
     }
@@ -1211,7 +1236,22 @@ function InnerGraph({ diagram, initialMode = "demo" }: { diagram: BowtieDiagram;
         return Math.abs(node.position.y - pos.y) <= rowThreshold;
       });
 
-      if (rowNodes.length > 0) {
+      if (activeSlot) {
+        // Use the active slot for precise insertion
+        const updatedLanes = moveBarrierToThreat(
+          threatLanes,
+          id as BarrierId,
+          activeSlot.threatId,
+          activeSlot.insertIndex
+        );
+        setThreatLanes(updatedLanes);
+
+        // Snap node to slot position
+        setNodes((nds) => nds.map(n => n.id === id ? { ...n, position: { x: activeSlot.x, y: activeSlot.y } } : n));
+
+        applyBuilderLayout(updatedLanes);
+        appliedLaneLayoutForPrevention = true;
+      } else if (rowNodes.length > 0) {
         const withNew = rowNodes.concat({
           ...newNode,
           position: { x: snappedX, y: pos.y },
@@ -1267,6 +1307,10 @@ function InnerGraph({ diagram, initialMode = "demo" }: { diagram: BowtieDiagram;
           "Could not find nearby nodes to attach this barrier. It was added without connections.",
         );
       }
+
+      // Clear slots after drop
+      setDropSlots([]);
+      setActiveSlot(null);
     } else if (t === "mitigationBarrier") {
       const candidateTypes: BowtieNodeType[] = ["topEvent", "mitigationBarrier", "consequence"];
       const rowThreshold = 80; // px distance for considering nodes on the same row
@@ -2094,8 +2138,8 @@ function InnerGraph({ diagram, initialMode = "demo" }: { diagram: BowtieDiagram;
   return (
     <div ref={wrapperRef} className={styles.graphRoot}>
 
-        <main className={styles.canvasRegion} aria-label="Canvas region">
-            <div className={styles.canvasToolbarContainer}>
+      <main className={styles.canvasRegion} aria-label="Canvas region">
+        <div className={styles.canvasToolbarContainer}>
 
 
 
@@ -2109,380 +2153,383 @@ function InnerGraph({ diagram, initialMode = "demo" }: { diagram: BowtieDiagram;
         </div>
 
         <Legend />
-          <div className={styles.canvasHost} ref={canvasRef} onDrop={onCanvasDrop} onDragOver={onCanvasDragOver} data-testid="canvas-host" data-mode={mode}>
-      <ErrorBoundary fallback={<div role="alert">Unable to render diagram.</div>}>
+        <div className={styles.canvasHost} ref={canvasRef} onDrop={onCanvasDrop} onDragOver={onCanvasDragOver} data-testid="canvas-host" data-mode={mode}>
+          <ErrorBoundary fallback={<div role="alert">Unable to render diagram.</div>}>
 
 
 
-      <ReactFlow
-        nodes={nodes}
-        edges={edges}
-        onNodesChange={onNodesChange}
-        onEdgesChange={onEdgesChange}
-        onConnect={handleConnect}
-        onPaneClick={() => {
-          if (cardNode) handleCloseCard();
-          if (mode === "builder") {
-            setInspectorOpen(false);
-            setSelectedInspectorId(null);
-          }
-        }}
+            <ReactFlow
+              nodes={nodes}
+              edges={edges}
+              onNodesChange={onNodesChange}
+              onEdgesChange={onEdgesChange}
+              onConnect={handleConnect}
+              onPaneClick={() => {
+                if (cardNode) handleCloseCard();
+                if (mode === "builder") {
+                  setInspectorOpen(false);
+                  setSelectedInspectorId(null);
+                }
+              }}
 
-        onNodeClick={(_, n) => {
-          const dn = diagram.nodes.find((x) => x.id === n.id) || null;
-          const bt = dn?.type;
-          if (bt === "topEvent") {
-            const totalChainRoots = chainNodesByRoot.size;
-            const allChainsExpanded =
-              totalChainRoots === 0 || expandedChainRoots.size >= totalChainRoots;
-            const atFinalStep = step === MAX_STEP;
-            const isFullyExpanded = leftExpanded && rightExpanded && atFinalStep && allChainsExpanded;
-            if (isFullyExpanded) {
-              setExpandedChainRoots(new Set());
-              setHighlightedChainRootId(null);
-              setManualRevealIds(new Set());
-              setManualFocusIds(new Set());
-              setCardNode(null);
-              setStep(1 as StepIndex);
-              return;
-            }
-            setLeftExpanded(true);
-            setRightExpanded(true);
-            setStep(MAX_STEP);
-            if (totalChainRoots > 0) {
-              const allRoots = new Set<string>();
-              chainNodesByRoot.forEach((_, rootId) => allRoots.add(rootId));
-              setExpandedChainRoots(allRoots);
-            }
-            setHighlightedChainRootId(null);
-            const allIds = new Set(diagram.nodes.map((node) => node.id));
-            setManualFocusIds(allIds);
-            handleNodeClick(n, { skipReveal: true });
-            return;
-          } else if (mode === "demo" && (bt === "threat" || bt === "consequence")) {
-            const toggled = toggleChainExpansion(n.id);
-            if (toggled !== "noop") {
-              handleNodeClick(n, { skipReveal: true });
-              return;
-            }
-          }
-          if (highlightedChainRootId && highlightedChainRootId !== n.id) {
-            setHighlightedChainRootId(null);
-          }
-          handleNodeClick(n);
-        }}
-        onNodeMouseEnter={(_, n) => {
-          try {
-            const d = n.data as BowtieNodeData;
-            if (d && !preloadRef.current.has(n.id)) {
-              preloadRef.current.set(n.id, d);
-            }
-          } catch {
-            // Ignore preload errors
-          }
-        }}
-        nodeTypes={nodeTypes}
-        defaultEdgeOptions={{ markerEnd: { type: MarkerType.ArrowClosed }, style: { stroke: "var(--edge)" } }}
-        fitView
-      >
-
-        <Background gap={24} />
-
-        <MiniMap />
-        <Controls />
-      </ReactFlow>
-
-      </ErrorBoundary>
-        <>
-          {mode === "demo" && storyOpen && (
-            <div className={styles.storyOverlay} role="dialog" aria-modal="false" aria-label="Demo narrative">
-              <div className={styles.storyCard}>
-                <div className={styles.panelTitle}>{highwayDrivingNarrative[storyIdx - 1]?.title}</div>
-                <p
-                  className={styles.storyBody}
-                  dangerouslySetInnerHTML={{ __html: highwayDrivingNarrative[storyIdx - 1]?.body || "" }}
-                />
-                <div className={styles.storyControls}>
-                  <div className={styles.storyControlsLeft}>
-                    <button className={styles.bowtieButton} onClick={() => setStoryOpen(false)} type="button">
-                      Hide
-                    </button>
-                  </div>
-                  <div className={styles.storyControlsCenter}>
-                    {storyIdx !== highwayDrivingNarrative.length && (
-                      <span
-                        className={`${styles.stepLabel} ${styles[`stepRole${getStepRole(storyIdx)}`] || ""}`}
-                        aria-live="polite"
-                      >
-                        Step {storyIdx} of {highwayDrivingNarrative.length}
-                      </span>
-                    )}
-                  </div>
-                  <div className={styles.storyControlsRight}>
-                    {storyIdx === highwayDrivingNarrative.length ? (
-                      <button className={styles.bowtieButton} onClick={() => setStoryIdx(1)} type="button">
-                        START
-                      </button>
-                    ) : (
-                      <>
-                        <button
-                          className={styles.bowtieButton}
-                          onClick={() => setStoryIdx((i) => (i > 1 ? i - 1 : i))}
-                          disabled={storyIdx === 1}
-                          type="button"
-                        >
-                          ◀ Prev
-                        </button>
-                        <button
-                          className={styles.bowtieButton}
-                          onClick={() => setStoryIdx((i) => (i < highwayDrivingNarrative.length ? i + 1 : i))}
-                          disabled={storyIdx === highwayDrivingNarrative.length}
-                          type="button"
-                        >
-                          Next ▶
-                        </button>
-                      </>
-                    )}
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-
-          <div className={styles.floatingTopRight} style={{ top: storyOpen ? 80 : 12 }}>
-            <button
-              className={styles.bowtieButton}
-              aria-controls="filters-panel"
-              aria-expanded={filtersOpen}
-              onClick={() => { setFiltersOpen((o) => !o); }}
-              type="button"
-              ref={filtersBtnRef}
+              onNodeClick={(_, n) => {
+                const dn = diagram.nodes.find((x) => x.id === n.id) || null;
+                const bt = dn?.type;
+                if (bt === "topEvent") {
+                  const totalChainRoots = chainNodesByRoot.size;
+                  const allChainsExpanded =
+                    totalChainRoots === 0 || expandedChainRoots.size >= totalChainRoots;
+                  const atFinalStep = step === MAX_STEP;
+                  const isFullyExpanded = leftExpanded && rightExpanded && atFinalStep && allChainsExpanded;
+                  if (isFullyExpanded) {
+                    setExpandedChainRoots(new Set());
+                    setHighlightedChainRootId(null);
+                    setManualRevealIds(new Set());
+                    setManualFocusIds(new Set());
+                    setCardNode(null);
+                    setStep(1 as StepIndex);
+                    return;
+                  }
+                  setLeftExpanded(true);
+                  setRightExpanded(true);
+                  setStep(MAX_STEP);
+                  if (totalChainRoots > 0) {
+                    const allRoots = new Set<string>();
+                    chainNodesByRoot.forEach((_, rootId) => allRoots.add(rootId));
+                    setExpandedChainRoots(allRoots);
+                  }
+                  setHighlightedChainRootId(null);
+                  const allIds = new Set(diagram.nodes.map((node) => node.id));
+                  setManualFocusIds(allIds);
+                  handleNodeClick(n, { skipReveal: true });
+                  return;
+                } else if (mode === "demo" && (bt === "threat" || bt === "consequence")) {
+                  const toggled = toggleChainExpansion(n.id);
+                  if (toggled !== "noop") {
+                    handleNodeClick(n, { skipReveal: true });
+                    return;
+                  }
+                }
+                if (highlightedChainRootId && highlightedChainRootId !== n.id) {
+                  setHighlightedChainRootId(null);
+                }
+                handleNodeClick(n);
+              }}
+              onNodeMouseEnter={(_, n) => {
+                try {
+                  const d = n.data as BowtieNodeData;
+                  if (d && !preloadRef.current.has(n.id)) {
+                    preloadRef.current.set(n.id, d);
+                  }
+                } catch {
+                  // Ignore preload errors
+                }
+              }}
+              nodeTypes={nodeTypes}
+              defaultEdgeOptions={{ markerEnd: { type: MarkerType.ArrowClosed }, style: { stroke: "var(--edge)" } }}
+              fitView
             >
-              Filters ▾
-            </button>
-            {filtersOpen && (
-              <div id="filters-panel" className={styles.filtersFloatingPanel} aria-label="Filter by role">
-                <span className={styles.filterLabel}>Filter:</span>
-                {allRoles.map((role) => {
-                  const pressed = selectedRoles.has(role);
-                  return (
-                    <button
-                      key={role}
-                      className={styles.bowtieChip}
-                      aria-label={`Toggle role filter ${role}`}
-                      aria-pressed={pressed}
-                      data-pressed={pressed}
-                      onClick={() => {
-                        setSelectedRoles((prev) => {
-                          const next = new Set(prev);
-                          if (pressed) next.delete(role);
-                          else next.add(role);
-                          return next;
-                        });
-                      }}
-                      type="button"
-                    >
-                      {role}
-                    </button>
-                  );
-                })}
-                <button
-                  className={styles.bowtieButton}
-                  onClick={() => setSelectedRoles(new Set())}
-                  disabled={selectedRoles.size === 0}
-                  type="button"
-                >
-                  Clear
-                </button>
-              </div>
-            )}
 
-            {actionsOpen && (
-              <div id="actions-panel" className={styles.filtersFloatingPanel} role="dialog" aria-label="Actions">
-                <div className={styles.panelTitle} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <span>Actions</span>
-                  <button className={styles.bowtieButton} aria-label="Close actions" type="button" onClick={() => setActionsOpen(false)}>×</button>
-                </div>
-                <div style={{ display: 'grid', gap: 8 }}>
-                  <button className={styles.bowtieButton} type="button" onClick={() => { setLeftExpanded(true); setRightExpanded(true); }}>Expand All</button>
-                  <button className={styles.bowtieButton} type="button" onClick={() => { setLeftExpanded(false); setRightExpanded(false); }}>Collapse All</button>
-                  <button className={styles.bowtieButton} type="button" aria-pressed={failedMode} onClick={() => setFailedMode((v) => !v)}>
-                    {failedMode ? 'Disable failure highlight' : 'Simulate failure'}
-                  </button>
-                  <button className={styles.bowtieButton} type="button" onClick={() => { try { rf.fitView({ padding: 0.2 }); } catch { /* Ignore fitView errors */ } }}>Fit All</button>
-                  <button className={styles.bowtieButton} type="button" onClick={() => { void exportPng(); }}>Export PNG</button>
-                </div>
-              </div>
-            )}
+              <Background gap={24} />
 
-            {exportOpen && (
-              <div id="export-panel" className={styles.filtersFloatingPanel} role="dialog" aria-label="Export">
-                <div className={styles.panelTitle} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <span>Share / Export</span>
-                  <button className={styles.bowtieButton} aria-label="Close export" type="button" onClick={() => setExportOpen(false)}>×</button>
-                </div>
-                <div style={{ display: 'grid', gap: 8 }}>
-                  <button className={styles.bowtieButton} type="button" onClick={() => { void exportPng(); }}>Export PNG</button>
-                </div>
-              </div>
-            )}
-            {mode === "builder" && (
-              <>
-                <button
-                  className={styles.bowtieButton}
-                  aria-controls="builder-palette-panel"
-                  aria-expanded={paletteOpen}
-                  onClick={() => setPaletteOpen((o) => !o)}
-                  type="button"
-                  data-testid="builder-palette-toggle"
-                  ref={paletteBtnRef}
-                >
-                  Palette ▾
-                </button>
-                <button
-                  className={`${styles.bowtieButton} ${styles.resetLayoutButton}`}
-                  onClick={() => applyBuilderLayout()}
-                  type="button"
-                  title="Reset node positions to default layout"
-                  aria-label="Reset layout"
-                >
-                  ↻ Reset Layout
-                </button>
-                {paletteOpen && (
-                  <div id="builder-palette-panel" className={styles.filtersFloatingPanel} role="dialog" aria-label="Builder palette" data-testid="builder-palette">
-                    <div className={styles.panelTitle} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <span>Add nodes</span>
-                      <button className={styles.bowtieButton} aria-label="Close palette" type="button" onClick={() => setPaletteOpen(false)}>×</button>
+              <MiniMap />
+              <Controls />
+              {mode === "builder" && dropSlots.length > 0 && (
+                <DropSlotLayer slots={dropSlots} activeSlot={activeSlot} />
+              )}
+            </ReactFlow>
+
+          </ErrorBoundary>
+          <>
+            {mode === "demo" && storyOpen && (
+              <div className={styles.storyOverlay} role="dialog" aria-modal="false" aria-label="Demo narrative">
+                <div className={styles.storyCard}>
+                  <div className={styles.panelTitle}>{highwayDrivingNarrative[storyIdx - 1]?.title}</div>
+                  <p
+                    className={styles.storyBody}
+                    dangerouslySetInnerHTML={{ __html: highwayDrivingNarrative[storyIdx - 1]?.body || "" }}
+                  />
+                  <div className={styles.storyControls}>
+                    <div className={styles.storyControlsLeft}>
+                      <button className={styles.bowtieButton} onClick={() => setStoryOpen(false)} type="button">
+                        Hide
+                      </button>
                     </div>
-                    <div className={styles.paletteGroup} role="group" aria-label="Add nodes">
-                      <button className={styles.bowtieButton} draggable onDragStart={(e) => onPaletteDragStart(e, "threat")}>Threat</button>
-                      <button className={styles.bowtieButton} draggable onDragStart={(e) => onPaletteDragStart(e, "preventionBarrier")}>Prevention Barrier</button>
-                      <button className={styles.bowtieButton} draggable onDragStart={(e) => onPaletteDragStart(e, "topEvent")}>Top Event</button>
-                      <button className={styles.bowtieButton} draggable onDragStart={(e) => onPaletteDragStart(e, "mitigationBarrier")}>Mitigation Barrier</button>
-                      <button className={styles.bowtieButton} draggable onDragStart={(e) => onPaletteDragStart(e, "consequence")}>Consequence</button>
+                    <div className={styles.storyControlsCenter}>
+                      {storyIdx !== highwayDrivingNarrative.length && (
+                        <span
+                          className={`${styles.stepLabel} ${styles[`stepRole${getStepRole(storyIdx)}`] || ""}`}
+                          aria-live="polite"
+                        >
+                          Step {storyIdx} of {highwayDrivingNarrative.length}
+                        </span>
+                      )}
                     </div>
-                    <div className={styles.hint} aria-hidden="true">Drag a type into the canvas</div>
+                    <div className={styles.storyControlsRight}>
+                      {storyIdx === highwayDrivingNarrative.length ? (
+                        <button className={styles.bowtieButton} onClick={() => setStoryIdx(1)} type="button">
+                          START
+                        </button>
+                      ) : (
+                        <>
+                          <button
+                            className={styles.bowtieButton}
+                            onClick={() => setStoryIdx((i) => (i > 1 ? i - 1 : i))}
+                            disabled={storyIdx === 1}
+                            type="button"
+                          >
+                            ◀ Prev
+                          </button>
+                          <button
+                            className={styles.bowtieButton}
+                            onClick={() => setStoryIdx((i) => (i < highwayDrivingNarrative.length ? i + 1 : i))}
+                            disabled={storyIdx === highwayDrivingNarrative.length}
+                            type="button"
+                          >
+                            Next ▶
+                          </button>
+                        </>
+                      )}
+                    </div>
                   </div>
-                )}
-              </>
+                </div>
+              </div>
             )}
 
-          </div>
-        </>
-
-          </div>
-        </main>
-        <aside
-          id="bowtie-inspector"
-          className={`${styles.inspector} ${!inspectorActive ? styles.collapsed : ""}`}
-          aria-label="Inspector"
-          aria-hidden={!inspectorActive}
-          data-testid="builder-inspector"
-        >
-          <BuilderInspector
-            node={selectedInspectorNode}
-            open={inspectorActive}
-            onClose={() => {
-              setSelectedInspectorId(null);
-              setInspectorOpen(false);
-            }}
-            onChange={handleInspectorChange}
-          />
-        </aside>
-
-      {cardNode && (
-      <ErrorBoundary fallback={<div role="alert">Unable to render details.</div>}>
-
-
-        <div
-          ref={cardRef}
-          className={styles.popOutCardWrapper}
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="card-title"
-        >
-          <div className={styles.popOutCard}>
-            {(() => {
-              const nodeData = cardNode.data as BowtieNodeData;
-              const { label, metadata } = nodeData;
-              return (
-                <>
+            <div className={styles.floatingTopRight} style={{ top: storyOpen ? 80 : 12 }}>
+              <button
+                className={styles.bowtieButton}
+                aria-controls="filters-panel"
+                aria-expanded={filtersOpen}
+                onClick={() => { setFiltersOpen((o) => !o); }}
+                type="button"
+                ref={filtersBtnRef}
+              >
+                Filters ▾
+              </button>
+              {filtersOpen && (
+                <div id="filters-panel" className={styles.filtersFloatingPanel} aria-label="Filter by role">
+                  <span className={styles.filterLabel}>Filter:</span>
+                  {allRoles.map((role) => {
+                    const pressed = selectedRoles.has(role);
+                    return (
+                      <button
+                        key={role}
+                        className={styles.bowtieChip}
+                        aria-label={`Toggle role filter ${role}`}
+                        aria-pressed={pressed}
+                        data-pressed={pressed}
+                        onClick={() => {
+                          setSelectedRoles((prev) => {
+                            const next = new Set(prev);
+                            if (pressed) next.delete(role);
+                            else next.add(role);
+                            return next;
+                          });
+                        }}
+                        type="button"
+                      >
+                        {role}
+                      </button>
+                    );
+                  })}
                   <button
-                    className={styles.closeButton}
-                    onClick={handleCloseCard}
-                    aria-label="Close details"
+                    className={styles.bowtieButton}
+                    onClick={() => setSelectedRoles(new Set())}
+                    disabled={selectedRoles.size === 0}
                     type="button"
                   >
-                    ×
+                    Clear
                   </button>
+                </div>
+              )}
 
-                  <h2 id="card-title" className={styles.popOutCard__title}>{label}</h2>
+              {actionsOpen && (
+                <div id="actions-panel" className={styles.filtersFloatingPanel} role="dialog" aria-label="Actions">
+                  <div className={styles.panelTitle} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span>Actions</span>
+                    <button className={styles.bowtieButton} aria-label="Close actions" type="button" onClick={() => setActionsOpen(false)}>×</button>
+                  </div>
+                  <div style={{ display: 'grid', gap: 8 }}>
+                    <button className={styles.bowtieButton} type="button" onClick={() => { setLeftExpanded(true); setRightExpanded(true); }}>Expand All</button>
+                    <button className={styles.bowtieButton} type="button" onClick={() => { setLeftExpanded(false); setRightExpanded(false); }}>Collapse All</button>
+                    <button className={styles.bowtieButton} type="button" aria-pressed={failedMode} onClick={() => setFailedMode((v) => !v)}>
+                      {failedMode ? 'Disable failure highlight' : 'Simulate failure'}
+                    </button>
+                    <button className={styles.bowtieButton} type="button" onClick={() => { try { rf.fitView({ padding: 0.2 }); } catch { /* Ignore fitView errors */ } }}>Fit All</button>
+                    <button className={styles.bowtieButton} type="button" onClick={() => { void exportPng(); }}>Export PNG</button>
+                  </div>
+                </div>
+              )}
 
-                  {metadata?.eli5 && (
-                    <section className={styles.popOutCard__section} aria-labelledby="eli5-heading">
-                      <h3 id="eli5-heading" className={styles.popOutCard__heading}>ELI5</h3>
-                      <p className={styles.popOutCard__text}>{metadata.eli5}</p>
-                    </section>
+              {exportOpen && (
+                <div id="export-panel" className={styles.filtersFloatingPanel} role="dialog" aria-label="Export">
+                  <div className={styles.panelTitle} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span>Share / Export</span>
+                    <button className={styles.bowtieButton} aria-label="Close export" type="button" onClick={() => setExportOpen(false)}>×</button>
+                  </div>
+                  <div style={{ display: 'grid', gap: 8 }}>
+                    <button className={styles.bowtieButton} type="button" onClick={() => { void exportPng(); }}>Export PNG</button>
+                  </div>
+                </div>
+              )}
+              {mode === "builder" && (
+                <>
+                  <button
+                    className={styles.bowtieButton}
+                    aria-controls="builder-palette-panel"
+                    aria-expanded={paletteOpen}
+                    onClick={() => setPaletteOpen((o) => !o)}
+                    type="button"
+                    data-testid="builder-palette-toggle"
+                    ref={paletteBtnRef}
+                  >
+                    Palette ▾
+                  </button>
+                  <button
+                    className={`${styles.bowtieButton} ${styles.resetLayoutButton}`}
+                    onClick={() => applyBuilderLayout()}
+                    type="button"
+                    title="Reset node positions to default layout"
+                    aria-label="Reset layout"
+                  >
+                    ↻ Reset Layout
+                  </button>
+                  {paletteOpen && (
+                    <div id="builder-palette-panel" className={styles.filtersFloatingPanel} role="dialog" aria-label="Builder palette" data-testid="builder-palette">
+                      <div className={styles.panelTitle} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <span>Add nodes</span>
+                        <button className={styles.bowtieButton} aria-label="Close palette" type="button" onClick={() => setPaletteOpen(false)}>×</button>
+                      </div>
+                      <div className={styles.paletteGroup} role="group" aria-label="Add nodes">
+                        <button className={styles.bowtieButton} draggable onDragStart={(e) => onPaletteDragStart(e, "threat")}>Threat</button>
+                        <button className={styles.bowtieButton} draggable onDragStart={(e) => onPaletteDragStart(e, "preventionBarrier")}>Prevention Barrier</button>
+                        <button className={styles.bowtieButton} draggable onDragStart={(e) => onPaletteDragStart(e, "topEvent")}>Top Event</button>
+                        <button className={styles.bowtieButton} draggable onDragStart={(e) => onPaletteDragStart(e, "mitigationBarrier")}>Mitigation Barrier</button>
+                        <button className={styles.bowtieButton} draggable onDragStart={(e) => onPaletteDragStart(e, "consequence")}>Consequence</button>
+                      </div>
+                      <div className={styles.hint} aria-hidden="true">Drag a type into the canvas</div>
+                    </div>
                   )}
-
-                  {metadata?.chips?.length ? (
-                    <section className={styles.popOutCard__section} aria-labelledby="owner-type-heading">
-                      <h3 id="owner-type-heading" className={styles.popOutCard__heading}>Owner and type</h3>
-                      <ul className={styles.popOutCard__chips}>
-                        {metadata.chips.map((chip: string, i: number) => (
-                          <li key={i} className={styles.popOutCard__chip}>{chip}</li>
-                        ))}
-                      </ul>
-                    </section>
-                  ) : null}
-
-                  {metadata?.kpis?.length ? (
-                    <section className={styles.popOutCard__section} aria-labelledby="kpis-heading">
-                      <h3 id="kpis-heading" className={styles.popOutCard__heading}>KPIs</h3>
-                      <ul className={styles.popOutCard__list}>
-                        {metadata.kpis.map((kpi: string, i: number) => (
-                          <li key={i} className={styles.popOutCard__listItem}>{kpi}</li>
-                        ))}
-                      </ul>
-                    </section>
-                  ) : null}
-
-                  {metadata?.details?.length ? (
-                    <section className={styles.popOutCard__section} aria-labelledby="details-heading">
-                      <h3 id="details-heading" className={styles.popOutCard__heading}>How it works</h3>
-                      <ul className={styles.popOutCard__list}>
-                        {metadata.details.map((d: string, i: number) => (
-                          <li key={i} className={styles.popOutCard__listItem}>{d}</li>
-                        ))}
-                      </ul>
-                    </section>
-                  ) : null}
-
-                  {metadata?.failureModes?.length ? (
-                    <section className={styles.popOutCard__section} aria-labelledby="failure-modes-heading">
-                      <h3 id="failure-modes-heading" className={styles.popOutCard__heading}>Failure modes</h3>
-                      <ul className={styles.popOutCard__list}>
-                        {metadata.failureModes.map((fm: string, i: number) => (
-                          <li key={i} className={styles.popOutCard__listItem}>{fm}</li>
-                        ))}
-                      </ul>
-                    </section>
-                  ) : null}
-
-                  {metadata?.sopLink ? (
-                    <section className={styles.popOutCard__section} aria-labelledby="sop-heading">
-                      <h3 id="sop-heading" className={styles.popOutCard__heading}>Standard operating procedure</h3>
-                      <p className={styles.popOutCard__text}>
-                        <a href={metadata.sopLink} target="_blank" rel="noopener noreferrer">View SOP 																																																																																																																																																																																																																																																																									</a>
-                      </p>
-                    </section>
-                  ) : null}
                 </>
-              );
-            })()}
-          </div>
+              )}
+
+            </div>
+          </>
+
         </div>
-      </ErrorBoundary>
+      </main>
+      <aside
+        id="bowtie-inspector"
+        className={`${styles.inspector} ${!inspectorActive ? styles.collapsed : ""}`}
+        aria-label="Inspector"
+        aria-hidden={!inspectorActive}
+        data-testid="builder-inspector"
+      >
+        <BuilderInspector
+          node={selectedInspectorNode}
+          open={inspectorActive}
+          onClose={() => {
+            setSelectedInspectorId(null);
+            setInspectorOpen(false);
+          }}
+          onChange={handleInspectorChange}
+        />
+      </aside>
+
+      {cardNode && (
+        <ErrorBoundary fallback={<div role="alert">Unable to render details.</div>}>
+
+
+          <div
+            ref={cardRef}
+            className={styles.popOutCardWrapper}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="card-title"
+          >
+            <div className={styles.popOutCard}>
+              {(() => {
+                const nodeData = cardNode.data as BowtieNodeData;
+                const { label, metadata } = nodeData;
+                return (
+                  <>
+                    <button
+                      className={styles.closeButton}
+                      onClick={handleCloseCard}
+                      aria-label="Close details"
+                      type="button"
+                    >
+                      ×
+                    </button>
+
+                    <h2 id="card-title" className={styles.popOutCard__title}>{label}</h2>
+
+                    {metadata?.eli5 && (
+                      <section className={styles.popOutCard__section} aria-labelledby="eli5-heading">
+                        <h3 id="eli5-heading" className={styles.popOutCard__heading}>ELI5</h3>
+                        <p className={styles.popOutCard__text}>{metadata.eli5}</p>
+                      </section>
+                    )}
+
+                    {metadata?.chips?.length ? (
+                      <section className={styles.popOutCard__section} aria-labelledby="owner-type-heading">
+                        <h3 id="owner-type-heading" className={styles.popOutCard__heading}>Owner and type</h3>
+                        <ul className={styles.popOutCard__chips}>
+                          {metadata.chips.map((chip: string, i: number) => (
+                            <li key={i} className={styles.popOutCard__chip}>{chip}</li>
+                          ))}
+                        </ul>
+                      </section>
+                    ) : null}
+
+                    {metadata?.kpis?.length ? (
+                      <section className={styles.popOutCard__section} aria-labelledby="kpis-heading">
+                        <h3 id="kpis-heading" className={styles.popOutCard__heading}>KPIs</h3>
+                        <ul className={styles.popOutCard__list}>
+                          {metadata.kpis.map((kpi: string, i: number) => (
+                            <li key={i} className={styles.popOutCard__listItem}>{kpi}</li>
+                          ))}
+                        </ul>
+                      </section>
+                    ) : null}
+
+                    {metadata?.details?.length ? (
+                      <section className={styles.popOutCard__section} aria-labelledby="details-heading">
+                        <h3 id="details-heading" className={styles.popOutCard__heading}>How it works</h3>
+                        <ul className={styles.popOutCard__list}>
+                          {metadata.details.map((d: string, i: number) => (
+                            <li key={i} className={styles.popOutCard__listItem}>{d}</li>
+                          ))}
+                        </ul>
+                      </section>
+                    ) : null}
+
+                    {metadata?.failureModes?.length ? (
+                      <section className={styles.popOutCard__section} aria-labelledby="failure-modes-heading">
+                        <h3 id="failure-modes-heading" className={styles.popOutCard__heading}>Failure modes</h3>
+                        <ul className={styles.popOutCard__list}>
+                          {metadata.failureModes.map((fm: string, i: number) => (
+                            <li key={i} className={styles.popOutCard__listItem}>{fm}</li>
+                          ))}
+                        </ul>
+                      </section>
+                    ) : null}
+
+                    {metadata?.sopLink ? (
+                      <section className={styles.popOutCard__section} aria-labelledby="sop-heading">
+                        <h3 id="sop-heading" className={styles.popOutCard__heading}>Standard operating procedure</h3>
+                        <p className={styles.popOutCard__text}>
+                          <a href={metadata.sopLink} target="_blank" rel="noopener noreferrer">View SOP 																																																																																																																																																																																																																																																																									</a>
+                        </p>
+                      </section>
+                    ) : null}
+                  </>
+                );
+              })()}
+            </div>
+          </div>
+        </ErrorBoundary>
 
 
       )}

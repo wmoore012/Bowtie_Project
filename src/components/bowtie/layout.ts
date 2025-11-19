@@ -47,25 +47,34 @@ function parseVisualLabel(label: string): { badge?: string; emoji?: string; text
 }
 
 
+// Symmetric “bow tie” layout with correct Hazard → Top Event hierarchy
+export const centerX = 600;
+export const centerY = 400;
+export const colGap = 350;
+export const yGap = 120;
+export const verticalHazardGap = 180;
+export const barrierChainSpacing = 300;
+export const escalationHorizontalOffset = 150;
+export const escalationFactorHorizontalOffset = 320;
+export const escalationVerticalOffset = 160;
+export const escalationSiblingGap = 90;
+export const threatDefaultGap = colGap * 0.5;
+export const consequenceDefaultGap = colGap * 0.5;
+export const threatColWidth = NODE_WIDTHS[widthHintForType("threat")];
+export const collapsedThreatGap = (colGap + threatDefaultGap) / 2;
+export const xPrevention = centerX - 1 * colGap;
+export const collapsedThreatColumnX = (centerX - collapsedThreatGap) - threatColWidth;
+export const xTopEvent = centerX;
+export const xHazard = centerX;
+export const xMitigation = centerX + 1 * colGap;
+export const xConsequence = xMitigation + consequenceDefaultGap;
+export const collapsedThreatRightEdge = xTopEvent - collapsedThreatGap;
+
 export function computeSimpleLayout(diagram: BowtieDiagram): {
   nodes: Node<BowtieNodeData>[];
   edges: Edge[];
 } {
-  // Symmetric “bow tie” layout with correct Hazard → Top Event hierarchy
-  const centerX = 600;
-  const centerY = 400;
-  const colGap = 350;
-  const yGap = 120;
-  const verticalHazardGap = 180;
-  const barrierChainSpacing = 300;
-  const escalationHorizontalOffset = 150;
-  const escalationFactorHorizontalOffset = 320;
-  const escalationVerticalOffset = 160;
-  const escalationSiblingGap = 90;
-  const threatDefaultGap = colGap * 0.5;
-  const consequenceDefaultGap = colGap * 0.5;
-  const threatColWidth = NODE_WIDTHS[widthHintForType("threat")];
-  const collapsedThreatGap = (colGap + threatDefaultGap) / 2;
+
 
   const nodeIndex = new Map<string, BowtieNode>();
   const nodesByType = (type: BowtieNodeType) => diagram.nodes.filter((n) => n.type === type);
@@ -92,13 +101,7 @@ export function computeSimpleLayout(diagram: BowtieDiagram): {
   const spreadY = (count: number, cY: number, gap: number) =>
     Array.from({ length: count }, (_, i) => cY + (i - (count - 1) / 2) * gap);
 
-  const xPrevention = centerX - 1 * colGap;
-  const xTopEvent = centerX;
-  const xHazard = centerX;
-  const xMitigation = centerX + 1 * colGap;
-  const xConsequence = xMitigation + consequenceDefaultGap;
-  const collapsedThreatRightEdge = xTopEvent - collapsedThreatGap;
-  const collapsedThreatColumnX = collapsedThreatRightEdge - threatColWidth;
+
 
   const leftEscalationFactors = escalationFactors.filter((n) => n.wing !== "right");
   const rightEscalationFactors = escalationFactors.filter((n) => n.wing === "right");
