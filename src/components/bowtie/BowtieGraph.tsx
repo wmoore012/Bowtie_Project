@@ -105,6 +105,7 @@ const nodeTypes = {
 } as const;
 
 const MAX_STEP: StepIndex = 11;
+const STORY_LOCK_STEP: StepIndex = 1 as StepIndex;
 
 
 
@@ -181,7 +182,7 @@ function InnerGraph({ diagram, initialMode = "demo" }: { diagram: BowtieDiagram;
     }
   }, [mode]);
   useEffect(() => {
-    if (mode === "demo") {
+    if (mode === "demo" && storyStepLockRef.current === null) {
       lastDemoStepRef.current = step;
     }
   }, [mode, step]);
@@ -217,6 +218,7 @@ function InnerGraph({ diagram, initialMode = "demo" }: { diagram: BowtieDiagram;
   const [storyRevealIds, setStoryRevealIds] = useState<Set<string>>(new Set());
   const [storyFocusIds, setStoryFocusIds] = useState<Set<string>>(new Set());
   const lastDemoStepRef = useRef<StepIndex>(1 as StepIndex);
+  const storyStepLockRef = useRef<StepIndex | null>(null);
 
 
   const [inspectorOpen, setInspectorOpen] = useState<boolean>(false);
@@ -1609,6 +1611,29 @@ function InnerGraph({ diagram, initialMode = "demo" }: { diagram: BowtieDiagram;
     setStoryOpen(mode === "demo");
   }, [mode]);
 
+  useEffect(() => {
+    if (mode !== "demo") {
+      storyStepLockRef.current = null;
+      return;
+    }
+
+    if (!storyOpen) {
+      const previousStep = storyStepLockRef.current;
+      storyStepLockRef.current = null;
+      if (previousStep !== null && previousStep !== step) {
+        setStep(previousStep);
+      }
+      return;
+    }
+
+    if (storyStepLockRef.current === null) {
+      storyStepLockRef.current = step;
+    }
+
+    if (step !== STORY_LOCK_STEP) {
+      setStep(STORY_LOCK_STEP);
+    }
+  }, [storyOpen, step, mode]);
 
 
   useEffect(() => {
