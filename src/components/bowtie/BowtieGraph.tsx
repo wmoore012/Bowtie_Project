@@ -52,7 +52,8 @@ import {
   exportDiagramToJSON,
   importDiagramFromJSON,
   saveDiagramToLocalStorage,
-  loadDiagramFromLocalStorage
+  loadDiagramFromLocalStorage,
+  clearDiagramFromLocalStorage,
 } from "../../utils/diagramIO";
 import { DropSlotLayer } from "./DropSlotLayer";
 import { calculatePreventionSlots, findNearestSlot, type DropSlot } from "./slotUtils";
@@ -234,6 +235,49 @@ function InnerGraph({ diagram, initialMode = "demo" }: { diagram: BowtieDiagram;
   // Slot visualization state
   const [dropSlots, setDropSlots] = useState<DropSlot[]>([]);
   const [activeSlot, setActiveSlot] = useState<DropSlot | null>(null);
+
+  const createClearedDiagram = useCallback((): BowtieDiagram => {
+    const timestamp = Date.now();
+    return {
+      id: `cleared-${timestamp}`,
+      title: diagram.title,
+      createdAt: diagram.createdAt,
+      updatedAt: new Date(timestamp).toISOString(),
+      nodes: [
+        { id: "hazard", type: "hazard", label: "" },
+        { id: "topEvent", type: "topEvent", label: "" },
+      ],
+      edges: [{ id: "h_to_top", source: "hazard", target: "topEvent" }],
+    };
+  }, [diagram.createdAt, diagram.title]);
+
+  const clearToBaseDiagram = useCallback(() => {
+    const cleared = createClearedDiagram();
+    setRenderOverride(cleared);
+    setInspectorOpen(false);
+    setSelectedInspectorId(null);
+    setCardNode(null);
+    setDropSlots([]);
+    setActiveSlot(null);
+    setManualRevealIds(new Set());
+    setManualFocusIds(new Set());
+    setExpandedChainRoots(new Set());
+    setHighlightedChainRootId(null);
+    clearDiagramFromLocalStorage("bowtie.diagram.autosave");
+    return cleared;
+  }, [
+    createClearedDiagram,
+    setRenderOverride,
+    setInspectorOpen,
+    setSelectedInspectorId,
+    setCardNode,
+    setDropSlots,
+    setActiveSlot,
+    setManualRevealIds,
+    setManualFocusIds,
+    setExpandedChainRoots,
+    setHighlightedChainRootId,
+  ]);
 
   // Story mode state
   const [autoZoomEnabled, setAutoZoomEnabled] = useState(true);
@@ -1454,26 +1498,9 @@ function InnerGraph({ diagram, initialMode = "demo" }: { diagram: BowtieDiagram;
     const onClear = () => {
       if (mode !== "builder") return;
       try {
-        const cleared: BowtieDiagram = {
-          id: "cleared",
-          title: diagram.title,
-          createdAt: diagram.createdAt,
-          updatedAt: new Date().toISOString(),
-          nodes: [
-            { id: "hazard", type: "hazard", label: "" },
-            { id: "topEvent", type: "topEvent", label: "" },
-          ],
-          edges: [
-            { id: "h_to_top", source: "hazard", target: "topEvent" },
-          ],
-        };
-        setDiagram(cleared);
-        setRenderOverride(null);
-        setInspectorOpen(false);
-        setSelectedInspectorId(null);
-        setCardNode(null);
-      } catch {
-        // Ignore clear diagram errors
+        clearToBaseDiagram();
+      } catch (error) {
+        console.error("Failed to clear diagram", error);
       }
     };
     const onExportJSON = () => {
@@ -1531,28 +1558,10 @@ function InnerGraph({ diagram, initialMode = "demo" }: { diagram: BowtieDiagram;
     setShowBuilderConfirm(false);
 
     if (clearDiagram) {
-      // Clear diagram to just hazard + top event
       try {
-        const hazard = diagram.nodes.find((n) => n.type === "hazard");
-        const topEvent = diagram.nodes.find((n) => n.type === "topEvent");
-        const hazardLabel = hazard?.label || "Hazard";
-        const topLabel = topEvent?.label || "Thermal runaway";
-        const cleared: BowtieDiagram = {
-          id: "cleared",
-          title: diagram.title,
-          createdAt: diagram.createdAt,
-          updatedAt: new Date().toISOString(),
-          nodes: [
-            { id: "hazard", type: "hazard", label: hazardLabel },
-            { id: "topEvent", type: "topEvent", label: topLabel },
-          ],
-          edges: [
-            { id: "h_to_top", source: "hazard", target: "topEvent" },
-          ],
-        };
-        setRenderOverride(cleared);
-      } catch {
-        // Ignore clear diagram errors
+        clearToBaseDiagram();
+      } catch (error) {
+        console.error("Failed to clear diagram", error);
       }
     }
 
