@@ -10,7 +10,7 @@
     "preview": "vite preview",
     "test": "vitest",
     "test:watch": "vitest --watch",
-    "test:run": "vitest run"
+    "test:run": "vitest run --maxWorkers=1 --reporter=dot --logHeapUsage"
   },
   "dependencies": {
     "@xyflow/react": "^12.9.2",
