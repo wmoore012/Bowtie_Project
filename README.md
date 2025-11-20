@@ -5,156 +5,52 @@ https://bowtie-project.vercel.app
 
 > **🔒 IMPORTANT:** The `main` branch is protected. **Do not push directly to `main`.** All changes must go through Pull Requests with CI checks and code review. Only @wmoore012 can push to `main`. See [Contributing Guide](CONTRIBUTING.md) and [Branch Protection Setup](docs/BRANCH_PROTECTION_SETUP.md).
 
-![Bowtie Builder Pro - Demo Mode](src/assets/v.9.png)
+![Bowtie Builder Pro - Demo Mode](src/assets/BT%201.png)
 
 <div style="display: flex; gap: 16px; margin: 16px 0;">
-  <img src="src/assets/v9 - 2.png" alt="Bowtie Builder Pro - Inspector Panel" style="width: 48%;" />
-  <img src="src/assets/v.9 - 3 builder.png" alt="Bowtie Builder Pro - Builder Mode" style="width: 48%;" />
+  <img src="src/assets/BT 2.png" alt="Bowtie Builder Pro - Inspector Panel" style="width: 48%;" />
+  <img src="src/assets/BT 5 Builder.png" alt="Bowtie Builder Pro - Builder Mode" style="width: 48%;" />
 </div>
 
-## Scripts
+## Team & Approach
+**Team #:** Group 2
+**Members:** Bobby Deasy, Sreedhar Lakamsani, Davis Martin, Will Moore, Chris Weihrauch
+**Chosen Approach:** Approach 1 – Build
+
+Deterministic ELK-backed React + TypeScript experience with guided Builder / Story modes, inline editing, GSAP-driven preattentive cues, export-to-PNG, and strong accessibility defaults.
+
+## Risk Story Summary
+Fleet operations normally run smoothly with trained drivers, well-maintained trucks, and multiple safety barriers in place. However, several threats: impaired driving, distraction, sensor drift, mechanical faults, bad weather, and poor visibility, can erode these defenses, especially when latent issues like deferred maintenance or missed alerts accumulate. In this scenario, a missed weather warning, an uncalibrated ADAS system, and an unresolved ABS fault combined during a storm to create a near-loss-of-control event on black ice. Mitigation barriers such as radar alerts and defensive driving ultimately prevented a crash, avoiding consequences like collisions, injuries, or rollovers. The incident reveals how layered barriers can fail or hold, depending on how well the system manages risks and addresses hidden weaknesses.
+
+## Run / View
+- `npm install`
 - `npm run dev` – start dev server
 - `npm run build` – type-check and build
 - `npm run preview` – preview the production build
 - `npm run test:run` – run unit tests once (no watch mode)
 
+**Hosted prototype:** https://bowtie-project.vercel.app (Story and Builder modes available with keyboard narration support).
+Scenario content lives in `src/domain/scenarios/*`; swap these files to showcase alternative risk stories.
+Visual / design token reference: `docs/design-tokens-reference.html` for color, motion, and typography mapping.
+
 ## Highlights
-- Deterministic ELK-backed layout keeps the hazard above the top event with true left/right symmetry.
-- Default “collapsed” bowtie only shows threats, escalation factors, top event, hazard, and consequences; clicking any card or running the story reveals the matching prevention/mitigation barriers.
-- Story / presentation mode pulses nodes, auto-reveals the correct branches, and supports arrow-key narration plus restart collapse.
-- Escalation factors stay visible as yellow striped pills; new legend entry explains their role.
-- Role-based multi-select filtering (chips) with accessible live region feedback.
-- Export any state of the diagram to PNG; CSS Modules + design tokens + reduced motion/focus-visible baked in.
-- 🎬 **Smooth GSAP-powered zoom/pan choreography** with preattentive visual system for narrative story mode transitions.
-- ✏️ **Inline node editing in Builder mode** with inspector panel for labels, tags, likelihood, severity, and metadata.
+- Deterministic ELK-powered layout keeps the hazard centered above the knot while maintaining left/right symmetry for prevention and mitigation branches.
+- Default collapsed bowtie surfaces only threats, escalation factors, hazard, top event, and consequences until a user clicks or runs the story, simplifying workshop onboarding.
+- Story mode animates focus, reveals the correct path, supports arrow-key narration, and records the barrier state for playback.
+- Escalation factors remain visible as yellow-striped pills with legend support, and the inspector allows inline editing of labels, tags, and risk metadata.
+- Multi-select filtering chips, PNG export, keyboard shortcuts, and reduced-motion/focus-visible defaults keep the tool accessible for mixed-experience teams.
 
-## Preattentive Visual System
-- **GSAP-powered preattentive visual system** with incident timeline framework integration.
+## Preattentive Attributes
+- **Color** separates roles (hazard amber, threat sand, prevention green, mitigation blue, consequence red) and timeline stages (normal gray through recovery green).
+- **Size and shape** emphasize hierarchy: circular top event node, larger banner hazard/top event cards, standard rectangles elsewhere.
+- **Opacity and glow** direct story focus by dimming inactive nodes and applying role-colored highlights to the active branch.
+- **Motion** uses short GSAP-driven pulses that respect prefers-reduced-motion to indicate narration steps without overwhelming participants.
+- **Position** keeps prevention left, mitigation right, and escalation factors tucked along their respective sides so each pattern maps to a single meaning.
 
-## Incident Timeline Framework
+## Acknowledgement
+This is a student project developed for DSBA 5122 in collaboration with Todus Advisors.
 
-This tool implements a comprehensive **incident timeline framework** that maps the progression from normal operations through to recovery:
-
-**Normal → Latent Conditions → Deviation → Detection → Escalation → Top Event → Consequences → Recovery/Lessons**
-
-### Framework Applied
-
-Each narrative step is color-coded and visually distinct using preattentive attributes:
-
-- **🛣️ NORMAL**: Baseline operations, all barriers in place (calm gray)
-- **🕳️ LATENT**: Hidden weaknesses—budget cuts, drift, normalization (warning yellow)
-- **🚚 DEVIATION**: Active error or violation introduces threat (orange alert)
-- **🚨 DETECTION**: Alarm/monitoring catches deviation or fails to (blue alert)
-- **⚠️ ESCALATION**: Situation worsens, multiple barriers down (red alert)
-- **🎯 TOP EVENT**: Control lost—prevention ends, mitigation begins (red-orange)
-- **💥 CONSEQUENCES**: Harm occurs despite mitigation (red)
-- **🛠️ RECOVERY**: Lessons learned, barriers strengthened (green success)
-
-### Preattentive Attributes Used
-
-The visual system follows the principle **"one pattern = one meaning"** (Krug-compliant):
-
-- **COLOR**: Stage/role identification (amber = hazard, sand = threat, green = prevention, blue = mitigation, red = consequence)
-- **SIZE**: Importance hierarchy (1.8× banner, 1.5× top event, 1.0× standard)
-- **OPACITY**: Narrative focus (1.0 = active, 0.3 = dimmed)
-- **GLOW**: Role-colored box-shadow for active emphasis
-- **MOTION**: 1-2 pulse cycles on activation, then static (respects `prefers-reduced-motion`)
-- **POSITION**: Left = prevention, center = knot, right = mitigation
-- **SHAPE**: Circle = top event ONLY, rectangles for all others
-
-### Key Improvements
-
-#### Warehouse Fire Narrative (16 steps)
-
-- Starts with **normal operations baseline** (240,000 Li-ion cells, proper spacing)
-- Surfaces **latent conditions** (budget cuts, incentive misalignment, language barriers)
-- Shows **specific deviations** (pallet bypasses quarantine, density increase, non-listed charger)
-- Tracks **detection failures** and **escalation points** with timestamps
-- Culminates in **top event** with clear consequences (full rack involvement, $8.2M loss)
-- Ends with **human factors analysis** and **recovery actions** (incentive reform, bilingual SOPs)
-
-**Example narrative step**:
-```typescript
-{
-  title: "🕳️ LATENT: Budget Cuts Erode Three Barriers",
-  body: "• <strong>Sensor calibration overdue</strong> 3 months (deferred maintenance)<br>• <strong>Wrong sprinkler heads installed</strong> to save $47K (spec violation)<br>• <strong>Hydrant flow tests skipped</strong> 2 years running (budget reallocation)",
-  focusIds: ["pb-thermal-monitoring", "mb-sprinkler", "mb-fire-brigade"],
-}
-```
-
-#### Highway Driving Narrative (20 steps)
-
-- **Normal fleet operations** with defense in depth (40 trucks, ADAS, maintained vehicles)
-- **Latent conditions** (maintenance backlog, policy drift, seatbelt alarm bypasses)
-- **Threat landscape overview** (6 threats: intoxication, sensor drift, distraction, weather, mechanical, visibility)
-- **Detailed prevention strategies** per threat type (screening, calibration, weather alerts, maintenance)
-- **Specific deviation scenario** (weather + distraction + equipment failure)
-- **Escalation sequence** with timestamps (black ice, ABS fault, loss of control)
-- Shows **BOTH outcomes** (barrier win vs. mitigation failure)
-- **Recovery and lessons learned** (telematics review, fleet-wide calibration, automation)
-
-**Example narrative step**:
-```typescript
-{
-  title: "🛡 PREVENTION: Managing Weather & Visibility",
-  body: "🌧️🌫️ Environmental threats countered by:<br>• <strong>🌧️ Hourly weather alerts</strong> to dispatch<br>• <strong>🗓️ Schedule shifts</strong> to daylight/safer routes<br>• <strong>🚧 No-drive thresholds</strong> when traction gone<br>• <strong>💡 Running lights always on</strong> (conspicuity)<br>• <strong>🛞 ABS braking systems</strong> preserve steering",
-  focusIds: ["th-slippery", "th-visibility", "pb-weather-report-t4", "pb-weather-report-t6", "pb-adjust-schedule-t4", "pb-adjust-schedule-t6", "pb-no-high-risk", "pb-lights-always", "pb-abs"],
-  revealIds: ["pb-weather-report-t4", "pb-weather-report-t6", "pb-adjust-schedule-t4", "pb-adjust-schedule-t6", "pb-no-high-risk", "pb-lights-always", "pb-abs"],
-}
-```
-
-### Design Tokens Enhanced
-
-The design system includes comprehensive token sets for both **bowtie roles** and **incident timeline stages**:
-
-- **Bowtie role colors**: hazard (amber), threat (sand + amber accent), prevention (green), top event (red-orange), mitigation (blue), consequence (light red)
-- **Incident timeline stage colors**: normal (gray), latent (yellow), deviation (orange), detection (blue), escalation (red), recovery (green)
-- **Clear visual encoding reference** in `docs/design-tokens-reference.html`
-- **One pattern = one meaning** principle enforced throughout
-
-See the [Design Tokens Reference](docs/design-tokens-reference.html) for the complete visual system specification.
-
-## Roadmap (next)
-- Time-travel scrubber that records which barriers were revealed during a workshop.
-- Multi-diagram workspace with version comparison.
-- Collaborative editing with real-time sync.
-
-## Scenarios
-
-This repo ships a professional teaching example:
-
-**Highway Driving Risk** (fleet operations) - 20-step narrative demonstrating the full incident timeline framework with concrete examples of latent conditions, barrier failures, and human factors analysis.
-
-Swap in your own scenario by editing `src/domain/scenarios/*`.
-
-## Contributing
-
-We welcome contributions! This project serves dual purposes:
-
-1. **Academic project** – M.S. Data Science course deliverable
-2. **Professional MVP** – Potential real-world risk analysis tool
-
-**Quick start:**
-- Read [CONTRIBUTING.md](CONTRIBUTING.md) for detailed guidelines
-- Check [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md) for community standards
-- Review [SECURITY.md](SECURITY.md) for security reporting
-- See [CONTRIBUTORS.md](CONTRIBUTORS.md) for recognition
-
-**Before contributing:**
-- Open an issue to discuss major changes
-- Follow the PR template and checklist
-- Ensure tests pass and code is linted
-- Maintain accessibility and design system consistency
-
-## License
-
-MIT License - see [LICENSE](LICENSE) for details.
-
-Copyright (c) 2025 Wilton Moore
-
-## Acknowledgments
-
-- Built with [React Flow](https://reactflow.dev/) and [ELK.js](https://eclipse.dev/elk/)
+- Built with React Flow and ELK.js
 - Inspired by bowtie methodology from risk management literature
 - Developed as part of M.S. Data Science coursework
 

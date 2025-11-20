@@ -219,6 +219,8 @@ function InnerGraph({ diagram, initialMode = "demo" }: { diagram: BowtieDiagram;
   const [storyFocusIds, setStoryFocusIds] = useState<Set<string>>(new Set());
   const lastDemoStepRef = useRef<StepIndex>(1 as StepIndex);
   const storyStepLockRef = useRef<StepIndex | null>(null);
+  const hazardNodeId = useMemo(() => diagram.nodes.find((n) => n.type === "hazard")?.id ?? null, [diagram]);
+  const topEventNodeId = useMemo(() => diagram.nodes.find((n) => n.type === "topEvent")?.id ?? null, [diagram]);
 
 
   const [inspectorOpen, setInspectorOpen] = useState<boolean>(false);
@@ -412,6 +414,11 @@ function InnerGraph({ diagram, initialMode = "demo" }: { diagram: BowtieDiagram;
       setExpandedChainRoots((prev) => {
         const next = new Set(prev);
         next.add(rootId);
+        return next;
+      });
+      setManualRevealIds((prev) => {
+        const next = new Set(prev);
+        chainNodesByRoot.get(rootId)?.forEach((nodeId) => next.add(nodeId));
         return next;
       });
       setHighlightedChainRootId(rootId);
@@ -708,29 +715,59 @@ function InnerGraph({ diagram, initialMode = "demo" }: { diagram: BowtieDiagram;
   }, [cardNode]);
 
   const baseDiagram = renderOverride ?? revealDiagram;
+  const storyVisibleNodeIds = useMemo(() => {
+    if (mode !== "demo" || !storyOpen) return null;
+    if (storyRevealIds.size === 0 && storyFocusIds.size === 0) return null;
+    const ids = new Set<string>();
+    storyRevealIds.forEach((id) => ids.add(id));
+    storyFocusIds.forEach((id) => ids.add(id));
+    if (hazardNodeId) ids.add(hazardNodeId);
+    if (topEventNodeId) ids.add(topEventNodeId);
+    return ids;
+  }, [mode, storyOpen, storyRevealIds, storyFocusIds, hazardNodeId, topEventNodeId]);
   const renderDiagram = useMemo(() => {
-    if (expandedChainRoots.size === 0) return baseDiagram;
-    if (expandedChainRoots.size === chainNodesByRoot.size) return baseDiagram;
-    const allowedRoots = expandedChainRoots;
-    let changed = false;
-    const allowedNodeIds = new Set<string>();
-    baseDiagram.nodes.forEach((node) => {
-      const root = nodeToRoot.get(node.id);
-      if (!root || allowedRoots.has(root)) {
-        allowedNodeIds.add(node.id);
-      } else {
-        changed = true;
+    let diagramWithChains = baseDiagram;
+    if (expandedChainRoots.size !== 0 && expandedChainRoots.size !== chainNodesByRoot.size) {
+      const allowedRoots = expandedChainRoots;
+      let changed = false;
+      const allowedNodeIds = new Set<string>();
+      baseDiagram.nodes.forEach((node) => {
+        const root = nodeToRoot.get(node.id);
+        if (!root || allowedRoots.has(root)) {
+          allowedNodeIds.add(node.id);
+        } else {
+          changed = true;
+        }
+      });
+      if (changed) {
+        diagramWithChains = {
+          ...baseDiagram,
+          nodes: baseDiagram.nodes.filter((n) => allowedNodeIds.has(n.id)),
+          edges: baseDiagram.edges.filter(
+            (e) => allowedNodeIds.has(e.source) && allowedNodeIds.has(e.target)
+          ),
+        };
       }
-    });
-    if (!changed) return baseDiagram;
-    return {
-      ...baseDiagram,
-      nodes: baseDiagram.nodes.filter((n) => allowedNodeIds.has(n.id)),
-      edges: baseDiagram.edges.filter(
-        (e) => allowedNodeIds.has(e.source) && allowedNodeIds.has(e.target)
-      ),
-    };
-  }, [baseDiagram, expandedChainRoots, chainNodesByRoot.size, nodeToRoot]);
+    }
+    if (storyVisibleNodeIds && storyVisibleNodeIds.size > 0) {
+      const allowedByStory = new Set<string>();
+      diagramWithChains.nodes.forEach((node) => {
+        if (storyVisibleNodeIds.has(node.id)) {
+          allowedByStory.add(node.id);
+        }
+      });
+      if (allowedByStory.size > 0 && allowedByStory.size < diagramWithChains.nodes.length) {
+        diagramWithChains = {
+          ...diagramWithChains,
+          nodes: diagramWithChains.nodes.filter((n) => allowedByStory.has(n.id)),
+          edges: diagramWithChains.edges.filter(
+            (e) => allowedByStory.has(e.source) && allowedByStory.has(e.target)
+          ),
+        };
+      }
+    }
+    return diagramWithChains;
+  }, [baseDiagram, expandedChainRoots, chainNodesByRoot.size, nodeToRoot, storyVisibleNodeIds]);
   const activeFocusIds = useMemo(() => {
     const ids = new Set<string>();
     manualFocusIds.forEach((id) => ids.add(id));
@@ -993,6 +1030,21 @@ function InnerGraph({ diagram, initialMode = "demo" }: { diagram: BowtieDiagram;
     if (!t) return;
     const client = { x: e.clientX, y: e.clientY };
     const pos = rf.screenToFlowPosition(client, { snapToGrid: false });
+    const snappedX = getSnapXForType(t, pos.x);
+
+    // Prevent duplicate Hazard or Top Event
+    if (t === "hazard" || t === "topEvent") {
+      const existing = rf.getNodes().find((n) => n.type === t);
+      if (existing) {
+        // Move existing node instead of creating new one
+        setNodes((nds) =>
+          nds.map((n) =>
+            n.id === existing.id ? { ...n, position: { x: snappedX, y: pos.y } } : n
+          )
+        );
+        return;
+      }
+    }
 
     // Default labels for quick scaffolding
     const defaultLabel: Record<BowtieNodeType, string> = {
@@ -1015,7 +1067,6 @@ function InnerGraph({ diagram, initialMode = "demo" }: { diagram: BowtieDiagram;
           : t === "escalationBarrier"
             ? "escalation"
             : undefined;
-    const snappedX = getSnapXForType(t, pos.x);
 
     const nodeData = ensureBuilderData({
       label: defaultLabel[t],
@@ -1041,13 +1092,13 @@ function InnerGraph({ diagram, initialMode = "demo" }: { diagram: BowtieDiagram;
 
     if (t === "preventionBarrier") {
       const candidateTypes: BowtieNodeType[] = ["threat", "preventionBarrier", "topEvent"];
-      const rowThreshold = 80; // px distance for considering nodes on the same row
       const existingNodes = rf.getNodes() as RFNode<BowtieNodeData>[];
       const rowNodes = existingNodes.filter((node) => {
         const nodeDataForType = node.data as BowtieNodeData | undefined;
         const nodeType = nodeDataForType?.bowtieType;
         if (!nodeType || !candidateTypes.includes(nodeType)) return false;
-        return Math.abs(node.position.y - pos.y) <= rowThreshold;
+        // Increased threshold for better magnetic feel
+        return Math.abs(node.position.y - pos.y) <= 120;
       });
 
       if (activeSlot) {
@@ -1403,24 +1454,21 @@ function InnerGraph({ diagram, initialMode = "demo" }: { diagram: BowtieDiagram;
     const onClear = () => {
       if (mode !== "builder") return;
       try {
-        const hazard = diagram.nodes.find((n) => n.type === "hazard");
-        const topEvent = diagram.nodes.find((n) => n.type === "topEvent");
-        const hazardLabel = hazard?.label || "Hazard";
-        const topLabel = topEvent?.label || "Thermal runaway";
         const cleared: BowtieDiagram = {
           id: "cleared",
           title: diagram.title,
           createdAt: diagram.createdAt,
           updatedAt: new Date().toISOString(),
           nodes: [
-            { id: "hazard", type: "hazard", label: hazardLabel },
-            { id: "topEvent", type: "topEvent", label: topLabel },
+            { id: "hazard", type: "hazard", label: "" },
+            { id: "topEvent", type: "topEvent", label: "" },
           ],
           edges: [
             { id: "h_to_top", source: "hazard", target: "topEvent" },
           ],
         };
-        setRenderOverride(cleared);
+        setDiagram(cleared);
+        setRenderOverride(null);
         setInspectorOpen(false);
         setSelectedInspectorId(null);
         setCardNode(null);
@@ -1721,7 +1769,7 @@ function InnerGraph({ diagram, initialMode = "demo" }: { diagram: BowtieDiagram;
 
       return () => clearTimeout(timer);
     }
-  }, [mode, storyIdx, setNodes, rf, autoZoomEnabled, highwayDrivingNarrative]); // Added highwayDrivingNarrative to dependencies
+  }, [mode, storyIdx, setNodes, rf, autoZoomEnabled]);
 
   // GSAP Animation System - Animate wrapper elements on story step changes
   useEffect(() => {
